@@ -1,26 +1,48 @@
 @import 'tailwindcss';
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* ── 브랜드 컬러 ── */
+  --color-primary: #ff5a5f;
+  --color-primary-hover: #e04e53;
+  --color-primary-light: #fff0f0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* ── 서피스 ── */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f7f7f7;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* ── 텍스트 ── */
+  --color-ink: #222222;
+  --color-secondary: #717171;
+  --color-tertiary: #b0b0b0;
+
+  /* ── 시맨틱 ── */
+  --color-success: #00a699;
+  --color-warning: #ffb400;
+  --color-border: #dddddd;
+
+  /* ── 폰트 ── */
+  --font-sans: 'Pretendard Variable', Pretendard, sans-serif;
+
+  /* ── 보더 라디우스 ── */
+  --radius-pill: 9999px;
+  --radius-card: 12px;
+  --radius-btn: 8px;
+
+  /* ── 간격 (8px 베이스) ── */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
