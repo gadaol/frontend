@@ -15,11 +15,11 @@
 
 ## 스키마 참조
 
-`.claude/context/schema.md` 를 항상 먼저 읽을 것.
+`agents/context/schema.md` 를 항상 먼저 읽을 것.
 
 ## 작업 절차
 
-1. `.claude/context/schema.md` 에서 대상 테이블 확인
+1. `agents/context/schema.md` 에서 대상 테이블 확인
 2. SQL 작성
 3. RLS 활성화 + 정책 추가 (아래 패턴 참고)
 4. 완료 후 타입 에이전트에 `database.types.ts` 재생성 요청

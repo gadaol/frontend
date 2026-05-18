@@ -13,7 +13,7 @@
 
 ## 스키마 참조
 
-`.claude/context/schema.md` 를 먼저 읽을 것.
+`agents/context/schema.md` 를 먼저 읽을 것.
 
 ## 현재 정의된 타입 (src/types/index.ts)
 

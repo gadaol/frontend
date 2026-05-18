@@ -3,18 +3,17 @@
 ## 에이전트 파일 위치
 
 ```
-.claude/
-├── context/          ← 프로젝트 데이터
+agents/
+├── context/            ← 프로젝트 데이터
 │   ├── stack.md
 │   ├── conventions.md
 │   ├── schema.md
 │   ├── screen-design.md
 │   └── api.md
-├── agents/           ← 에이전트 프롬프트
-│   ├── db-agent.md
-│   ├── ui-agent.md
-│   ├── type-agent.md
-│   └── api-agent.md
+├── db-agent.md
+├── ui-agent.md
+├── type-agent.md
+├── api-agent.md
 └── pipelines/
     └── orchestrator.md
 ```
@@ -22,7 +21,7 @@
 ## 화면 개발 시작하는 법
 
 ```
-.claude/pipelines/orchestrator.md 를 읽고
+agents/pipelines/orchestrator.md 를 읽고
 [화면명] 화면을 만들어줘
 ```
 

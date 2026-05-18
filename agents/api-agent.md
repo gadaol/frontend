@@ -14,7 +14,7 @@
 
 ## API 참조
 
-`.claude/context/api.md` 를 먼저 읽을 것.
+`agents/context/api.md` 를 먼저 읽을 것.
 
 ## 서버 액션 필수 패턴
 

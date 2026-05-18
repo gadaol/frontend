@@ -8,9 +8,9 @@
 ## 세션 시작 시 로드 순서
 
 1. `~/Documents/min/agent/AGENTS.md`
-2. `.claude/context/stack.md`
-3. `.claude/context/schema.md`
-4. 태스크에 따라 `.claude/context/screen-design.md` 또는 `.claude/context/api.md`
+2. `agents/context/stack.md`
+3. `agents/context/schema.md`
+4. 태스크에 따라 `agents/context/screen-design.md` 또는 `agents/context/api.md`
 
 ---
 
@@ -54,28 +54,28 @@ MVP 우선순위 순:
 
 ### DB
 ```
-.claude/agents/db-agent.md 를 읽고:
+agents/db-agent.md 를 읽고:
 [테이블] 관련 [작업 내용]
 ```
 
 ### 타입
 ```
-.claude/agents/type-agent.md 를 읽고:
+agents/type-agent.md 를 읽고:
 [기능] 타입 및 Zod 스키마 추가
 ```
 
 ### API
 ```
-.claude/agents/api-agent.md 를 읽고:
+agents/api-agent.md 를 읽고:
 [기능] 서버 액션 + 훅 구현
-참고: .claude/context/api.md
+참고: agents/context/api.md
 ```
 
 ### UI
 ```
-.claude/agents/ui-agent.md 를 읽고:
+agents/ui-agent.md 를 읽고:
 [화면명] 화면 구현
-참고: .claude/context/screen-design.md, .claude/context/conventions.md
+참고: agents/context/screen-design.md, agents/context/conventions.md
 ```
 
 ---

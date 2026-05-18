@@ -15,8 +15,8 @@
 
 ## 화면 참조
 
-`.claude/context/screen-design.md` 를 항상 먼저 읽을 것.
-`.claude/context/conventions.md` 의 파일 구조/네이밍 따를 것.
+`agents/context/screen-design.md` 를 항상 먼저 읽을 것.
+`agents/context/conventions.md` 의 파일 구조/네이밍 따를 것.
 
 ## 라우트 그룹 구조
 

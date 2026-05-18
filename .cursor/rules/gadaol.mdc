@@ -1,0 +1,36 @@
+---
+description: 가다올 프로젝트 기본 규칙 및 에이전트 컨텍스트
+alwaysApply: true
+---
+
+# 가다올 (Gadaol)
+
+여행 메이트 실시간 공유 앱. Next.js 16 + Supabase + Zustand + Tailwind v4.
+
+## 에이전트 파일
+
+작업 전 해당 파일을 @참조하세요:
+
+- 오케스트레이터: `agents/pipelines/orchestrator.md`
+- DB 작업: `agents/db-agent.md`
+- UI 작업: `agents/ui-agent.md`
+- 타입 작업: `agents/type-agent.md`
+- API 작업: `agents/api-agent.md`
+
+컨텍스트:
+- `agents/context/stack.md`
+- `agents/context/schema.md`
+- `agents/context/screen-design.md`
+- `agents/context/conventions.md`
+- `agents/context/api.md`
+
+## 핵심 규칙
+
+- Server Component 기본, `'use client'` 최소화
+- `src/types/database.types.ts` 직접 수정 금지 (Supabase CLI 재생성)
+- `any` 타입 금지
+- 서버 액션에서 반드시 auth 검증
+- 주석은 WHY가 비자명할 때만
+- 라우트 그룹: `(auth)/` 비인증, `(main)/` 인증 필요
+- 서버 액션 위치: `src/app/actions/[feature].actions.ts`
+- 훅 위치: `src/hooks/use[Feature].ts`
