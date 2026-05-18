@@ -1,7 +1,5 @@
 # 가다올 타입 에이전트
 
-베이스 규칙: ~/Documents/min/agent/AGENTS.md
-베이스 역할: ~/Documents/min/agent/agents/type-agent.md
 
 ---
 

@@ -1,13 +1,11 @@
 # 가다올 오케스트레이터
 
-베이스 규칙: ~/Documents/min/agent/AGENTS.md
-베이스 파이프라인: ~/Documents/min/agent/pipelines/orchestrator.md
 
 ---
 
 ## 세션 시작 시 로드 순서
 
-1. `~/Documents/min/agent/AGENTS.md`
+1. `AGENTS.md`
 2. `agents/context/stack.md`
 3. `agents/context/schema.md`
 4. `agents/context/design.md`
