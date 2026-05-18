@@ -1,48 +1,79 @@
 @import 'tailwindcss';
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
+@custom-variant dark (&:is(.dark *));
+
+/* ── 가다올 디자인 토큰 ── */
 @theme {
-  /* ── 브랜드 컬러 ── */
+  /* 브랜드 */
   --color-primary: #ff5a5f;
   --color-primary-hover: #e04e53;
   --color-primary-light: #fff0f0;
 
-  /* ── 서피스 ── */
+  /* 서피스 */
   --color-bg: #ffffff;
   --color-bg-subtle: #f7f7f7;
 
-  /* ── 텍스트 ── */
+  /* 텍스트 */
   --color-ink: #222222;
   --color-secondary: #717171;
   --color-tertiary: #b0b0b0;
 
-  /* ── 시맨틱 ── */
+  /* 시맨틱 */
   --color-success: #00a699;
   --color-warning: #ffb400;
   --color-border: #dddddd;
 
-  /* ── 폰트 ── */
+  /* 폰트 */
   --font-sans: 'Pretendard Variable', Pretendard, sans-serif;
 
-  /* ── 보더 라디우스 ── */
+  /* 라디우스 */
   --radius-pill: 9999px;
   --radius-card: 12px;
   --radius-btn: 8px;
-
-  /* ── 간격 (8px 베이스) ── */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
-  --spacing-2xl: 32px;
-  --spacing-3xl: 48px;
-  --spacing-4xl: 64px;
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+/* ── shadcn 변수를 가다올 토큰으로 오버라이드 ── */
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-ink);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: #ffffff;
+  --color-muted: var(--color-bg-subtle);
+  --color-muted-foreground: var(--color-secondary);
+  --color-border: var(--color-border);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-primary);
+  --color-destructive: var(--color-primary);
+  --radius-sm: var(--radius-btn);
+  --radius-md: var(--radius-card);
+  --radius-lg: var(--radius-card);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #222222;
+  --primary: #ff5a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f7f7;
+  --secondary-foreground: #222222;
+  --muted: #f7f7f7;
+  --muted-foreground: #717171;
+  --border: #dddddd;
+  --input: #dddddd;
+  --ring: #ff5a5f;
+  --destructive: #ff5a5f;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
 }
