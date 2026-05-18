@@ -42,14 +42,49 @@ src/app/
 └── actions/
 ```
 
-## 컴포넌트 패턴
+## 컴포넌트 역할 분리 원칙
+
+**컴포넌트는 UI만, 로직은 훅으로.**
 
 ```tsx
-// 화면 전용 컴포넌트는 _components/ 에
-// src/app/(main)/trips/[id]/_components/TripHeader.tsx
+// ✅ 올바른 구조
+function TripCard({ trip, onPress }: TripCardProps) {
+  return <div className="...">{trip.title}</div>  // UI만
+}
+
+function TripsPage() {
+  const { trips, loading } = useTrips()  // 로직은 훅에서
+  return <TripCard trip={trips[0]} />
+}
+
+// ❌ 금지: 컴포넌트 안에서 직접 데이터 페칭
+function TripCard({ id }: { id: string }) {
+  const [trip, setTrip] = useState()
+  useEffect(() => { fetch(id).then(setTrip) }, [])  // 금지
+}
+```
+
+### 훅 책임
+- 데이터 페칭 / 서버 액션 호출
+- 로딩 · 에러 상태 관리
+- 비즈니스 로직
+
+### 컴포넌트 책임
+- props를 받아서 렌더링
+- 사용자 이벤트를 props 콜백으로 위임
+- 스타일 · 레이아웃
+
+## 컴포넌트 파일 위치
+
+```tsx
+// 화면 전용 컴포넌트
+src/app/(main)/trips/[id]/_components/TripHeader.tsx
 
 // 공용 기능 컴포넌트
-// src/components/features/trip/TripCard.tsx
+src/components/features/trip/TripCard.tsx
+
+// 공용 기본 컴포넌트 (shadcn/ui 기반)
+src/components/ui/Button.tsx
 ```
 
 ## 모바일 우선
