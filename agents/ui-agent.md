@@ -15,7 +15,8 @@
 
 ## 화면 참조
 
-`agents/context/screen-design.md` 를 항상 먼저 읽을 것.
+`agents/context/design.md` 를 항상 먼저 읽을 것 — 컬러, 타이포, 컴포넌트 스펙 기준.
+`agents/context/screen-design.md` 에서 화면 명세 확인.
 `agents/context/conventions.md` 의 파일 구조/네이밍 따를 것.
 
 ## 라우트 그룹 구조

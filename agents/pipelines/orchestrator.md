@@ -10,7 +10,8 @@
 1. `~/Documents/min/agent/AGENTS.md`
 2. `agents/context/stack.md`
 3. `agents/context/schema.md`
-4. 태스크에 따라 `agents/context/screen-design.md` 또는 `agents/context/api.md`
+4. `agents/context/design.md`
+5. 태스크에 따라 `agents/context/screen-design.md` 또는 `agents/context/api.md`
 
 ---
 
