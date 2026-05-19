@@ -28,12 +28,29 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const protectedPaths = ['/home', '/trips', '/backlog', '/mypage', '/notifications']
-  const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p))
+  const { pathname } = request.nextUrl
+
+  const protectedPaths = [
+    '/home',
+    '/trips',
+    '/places',
+    '/backlog',
+    '/mypage',
+    '/notifications',
+    '/subscription',
+  ]
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
+  const isAuthRoute = pathname === '/' || pathname.startsWith('/auth')
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 
