@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/features/layout/PlaceholderPage'
+import { CreateTripForm } from '@/components/features/trips/CreateTripForm'
 
 export default function NewTripPage() {
-  return <PlaceholderPage title="여행 만들기" path="/trips/new" />
+  return <CreateTripForm />
 }
