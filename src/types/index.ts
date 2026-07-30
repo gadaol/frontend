@@ -1,5 +1,1 @@
 export * from './db'
-export * from './api'
-export * from './domain/trip'
-export * from './domain/place'
-export * from './domain/vote'
