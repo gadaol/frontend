@@ -2,7 +2,6 @@ export type { Database, Tables, TablesInsert, TablesUpdate } from './database.ty
 
 import type { Database } from './database.types'
 
-
 // 프로필 & 결제
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
