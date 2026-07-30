@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
       'prefer-const': 'error',
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'src/types/database/database.types.ts']),
 ])
 
 export default eslintConfig
