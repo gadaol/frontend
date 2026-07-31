@@ -21,7 +21,7 @@ export default function AuthPage() {
   const [verificationEmail, setVerificationEmail] = useState('')
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-dvh flex-col">
       {view === 'social' && <SocialLoginView onEmailClick={() => setView('email')} />}
       {view === 'email' && (
         <EmailLoginView

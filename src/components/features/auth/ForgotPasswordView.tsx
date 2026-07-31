@@ -19,6 +19,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const locale = useLocale()
   const supabase = createClient()
   const [sentEmail, setSentEmail] = useState<string | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const schema = z.object({
     email: z.string().email(t('emailError')),
@@ -31,9 +32,11 @@ export default function ForgotPasswordView({ onBack }: Props) {
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   const onSubmit = async ({ email }: FormValues) => {
-    await supabase.auth.resetPasswordForEmail(email, {
+    setServerError(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${location.origin}/${locale}/reset-password`,
     })
+    if (error) return setServerError(error.message)
     setSentEmail(email)
   }
 
@@ -119,6 +122,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <span className="text-[12px] text-[#F04438]">{errors.email.message}</span>
           )}
         </div>
+
+        {serverError && (
+          <span className="mt-2 text-[13px] text-[#F04438]">{serverError}</span>
+        )}
 
         <div className="mt-auto pt-8">
           <button
