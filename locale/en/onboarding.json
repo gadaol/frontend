@@ -1,0 +1,16 @@
+{
+  "step1Label": "STEP 1 / 2",
+  "step1Title": "What should we call you?",
+  "step1Subtitle": "Set a nickname to show your travel mates",
+  "avatarHint": "Change profile photo",
+  "nicknameLabel": "Nickname",
+  "nicknamePlaceholder": "Enter a nickname",
+  "step2Label": "STEP 2 / 2",
+  "step2Title": "What kind of trips do you like?",
+  "step2Subtitle": "We'll recommend places based on your taste\nYou can select multiple",
+  "paceLabel": "Travel pace",
+  "placeLabel": "Preferred places",
+  "companionLabel": "Who do you travel with?",
+  "start": "Let's go 🎉",
+  "saving": "Saving..."
+}

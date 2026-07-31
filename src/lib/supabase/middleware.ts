@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database/database.types'
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+export async function updateSession(request: NextRequest, response?: NextResponse) {
+  let supabaseResponse = response ?? NextResponse.next({ request })
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +28,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
+  // locale prefix 제거 후 pathname 체크 (/ko/home → /home)
+  const pathname = request.nextUrl.pathname.replace(/^\/(ko|en)/, '') || '/'
 
   const protectedPaths = ['/home', '/trips', '/places', '/backlog', '/mypage', '/notifications']
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
@@ -36,13 +37,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth'
+    url.pathname = url.pathname.replace(/\/(home|trips|places|backlog|mypage|notifications).*/, '/')
     return NextResponse.redirect(url)
   }
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/home'
+    const locale = request.nextUrl.pathname.match(/^\/(ko|en)/)?.[1] ?? 'ko'
+    url.pathname = `/${locale}/home`
     return NextResponse.redirect(url)
   }
 

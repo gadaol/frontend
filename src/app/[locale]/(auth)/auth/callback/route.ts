@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
 
@@ -21,13 +22,13 @@ export async function GET(request: Request) {
           .single()
 
         if (!profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/onboarding`)
+          return NextResponse.redirect(`${origin}/${locale}/onboarding`)
         }
       }
 
-      return NextResponse.redirect(`${origin}/home`)
+      return NextResponse.redirect(`${origin}/${locale}/home`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/?error=auth`)
+  return NextResponse.redirect(`${origin}/${locale}?error=auth`)
 }
