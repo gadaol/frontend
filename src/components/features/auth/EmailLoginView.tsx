@@ -16,6 +16,7 @@ interface Props {
 
 export default function EmailLoginView({ onBack }: Props) {
   const t = useTranslations('auth')
+  const tc = useTranslations('common')
   const router = useRouter()
   const supabase = createClient()
   const locale = useLocale()
@@ -53,7 +54,7 @@ export default function EmailLoginView({ onBack }: Props) {
         <button
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center"
-          aria-label={t('back' as never) ?? '뒤로'}
+          aria-label={tc('back')}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
