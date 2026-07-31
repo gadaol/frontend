@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
 
@@ -16,6 +17,7 @@ interface Props {
 
 export default function TravelStyleStep({ nickname, onBack }: Props) {
   const router = useRouter()
+  const locale = useLocale()
   const [pace, setPace] = useState<string[]>([])
   const [places, setPlaces] = useState<string[]>([])
   const [companion, setCompanion] = useState<string[]>([])
@@ -27,13 +29,13 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
 
   const handleSkip = async () => {
     await saveAndFinish({ nickname })
-    router.push('/home')
+    router.push(`/${locale}/home`)
   }
 
   const handleSubmit = async () => {
     setLoading(true)
     await saveAndFinish({ nickname })
-    router.push('/home')
+    router.push(`/${locale}/home`)
   }
 
   return (

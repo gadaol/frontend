@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 
 const schema = z.object({
   email: z.string().email('올바른 이메일을 입력해주세요'),
@@ -21,6 +22,7 @@ interface Props {
 export default function EmailLoginView({ onBack }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const locale = useLocale()
   const [isSignUp, setIsSignUp] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -36,11 +38,11 @@ export default function EmailLoginView({ onBack }: Props) {
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) return setServerError(error.message)
-      router.push('/onboarding')
+      router.push(`/${locale}/onboarding`)
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) return setServerError('이메일 또는 비밀번호가 올바르지 않아요')
-      router.push('/home')
+      router.push(`/${locale}/home`)
     }
   }
 

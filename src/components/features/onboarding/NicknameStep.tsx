@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
 
@@ -15,11 +16,12 @@ interface Props {
 
 export default function NicknameStep({ nickname, onChange, onNext }: Props) {
   const router = useRouter()
+  const locale = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSkip = async () => {
     await markOnboardingComplete()
-    router.push('/home')
+    router.push(`/${locale}/home`)
   }
 
   return (

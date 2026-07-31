@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { useLocale } from 'next-intl'
 
 interface Props {
   onEmailClick: () => void
@@ -8,18 +9,19 @@ interface Props {
 
 export default function SocialLoginView({ onEmailClick }: Props) {
   const supabase = createClient()
+  const locale = useLocale()
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
     })
   }
 
   const signInWithKakao = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
     })
   }
 
