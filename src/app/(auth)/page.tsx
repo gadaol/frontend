@@ -1,3 +1,5 @@
+import AuthPage from '@/components/features/auth/AuthPage'
+
 export default function Page() {
-  return <div>인증</div>
+  return <AuthPage />
 }
