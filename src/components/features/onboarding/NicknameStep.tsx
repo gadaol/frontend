@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
 
@@ -15,6 +15,7 @@ interface Props {
 }
 
 export default function NicknameStep({ nickname, onChange, onNext }: Props) {
+  const t = useTranslations('onboarding')
   const router = useRouter()
   const locale = useLocale()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -29,18 +30,16 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
       <div className="flex items-center justify-between py-5">
         <StepIndicator current={1} total={2} />
         <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
-          건너뛰기
+          {t('skip')}
         </button>
       </div>
 
       <div className="mb-8">
-        <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">STEP 1 / 2</div>
+        <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">{t('step1Label')}</div>
         <h1 className="mb-2 text-[24px] leading-snug font-bold text-[#0F1117]">
-          어떻게 불러드릴까요?
+          {t('step1Title')}
         </h1>
-        <p className="text-[14px] leading-relaxed text-[#9099A8]">
-          메이트들에게 보여질 닉네임을 설정해요
-        </p>
+        <p className="text-[14px] leading-relaxed text-[#9099A8]">{t('step1Subtitle')}</p>
       </div>
 
       <div className="mb-8 flex flex-col items-center gap-3">
@@ -52,11 +51,13 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
             <CameraIcon />
           </div>
         </button>
-        <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
+        <span className="text-[12px] text-[#9099A8]">{t('avatarHint')}</span>
       </div>
 
       <div className="mb-6">
-        <label className="mb-2 block text-[13px] font-medium text-[#0F1117]">닉네임</label>
+        <label className="mb-2 block text-[13px] font-medium text-[#0F1117]">
+          {t('nicknameLabel')}
+        </label>
         <div
           className="flex h-[52px] cursor-text items-center rounded-xl border-[1.5px] border-[#1B6FF0] bg-white px-4 shadow-[0_0_0_3px_rgba(27,111,240,0.1)]"
           onClick={() => inputRef.current?.focus()}
@@ -65,7 +66,7 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
             ref={inputRef}
             value={nickname}
             onChange={(e) => onChange(e.target.value.slice(0, MAX))}
-            placeholder="닉네임을 입력해주세요"
+            placeholder={t('nicknamePlaceholder')}
             className="flex-1 bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
           />
           <span className="text-[12px] text-[#9099A8]">
@@ -80,7 +81,7 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
           disabled={nickname.trim().length === 0}
           className="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-40"
         >
-          다음
+          {t('next')}
           <ChevronRight />
         </button>
       </div>

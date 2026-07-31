@@ -2,13 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
 
-const PACE_OPTIONS = ['여유롭게', '빠르게', '계획파', '즉흥파']
-const PLACE_OPTIONS = ['맛집', '자연', '카페', '관광지', '쇼핑', '액티비티']
-const COMPANION_OPTIONS = ['혼자', '둘이서', '가족과', '친구들과']
+type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
+type PlaceKey = 'restaurant' | 'nature' | 'cafe' | 'landmark' | 'shopping' | 'activity'
+type CompanionKey = 'solo' | 'couple' | 'family' | 'friends'
+
+const PACE_KEYS: PaceKey[] = ['relaxed', 'fast', 'planned', 'spontaneous']
+const PLACE_KEYS: PlaceKey[] = ['restaurant', 'nature', 'cafe', 'landmark', 'shopping', 'activity']
+const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends']
 
 interface Props {
   nickname: string
@@ -16,14 +20,15 @@ interface Props {
 }
 
 export default function TravelStyleStep({ nickname, onBack }: Props) {
+  const t = useTranslations('onboarding')
   const router = useRouter()
   const locale = useLocale()
-  const [pace, setPace] = useState<string[]>([])
-  const [places, setPlaces] = useState<string[]>([])
-  const [companion, setCompanion] = useState<string[]>([])
+  const [pace, setPace] = useState<PaceKey[]>([])
+  const [places, setPlaces] = useState<PlaceKey[]>([])
+  const [companion, setCompanion] = useState<CompanionKey[]>([])
   const [loading, setLoading] = useState(false)
 
-  const toggle = (list: string[], item: string, setter: (v: string[]) => void) => {
+  const toggle = <T,>(list: T[], item: T, setter: (v: T[]) => void) => {
     setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
   }
 
@@ -56,39 +61,47 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
           <StepIndicator current={2} total={2} />
         </div>
         <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
-          건너뛰기
+          {t('skip')}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-8">
         <div className="mb-8">
-          <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">STEP 2 / 2</div>
+          <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">{t('step2Label')}</div>
           <h1 className="mb-2 text-[24px] leading-snug font-bold text-[#0F1117]">
-            어떤 여행을 좋아해요?
+            {t('step2Title')}
           </h1>
           <p className="text-[14px] leading-relaxed text-[#9099A8]">
-            취향에 맞는 장소를 추천해드려요
-            <br />
-            여러 개 선택할 수 있어요
+            {t('step2Subtitle')
+              .split('\n')
+              .map((line, i) => (
+                <span key={i}>
+                  {line}
+                  {i === 0 && <br />}
+                </span>
+              ))}
           </p>
         </div>
 
         <ChipSection
-          label="여행 페이스"
-          options={PACE_OPTIONS}
+          label={t('paceLabel')}
+          options={PACE_KEYS}
           selected={pace}
+          getLabel={(k) => t(`pace.${k}` as never)}
           onToggle={(v) => toggle(pace, v, setPace)}
         />
         <ChipSection
-          label="선호 장소"
-          options={PLACE_OPTIONS}
+          label={t('placeLabel')}
+          options={PLACE_KEYS}
           selected={places}
+          getLabel={(k) => t(`place.${k}` as never)}
           onToggle={(v) => toggle(places, v, setPlaces)}
         />
         <ChipSection
-          label="주로 함께하는 여행"
-          options={COMPANION_OPTIONS}
+          label={t('companionLabel')}
+          options={COMPANION_KEYS}
           selected={companion}
+          getLabel={(k) => t(`companion.${k}` as never)}
           onToggle={(v) => toggle(companion, v, setCompanion)}
         />
 
@@ -98,7 +111,7 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
             disabled={loading}
             className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-40"
           >
-            {loading ? '저장 중...' : '시작하기 🎉'}
+            {loading ? t('saving') : t('start')}
           </button>
         </div>
       </div>
@@ -106,34 +119,36 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
   )
 }
 
-function ChipSection({
+function ChipSection<T extends string>({
   label,
   options,
   selected,
+  getLabel,
   onToggle,
 }: {
   label: string
-  options: string[]
-  selected: string[]
-  onToggle: (v: string) => void
+  options: T[]
+  selected: T[]
+  getLabel: (k: T) => string
+  onToggle: (v: T) => void
 }) {
   return (
     <div className="mb-6">
       <div className="mb-2 text-[13px] font-medium text-[#0F1117]">{label}</div>
       <div className="flex flex-wrap gap-2">
-        {options.map((opt) => {
-          const active = selected.includes(opt)
+        {options.map((key) => {
+          const active = selected.includes(key)
           return (
             <button
-              key={opt}
-              onClick={() => onToggle(opt)}
+              key={key}
+              onClick={() => onToggle(key)}
               className={`h-9 rounded-full border-[1.5px] px-[14px] text-[13px] font-medium transition-colors ${
                 active
                   ? 'border-[#1B6FF0] bg-[#EBF2FF] text-[#1B6FF0]'
                   : 'border-[#E8EAED] bg-white text-[#515966]'
               }`}
             >
-              {opt}
+              {getLabel(key)}
             </button>
           )
         })}

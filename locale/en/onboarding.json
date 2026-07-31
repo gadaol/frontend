@@ -1,16 +1,38 @@
 {
+  "skip": "Skip",
   "step1Label": "STEP 1 / 2",
   "step1Title": "What should we call you?",
   "step1Subtitle": "Set a nickname to show your travel mates",
   "avatarHint": "Change profile photo",
   "nicknameLabel": "Nickname",
   "nicknamePlaceholder": "Enter a nickname",
+  "next": "Next",
   "step2Label": "STEP 2 / 2",
   "step2Title": "What kind of trips do you like?",
   "step2Subtitle": "We'll recommend places based on your taste\nYou can select multiple",
   "paceLabel": "Travel pace",
   "placeLabel": "Preferred places",
   "companionLabel": "Who do you travel with?",
+  "pace": {
+    "relaxed": "Relaxed",
+    "fast": "Fast-paced",
+    "planned": "Planner",
+    "spontaneous": "Spontaneous"
+  },
+  "place": {
+    "restaurant": "Restaurants",
+    "nature": "Nature",
+    "cafe": "Cafes",
+    "landmark": "Landmarks",
+    "shopping": "Shopping",
+    "activity": "Activities"
+  },
+  "companion": {
+    "solo": "Solo",
+    "couple": "Couple",
+    "family": "Family",
+    "friends": "Friends"
+  },
   "start": "Let's go 🎉",
   "saving": "Saving..."
 }

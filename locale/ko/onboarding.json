@@ -1,16 +1,38 @@
 {
+  "skip": "건너뛰기",
   "step1Label": "STEP 1 / 2",
   "step1Title": "어떻게 불러드릴까요?",
   "step1Subtitle": "메이트들에게 보여질 닉네임을 설정해요",
   "avatarHint": "프로필 사진 변경",
   "nicknameLabel": "닉네임",
   "nicknamePlaceholder": "닉네임을 입력해주세요",
+  "next": "다음",
   "step2Label": "STEP 2 / 2",
   "step2Title": "어떤 여행을 좋아해요?",
   "step2Subtitle": "취향에 맞는 장소를 추천해드려요\n여러 개 선택할 수 있어요",
   "paceLabel": "여행 페이스",
   "placeLabel": "선호 장소",
   "companionLabel": "주로 함께하는 여행",
+  "pace": {
+    "relaxed": "여유롭게",
+    "fast": "빠르게",
+    "planned": "계획파",
+    "spontaneous": "즉흥파"
+  },
+  "place": {
+    "restaurant": "맛집",
+    "nature": "자연",
+    "cafe": "카페",
+    "landmark": "관광지",
+    "shopping": "쇼핑",
+    "activity": "액티비티"
+  },
+  "companion": {
+    "solo": "혼자",
+    "couple": "둘이서",
+    "family": "가족과",
+    "friends": "친구들과"
+  },
   "start": "시작하기 🎉",
   "saving": "저장 중..."
 }

@@ -1,13 +1,14 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface Props {
   onEmailClick: () => void
 }
 
 export default function SocialLoginView({ onEmailClick }: Props) {
+  const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
 
@@ -29,12 +30,12 @@ export default function SocialLoginView({ onEmailClick }: Props) {
     <div className="flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,#070E1A_0%,#0F2351_100%)]">
       <div className="px-7 pt-12 pb-8 text-center">
         <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">gadaol</div>
-        <div className="text-sm text-white/45">함께 떠나는 여행 플래너</div>
+        <div className="text-sm text-white/45">{t('tagline')}</div>
       </div>
 
       <div className="flex flex-1 flex-col overflow-y-auto rounded-t-[28px] bg-white px-6 pt-8 pb-10">
-        <div className="mb-1 text-[22px] font-bold tracking-tight text-[#0F1117]">시작하기</div>
-        <div className="mb-7 text-sm text-[#9099A8]">계속하려면 로그인 또는 회원가입하세요</div>
+        <div className="mb-1 text-[22px] font-bold tracking-tight text-[#0F1117]">{t('title')}</div>
+        <div className="mb-7 text-sm text-[#9099A8]">{t('subtitle')}</div>
 
         <div className="flex flex-col gap-3">
           <button
@@ -42,7 +43,7 @@ export default function SocialLoginView({ onEmailClick }: Props) {
             className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#FEE500] text-[15px] font-medium text-[#191919]"
           >
             <KakaoIcon />
-            카카오로 계속하기
+            {t('kakao')}
           </button>
 
           <button
@@ -50,12 +51,12 @@ export default function SocialLoginView({ onEmailClick }: Props) {
             className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl border border-[#E8EAED] bg-white text-[15px] font-medium text-[#0F1117]"
           >
             <GoogleIcon />
-            Google로 계속하기
+            {t('google')}
           </button>
 
           <div className="flex items-center gap-3 text-[13px] text-[#9099A8]">
             <span className="h-px flex-1 bg-[#E8EAED]" />
-            또는
+            {t('or')}
             <span className="h-px flex-1 bg-[#E8EAED]" />
           </div>
 
@@ -64,21 +65,23 @@ export default function SocialLoginView({ onEmailClick }: Props) {
             className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#0F1117] text-[15px] font-medium text-white"
           >
             <EmailIcon />
-            이메일로 계속하기
+            {t('email')}
           </button>
         </div>
 
         <p className="mt-5 text-center text-[12px] leading-relaxed text-[#9099A8]">
-          계속하면{' '}
-          <a href="#" className="text-[#1B6FF0]">
-            이용약관
-          </a>{' '}
-          및{' '}
-          <a href="#" className="text-[#1B6FF0]">
-            개인정보 처리방침
-          </a>
-          에<br />
-          동의하는 것으로 간주합니다.
+          {t.rich('termsNotice', {
+            termsLink: (chunks) => (
+              <a href="#" className="text-[#1B6FF0]">
+                {chunks}
+              </a>
+            ),
+            privacyLink: (chunks) => (
+              <a href="#" className="text-[#1B6FF0]">
+                {chunks}
+              </a>
+            ),
+          })}
         </p>
       </div>
     </div>

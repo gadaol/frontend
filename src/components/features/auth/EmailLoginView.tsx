@@ -6,25 +6,26 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
-const schema = z.object({
-  email: z.string().email('올바른 이메일을 입력해주세요'),
-  password: z.string().min(6, '비밀번호는 6자 이상이어야 해요'),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = { email: string; password: string }
 
 interface Props {
   onBack: () => void
 }
 
 export default function EmailLoginView({ onBack }: Props) {
+  const t = useTranslations('auth')
   const router = useRouter()
   const supabase = createClient()
   const locale = useLocale()
   const [isSignUp, setIsSignUp] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+
+  const schema = z.object({
+    email: z.string().email(t('emailError')),
+    password: z.string().min(6, t('passwordError')),
+  })
 
   const {
     register,
@@ -41,7 +42,7 @@ export default function EmailLoginView({ onBack }: Props) {
       router.push(`/${locale}/onboarding`)
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) return setServerError('이메일 또는 비밀번호가 올바르지 않아요')
+      if (error) return setServerError(t('invalidCredentials'))
       router.push(`/${locale}/home`)
     }
   }
@@ -52,7 +53,7 @@ export default function EmailLoginView({ onBack }: Props) {
         <button
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center"
-          aria-label="뒤로"
+          aria-label={t('back' as never) ?? '뒤로'}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
@@ -65,7 +66,7 @@ export default function EmailLoginView({ onBack }: Props) {
           </svg>
         </button>
         <span className="text-[17px] font-semibold text-[#0F1117]">
-          {isSignUp ? '회원가입' : '이메일 로그인'}
+          {isSignUp ? t('signupAction') : t('emailLogin')}
         </span>
       </div>
 
@@ -75,7 +76,7 @@ export default function EmailLoginView({ onBack }: Props) {
       >
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-[#0F1117]">이메일</label>
+            <label className="text-[13px] font-medium text-[#0F1117]">{t('emailLabel')}</label>
             <input
               {...register('email')}
               type="email"
@@ -88,7 +89,7 @@ export default function EmailLoginView({ onBack }: Props) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-[#0F1117]">비밀번호</label>
+            <label className="text-[13px] font-medium text-[#0F1117]">{t('passwordLabel')}</label>
             <input
               {...register('password')}
               type="password"
@@ -102,7 +103,7 @@ export default function EmailLoginView({ onBack }: Props) {
 
           {!isSignUp && (
             <a href="#" className="self-end text-[13px] font-medium text-[#1B6FF0]">
-              비밀번호를 잊으셨나요?
+              {t('forgotPassword')}
             </a>
           )}
 
@@ -115,16 +116,16 @@ export default function EmailLoginView({ onBack }: Props) {
             disabled={isSubmitting}
             className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
           >
-            {isSubmitting ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
+            {isSubmitting ? t('processing') : isSignUp ? t('signupAction') : t('loginAction')}
           </button>
           <p className="mt-4 text-center text-[14px] text-[#9099A8]">
-            {isSignUp ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}{' '}
+            {isSignUp ? t('hasAccount') : t('noAccount')}{' '}
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
               className="font-medium text-[#1B6FF0]"
             >
-              {isSignUp ? '로그인' : '회원가입'}
+              {isSignUp ? t('loginAction') : t('signupAction')}
             </button>
           </p>
         </div>
