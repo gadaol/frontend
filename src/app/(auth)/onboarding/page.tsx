@@ -1,3 +1,5 @@
+import OnboardingPage from '@/components/features/onboarding/OnboardingPage'
+
 export default function Page() {
-  return <div>온보딩</div>
+  return <OnboardingPage />
 }
