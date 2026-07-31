@@ -102,9 +102,9 @@ export default function EmailLoginView({ onBack }: Props) {
           </div>
 
           {!isSignUp && (
-            <a href="#" className="self-end text-[13px] font-medium text-[#1B6FF0]">
+            <button type="button" className="self-end text-[13px] font-medium text-[#1B6FF0]">
               {t('forgotPassword')}
-            </a>
+            </button>
           )}
 
           {serverError && <span className="text-[13px] text-[#F04438]">{serverError}</span>}

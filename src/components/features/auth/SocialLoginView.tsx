@@ -72,14 +72,14 @@ export default function SocialLoginView({ onEmailClick }: Props) {
         <p className="mt-5 text-center text-[12px] leading-relaxed text-[#9099A8]">
           {t.rich('termsNotice', {
             termsLink: (chunks) => (
-              <a href="#" className="text-[#1B6FF0]">
+              <button type="button" className="text-[#1B6FF0]">
                 {chunks}
-              </a>
+              </button>
             ),
             privacyLink: (chunks) => (
-              <a href="#" className="text-[#1B6FF0]">
+              <button type="button" className="text-[#1B6FF0]">
                 {chunks}
-              </a>
+              </button>
             ),
           })}
         </p>
