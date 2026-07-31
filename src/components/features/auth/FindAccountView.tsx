@@ -1,0 +1,220 @@
+'use client'
+
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+
+type Step = 'input' | 'otp' | 'result'
+
+interface AccountResult {
+  found: boolean
+  maskedEmail?: string
+  providers?: string[]
+}
+
+interface Props {
+  onBack: () => void
+  onGoToLogin: () => void
+}
+
+export default function FindAccountView({ onBack, onGoToLogin }: Props) {
+  const t = useTranslations('auth')
+  const tc = useTranslations('common')
+  const [step, setStep] = useState<Step>('input')
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [sending, setSending] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<AccountResult | null>(null)
+
+  const handleSendOtp = async () => {
+    if (!phone.trim()) return
+    setSending(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/find-account/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? tc('error'))
+      } else {
+        setStep('otp')
+      }
+    } catch {
+      setError(tc('error'))
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleVerify = async () => {
+    if (!otp.trim()) return
+    setVerifying(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/find-account/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code: otp }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? tc('error'))
+      } else {
+        setResult(data)
+        setStep('result')
+      }
+    } catch {
+      setError(tc('error'))
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-1 flex-col bg-white">
+      <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
+        <button
+          onClick={step === 'otp' ? () => setStep('input') : onBack}
+          className="flex h-10 w-10 items-center justify-center"
+          aria-label={tc('back')}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15 18l-6-6 6-6"
+              stroke="#0F1117"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <span className="text-[17px] font-semibold text-[#0F1117]">{t('findAccountTitle')}</span>
+      </div>
+
+      <div className="flex flex-1 flex-col px-5 py-6">
+        {step === 'input' && (
+          <>
+            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
+              {t('findAccountDesc')}
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-medium text-[#0F1117]">{t('phoneLabel')}</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={t('phonePlaceholder')}
+                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+              />
+            </div>
+            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
+            <div className="mt-auto pt-8">
+              <button
+                onClick={handleSendOtp}
+                disabled={sending || !phone.trim()}
+                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
+              >
+                {sending ? t('otpSending') : t('sendOtp')}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 'otp' && (
+          <>
+            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
+              <span className="font-medium text-[#0F1117]">{phone}</span>으로 인증번호를 보냈어요.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-medium text-[#0F1117]">{t('otpLabel')}</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                placeholder={t('otpPlaceholder')}
+                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] tracking-widest text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+              />
+            </div>
+            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
+            <button
+              onClick={() => {
+                setStep('input')
+                setOtp('')
+                setError(null)
+              }}
+              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0]"
+            >
+              {t('sendOtp')}
+            </button>
+            <div className="mt-auto pt-8">
+              <button
+                onClick={handleVerify}
+                disabled={verifying || otp.length < 6}
+                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
+              >
+                {verifying ? t('processing') : t('verifyOtp')}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 'result' && result && (
+          <div className="flex flex-1 flex-col">
+            {result.found ? (
+              <>
+                <h2 className="mb-6 text-[18px] font-bold text-[#0F1117]">
+                  {t('findAccountResultTitle')}
+                </h2>
+                <div className="rounded-2xl border border-[#E8EAED] p-5">
+                  <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail ?? '-'} />
+                  <ResultRow
+                    label={t('loginMethodLabel')}
+                    value={
+                      result.providers
+                        ?.map((p) => {
+                          if (p === 'google') return t('methodGoogle')
+                          if (p === 'kakao') return t('methodKakao')
+                          return t('methodEmail')
+                        })
+                        .join(', ') ?? '-'
+                    }
+                    last
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center text-center">
+                <p className="text-[14px] text-[#9099A8]">{t('noAccountFound')}</p>
+              </div>
+            )}
+            <div className="mt-auto pt-8">
+              <button
+                onClick={onGoToLogin}
+                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white"
+              >
+                {t('goToLogin')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ResultRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <div
+      className={`flex items-center justify-between py-3 ${!last ? 'border-b border-[#E8EAED]' : ''}`}
+    >
+      <span className="text-[13px] text-[#9099A8]">{label}</span>
+      <span className="text-[14px] font-medium text-[#0F1117]">{value}</span>
+    </div>
+  )
+}

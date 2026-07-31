@@ -12,15 +12,22 @@ type FormValues = { email: string; password: string }
 
 interface Props {
   onBack: () => void
+  onSignUp: () => void
+  onForgotPassword: () => void
+  onFindAccount: () => void
 }
 
-export default function EmailLoginView({ onBack }: Props) {
+export default function EmailLoginView({
+  onBack,
+  onSignUp,
+  onForgotPassword,
+  onFindAccount,
+}: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const router = useRouter()
   const supabase = createClient()
   const locale = useLocale()
-  const [isSignUp, setIsSignUp] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const schema = z.object({
@@ -36,16 +43,9 @@ export default function EmailLoginView({ onBack }: Props) {
 
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError(null)
-
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) return setServerError(error.message)
-      router.push(`/${locale}/onboarding`)
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) return setServerError(t('invalidCredentials'))
-      router.push(`/${locale}/home`)
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return setServerError(t('invalidCredentials'))
+    router.push(`/${locale}/home`)
   }
 
   return (
@@ -66,9 +66,7 @@ export default function EmailLoginView({ onBack }: Props) {
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">
-          {isSignUp ? t('signupAction') : t('emailLogin')}
-        </span>
+        <span className="text-[17px] font-semibold text-[#0F1117]">{t('emailLogin')}</span>
       </div>
 
       <form
@@ -102,11 +100,18 @@ export default function EmailLoginView({ onBack }: Props) {
             )}
           </div>
 
-          {!isSignUp && (
-            <button type="button" className="self-end text-[13px] font-medium text-[#1B6FF0]">
+          <div className="flex items-center justify-between">
+            <button type="button" onClick={onFindAccount} className="text-[13px] text-[#9099A8]">
+              {t('findAccount')}
+            </button>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-[13px] font-medium text-[#1B6FF0]"
+            >
               {t('forgotPassword')}
             </button>
-          )}
+          </div>
 
           {serverError && <span className="text-[13px] text-[#F04438]">{serverError}</span>}
         </div>
@@ -117,16 +122,12 @@ export default function EmailLoginView({ onBack }: Props) {
             disabled={isSubmitting}
             className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
           >
-            {isSubmitting ? t('processing') : isSignUp ? t('signupAction') : t('loginAction')}
+            {isSubmitting ? t('processing') : t('loginAction')}
           </button>
           <p className="mt-4 text-center text-[14px] text-[#9099A8]">
-            {isSignUp ? t('hasAccount') : t('noAccount')}{' '}
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="font-medium text-[#1B6FF0]"
-            >
-              {isSignUp ? t('loginAction') : t('signupAction')}
+            {t('noAccount')}{' '}
+            <button type="button" onClick={onSignUp} className="font-medium text-[#1B6FF0]">
+              {t('signupAction')}
             </button>
           </p>
         </div>
