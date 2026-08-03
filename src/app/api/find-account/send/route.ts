@@ -14,6 +14,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'phone required' }, { status: 400 })
   }
 
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({ success: true })
+  }
+
   const e164 = toE164(phone)
   const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
