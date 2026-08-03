@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
+import axios from 'axios'
 
 type Step = 'phone' | 'otp' | 'info'
 
@@ -65,19 +66,11 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
     setSending(true)
     setError(null)
     try {
-      const res = await fetch('/api/find-account/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error ?? tc('error'))
-      } else {
-        setStep('otp')
-      }
-    } catch {
-      setError(tc('error'))
+      await axios.post('/api/find-account/send', { phone })
+      setStep('otp')
+    } catch (err) {
+      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
+      else setError(tc('error'))
     } finally {
       setSending(false)
     }
@@ -88,19 +81,11 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
     setVerifying(true)
     setError(null)
     try {
-      const res = await fetch('/api/verify-phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code: otp }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error ?? tc('error'))
-      } else {
-        setStep('info')
-      }
-    } catch {
-      setError(tc('error'))
+      await axios.post('/api/verify-phone', { phone, code: otp })
+      setStep('info')
+    } catch (err) {
+      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
+      else setError(tc('error'))
     } finally {
       setVerifying(false)
     }
