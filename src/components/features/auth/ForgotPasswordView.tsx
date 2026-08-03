@@ -224,11 +224,19 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <button
               onClick={handleResend}
               disabled={resending}
-              className="mt-8 text-[14px] font-medium text-[#1B6FF0] disabled:opacity-50"
+              className="mt-6 text-[14px] font-medium text-[#1B6FF0] disabled:opacity-50"
             >
               {resending ? t('processing') : t('resendEmail')}
             </button>
             {resent && <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>}
+            <div className="mt-auto w-full pt-8">
+              <button
+                onClick={onBack}
+                className="h-[52px] w-full rounded-xl border border-[#E8EAED] text-[15px] font-medium text-[#0F1117]"
+              >
+                {t('backToLogin')}
+              </button>
+            </div>
           </div>
         )}
 
