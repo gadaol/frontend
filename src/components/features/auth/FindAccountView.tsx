@@ -11,14 +11,11 @@ function formatPhone(value: string): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
 }
 
-type Method = 'sms' | 'email'
-type SmsStep = 'input' | 'otp' | 'result'
-type EmailStep = 'input' | 'result'
+type Step = 'input' | 'otp' | 'result'
 
 interface AccountResult {
   found: boolean
   maskedEmail?: string
-  maskedPhone?: string
   providers?: string[]
 }
 
@@ -30,100 +27,55 @@ interface Props {
 export default function FindAccountView({ onBack, onGoToLogin }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
-  const [method, setMethod] = useState<Method>('sms')
-
-  // SMS 상태
-  const [smsStep, setSmsStep] = useState<SmsStep>('input')
+  const [step, setStep] = useState<Step>('input')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [sending, setSending] = useState(false)
   const [verifying, setVerifying] = useState(false)
-  const [smsError, setSmsError] = useState<string | null>(null)
-
-  // 이메일 상태
-  const [emailStep, setEmailStep] = useState<EmailStep>('input')
-  const [email, setEmail] = useState('')
-  const [emailSearching, setEmailSearching] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
-
-  // 공통 결과
+  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AccountResult | null>(null)
 
   const handleSendOtp = async () => {
     if (!phone.trim()) return
     setSending(true)
-    setSmsError(null)
+    setError(null)
     try {
       await axios.post('/api/find-account/send', { phone })
-      setSmsStep('otp')
+      setStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
-      else setSmsError(tc('error'))
+      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
+      else setError(tc('error'))
     } finally {
       setSending(false)
     }
   }
 
-  const handleVerifySms = async () => {
+  const handleVerify = async () => {
     if (!otp.trim()) return
     setVerifying(true)
-    setSmsError(null)
+    setError(null)
     try {
       const { data } = await axios.post('/api/find-account/verify', { phone, code: otp })
       setResult(data)
-      setSmsStep('result')
+      setStep('result')
     } catch (err) {
-      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
-      else setSmsError(tc('error'))
+      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
+      else setError(tc('error'))
     } finally {
       setVerifying(false)
     }
   }
 
-  const handleFindByEmail = async () => {
-    if (!email.trim()) return
-    setEmailSearching(true)
-    setEmailError(null)
-    try {
-      const { data } = await axios.post('/api/find-account/email', { email })
-      setResult(data)
-      setEmailStep('result')
-    } catch (err) {
-      if (axios.isAxiosError(err)) setEmailError(err.response?.data?.error ?? tc('error'))
-      else setEmailError(tc('error'))
-    } finally {
-      setEmailSearching(false)
-    }
-  }
-
-  const handleMethodChange = (m: Method) => {
-    setMethod(m)
-    setSmsStep('input')
-    setEmailStep('input')
-    setSmsError(null)
-    setEmailError(null)
-    setResult(null)
-    setOtp('')
-  }
-
-  const isResult = (method === 'sms' && smsStep === 'result') || (method === 'email' && emailStep === 'result')
   const backAction = () => {
-    if (method === 'sms') {
-      if (smsStep === 'otp') return setSmsStep('input')
-      if (smsStep === 'result') return setSmsStep('input')
-    }
-    if (method === 'email' && emailStep === 'result') return setEmailStep('input')
+    if (step === 'otp') return setStep('input')
+    if (step === 'result') return setStep('input')
     onBack()
   }
 
   return (
     <div className="flex flex-1 flex-col bg-white">
       <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
-        <button
-          onClick={backAction}
-          className="flex h-10 w-10 items-center justify-center"
-          aria-label={tc('back')}
-        >
+        <button onClick={backAction} className="flex h-10 w-10 items-center justify-center" aria-label={tc('back')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="#0F1117" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -131,28 +83,8 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
         <span className="text-[17px] font-semibold text-[#0F1117]">{t('findAccountTitle')}</span>
       </div>
 
-      {/* 탭 */}
-      {!isResult && (
-        <div className="flex border-b border-[#E8EAED]">
-          {(['sms', 'email'] as Method[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => handleMethodChange(m)}
-              className={`flex-1 py-3 text-[14px] font-medium transition-colors ${
-                method === m
-                  ? 'border-b-2 border-[#1B6FF0] text-[#1B6FF0]'
-                  : 'text-[#9099A8]'
-              }`}
-            >
-              {m === 'sms' ? t('methodSms') : t('methodEmailTab')}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="flex flex-1 flex-col px-5 py-6">
-        {/* SMS 플로우 */}
-        {method === 'sms' && smsStep === 'input' && (
+        {step === 'input' && (
           <>
             <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">{t('findAccountDesc')}</p>
             <div className="flex flex-col gap-1.5">
@@ -166,7 +98,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
                 className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
               />
             </div>
-            {smsError && <span className="mt-2 text-[13px] text-[#F04438]">{smsError}</span>}
+            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
             <div className="mt-auto pt-8">
               <button
                 onClick={handleSendOtp}
@@ -179,7 +111,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           </>
         )}
 
-        {method === 'sms' && smsStep === 'otp' && (
+        {step === 'otp' && (
           <>
             <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
               <span className="font-medium text-[#0F1117]">{phone}</span>{t('otpSentDesc')}
@@ -196,9 +128,9 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
                 className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] tracking-widest text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
               />
             </div>
-            {smsError && <span className="mt-2 text-[13px] text-[#F04438]">{smsError}</span>}
+            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
             <button
-              onClick={async () => { setOtp(''); setSmsError(null); await handleSendOtp() }}
+              onClick={async () => { setOtp(''); setError(null); await handleSendOtp() }}
               disabled={sending}
               className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
             >
@@ -206,7 +138,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
             </button>
             <div className="mt-auto pt-8">
               <button
-                onClick={handleVerifySms}
+                onClick={handleVerify}
                 disabled={verifying || otp.length < 6}
                 className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
               >
@@ -216,46 +148,13 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           </>
         )}
 
-        {/* 이메일 플로우 */}
-        {method === 'email' && emailStep === 'input' && (
-          <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">{t('findAccountEmailDesc')}</p>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('findAccountEmailLabel')}</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="hello@gadaol.com"
-                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
-              />
-            </div>
-            {emailError && <span className="mt-2 text-[13px] text-[#F04438]">{emailError}</span>}
-            <div className="mt-auto pt-8">
-              <button
-                onClick={handleFindByEmail}
-                disabled={emailSearching || !email.trim()}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
-                {emailSearching ? t('processing') : t('findAccountAction')}
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* 결과 */}
-        {isResult && result && (
+        {step === 'result' && result && (
           <div className="flex flex-1 flex-col">
             {result.found ? (
               <>
                 <h2 className="mb-6 text-[18px] font-bold text-[#0F1117]">{t('findAccountResultTitle')}</h2>
                 <div className="rounded-2xl border border-[#E8EAED] p-5">
-                  {method === 'sms' && result.maskedEmail && (
-                    <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail} />
-                  )}
-                  {method === 'email' && result.maskedPhone && (
-                    <ResultRow label={t('maskedPhoneLabel')} value={result.maskedPhone} />
-                  )}
+                  <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail ?? '-'} />
                   <ResultRow
                     label={t('loginMethodLabel')}
                     value={
@@ -273,9 +172,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
               </>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <p className="text-[14px] text-[#9099A8]">
-                  {method === 'email' ? t('noAccountFoundByEmail') : t('noAccountFound')}
-                </p>
+                <p className="text-[14px] text-[#9099A8]">{t('noAccountFound')}</p>
               </div>
             )}
             <div className="mt-auto pt-8">
