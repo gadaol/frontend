@@ -1,10 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
-
-type Provider = 'kakao' | 'google'
 
 interface Props {
   onEmailClick: () => void
@@ -15,43 +12,25 @@ export default function SocialLoginView({ onEmailClick }: Props) {
   const supabase = createClient()
   const locale = useLocale()
 
-  const [pendingProvider, setPendingProvider] = useState<Provider | null>(null)
-  const [termsChecked, setTermsChecked] = useState(false)
-  const [privacyChecked, setPrivacyChecked] = useState(false)
-
-  const allChecked = termsChecked && privacyChecked
-
-  const handleSocialClick = (provider: Provider) => {
-    setTermsChecked(false)
-    setPrivacyChecked(false)
-    setPendingProvider(provider)
+  const signInWithKakao = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${location.origin}/${locale}/auth/callback`,
+        scopes: 'profile_nickname profile_image account_email',
+      },
+    })
   }
 
-  const handleAgree = async () => {
-    if (!allChecked || !pendingProvider) return
-    setPendingProvider(null)
-    if (pendingProvider === 'kakao') {
-      await supabase.auth.signInWithOAuth({
-        provider: 'kakao',
-        options: {
-          redirectTo: `${location.origin}/${locale}/auth/callback`,
-          scopes: 'profile_nickname profile_image account_email',
-        },
-      })
-    } else {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
-      })
-    }
-  }
-
-  const handleCancel = () => {
-    setPendingProvider(null)
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
+    })
   }
 
   return (
-    <div className="relative flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,#070E1A_0%,#0F2351_100%)]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,#070E1A_0%,#0F2351_100%)]">
       <div className="px-7 pt-12 pb-8 text-center">
         <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">gadaol</div>
         <div className="text-sm text-white/45">{t('tagline')}</div>
@@ -63,7 +42,7 @@ export default function SocialLoginView({ onEmailClick }: Props) {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => handleSocialClick('kakao')}
+            onClick={signInWithKakao}
             className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#FEE500] text-[15px] font-medium text-[#191919]"
           >
             <KakaoIcon />
@@ -71,7 +50,7 @@ export default function SocialLoginView({ onEmailClick }: Props) {
           </button>
 
           <button
-            onClick={() => handleSocialClick('google')}
+            onClick={signInWithGoogle}
             className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl border border-[#E8EAED] bg-white text-[15px] font-medium text-[#0F1117]"
           >
             <GoogleIcon />
@@ -108,54 +87,6 @@ export default function SocialLoginView({ onEmailClick }: Props) {
           })}
         </p>
       </div>
-
-      {/* 약관 동의 바텀시트 */}
-      {pendingProvider && (
-        <div className="absolute inset-0 z-50 flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40" onClick={handleCancel} />
-          <div className="relative rounded-t-[24px] bg-white px-6 pt-6 pb-10">
-            <div className="mb-1 text-[18px] font-bold text-[#0F1117]">{t('termsAgreeTitle')}</div>
-            <p className="mb-6 text-[13px] text-[#9099A8]">{t('termsAgreeDesc')}</p>
-
-            <div className="mb-6 flex flex-col gap-4">
-              <label className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={termsChecked}
-                  onChange={(e) => setTermsChecked(e.target.checked)}
-                  className="h-5 w-5 accent-[#1B6FF0]"
-                />
-                <span className="text-[15px] text-[#0F1117]">{t('termsAgreeTerms')}</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={privacyChecked}
-                  onChange={(e) => setPrivacyChecked(e.target.checked)}
-                  className="h-5 w-5 accent-[#1B6FF0]"
-                />
-                <span className="text-[15px] text-[#0F1117]">{t('termsAgreePrivacy')}</span>
-              </label>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={handleAgree}
-                disabled={!allChecked}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
-                {t('termsAgreeAction')}
-              </button>
-              <button
-                onClick={handleCancel}
-                className="h-[52px] w-full rounded-xl text-[15px] font-medium text-[#9099A8]"
-              >
-                {t('termsAgreeCancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
