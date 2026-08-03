@@ -23,7 +23,8 @@ export async function POST(request: Request) {
       .verifications.create({ to: e164, channel: 'sms' })
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('[find-account/send]', err)
     return NextResponse.json({ error: 'SMS 발송에 실패했어요' }, { status: 500 })
   }
 }
