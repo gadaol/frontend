@@ -10,6 +10,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const next = searchParams.get('next')
+      if (next === 'reset-password') {
+        return NextResponse.redirect(`${origin}/${locale}/reset-password`)
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser()

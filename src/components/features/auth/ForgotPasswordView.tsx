@@ -36,7 +36,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const onSubmit = async ({ email }: FormValues) => {
     setServerError(null)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/${locale}/reset-password`,
+      redirectTo: `${location.origin}/${locale}/auth/callback?next=reset-password`,
     })
     if (error) return setServerError(error.message)
     setSentEmail(email)
@@ -46,7 +46,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
     if (!sentEmail || resending) return
     setResending(true)
     await supabase.auth.resetPasswordForEmail(sentEmail, {
-      redirectTo: `${location.origin}/${locale}/reset-password`,
+      redirectTo: `${location.origin}/${locale}/auth/callback?next=reset-password`,
     })
     setResending(false)
     setResent(true)

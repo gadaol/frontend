@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 
 type FormValues = { password: string; confirmPassword: string }
@@ -14,28 +14,17 @@ export default function ResetPasswordPage() {
   const t = useTranslations('auth')
   const router = useRouter()
   const locale = useLocale()
-  const searchParams = useSearchParams()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    const code = searchParams.get('code')
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (!error) setReady(true)
-      })
-      return
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
-        setReady(true)
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
     })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) setReady(true)
     })
 
