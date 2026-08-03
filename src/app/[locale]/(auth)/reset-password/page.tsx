@@ -26,11 +26,20 @@ export default function ResetPasswordPage() {
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (!error) setReady(true)
       })
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) setReady(true)
-      })
+      return
     }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+        setReady(true)
+      }
+    })
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const schema = z

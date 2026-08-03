@@ -20,6 +20,8 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const supabase = createClient()
   const [sentEmail, setSentEmail] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
 
   const schema = z.object({
     email: z.string().email(t('emailError')),
@@ -38,6 +40,17 @@ export default function ForgotPasswordView({ onBack }: Props) {
     })
     if (error) return setServerError(error.message)
     setSentEmail(email)
+  }
+
+  const handleResend = async () => {
+    if (!sentEmail || resending) return
+    setResending(true)
+    await supabase.auth.resetPasswordForEmail(sentEmail, {
+      redirectTo: `${location.origin}/${locale}/reset-password`,
+    })
+    setResending(false)
+    setResent(true)
+    setTimeout(() => setResent(false), 3000)
   }
 
   if (sentEmail) {
@@ -76,6 +89,18 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <span className="font-medium text-[#0F1117]">{sentEmail}</span>
             {t('resetLinkSentDesc')}
           </p>
+
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="mt-8 text-[14px] font-medium text-[#1B6FF0] disabled:opacity-50"
+          >
+            {resending ? t('processing') : t('resendEmail')}
+          </button>
+
+          {resent && (
+            <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>
+          )}
         </div>
       </div>
     )
