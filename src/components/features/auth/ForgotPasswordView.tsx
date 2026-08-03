@@ -45,6 +45,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [sending, setSending] = useState(false)
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [smsError, setSmsError] = useState<string | null>(null)
   const [pwServerError, setPwServerError] = useState<string | null>(null)
 
@@ -107,9 +108,19 @@ export default function ForgotPasswordView({ onBack }: Props) {
     }
   }
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     if (otp.length < 6) return
-    setSmsStep('password')
+    setVerifyingOtp(true)
+    setSmsError(null)
+    try {
+      await axios.post('/api/find-account/verify', { phone, code: otp })
+      setSmsStep('password')
+    } catch (err) {
+      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
+      else setSmsError(tc('error'))
+    } finally {
+      setVerifyingOtp(false)
+    }
   }
 
   const onPasswordSubmit = async ({ password }: PasswordFormValues) => {
@@ -323,10 +334,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <div className="mt-auto pt-8">
               <button
                 onClick={handleVerifyOtp}
-                disabled={otp.length < 6}
+                disabled={otp.length < 6 || verifyingOtp}
                 className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
               >
-                {t('verifyOtp')}
+                {verifyingOtp ? t('processing') : t('verifyOtp')}
               </button>
             </div>
           </>
