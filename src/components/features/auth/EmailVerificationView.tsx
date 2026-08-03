@@ -22,12 +22,16 @@ export default function EmailVerificationView({ email, onBack }: Props) {
   useEffect(() => {
     let mounted = true
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted && event === 'SIGNED_IN' && session) router.push(`/${locale}/home`)
     })
 
     const interval = setInterval(async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (mounted && session) router.push(`/${locale}/home`)
     }, 3000)
 
@@ -43,7 +47,9 @@ export default function EmailVerificationView({ email, onBack }: Props) {
     await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback` },
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
+      },
     })
     setResending(false)
     setResent(true)
@@ -97,7 +103,7 @@ export default function EmailVerificationView({ email, onBack }: Props) {
 
         {resent && <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>}
 
-        <div className="mt-auto w-full pb-6 pt-8">
+        <div className="mt-auto w-full pt-8 pb-6">
           <button
             onClick={onBack}
             className="h-[52px] w-full rounded-xl border border-[#E8EAED] text-[15px] font-medium text-[#0F1117]"

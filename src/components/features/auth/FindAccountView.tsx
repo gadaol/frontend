@@ -75,9 +75,19 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
   return (
     <div className="flex flex-1 flex-col bg-white">
       <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
-        <button onClick={backAction} className="flex h-10 w-10 items-center justify-center" aria-label={tc('back')}>
+        <button
+          onClick={backAction}
+          className="flex h-10 w-10 items-center justify-center"
+          aria-label={tc('back')}
+        >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="#0F1117" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M15 18l-6-6 6-6"
+              stroke="#0F1117"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
         <span className="text-[17px] font-semibold text-[#0F1117]">{t('findAccountTitle')}</span>
@@ -86,7 +96,9 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
       <div className="flex flex-1 flex-col px-5 py-6">
         {step === 'input' && (
           <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">{t('findAccountDesc')}</p>
+            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
+              {t('findAccountDesc')}
+            </p>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-medium text-[#0F1117]">{t('phoneLabel')}</label>
               <input
@@ -114,7 +126,8 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
         {step === 'otp' && (
           <>
             <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              <span className="font-medium text-[#0F1117]">{phone}</span>{t('otpSentDesc')}
+              <span className="font-medium text-[#0F1117]">{phone}</span>
+              {t('otpSentDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-medium text-[#0F1117]">{t('otpLabel')}</label>
@@ -130,7 +143,11 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
             </div>
             {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
             <button
-              onClick={async () => { setOtp(''); setError(null); await handleSendOtp() }}
+              onClick={async () => {
+                setOtp('')
+                setError(null)
+                await handleSendOtp()
+              }}
               disabled={sending}
               className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
             >
@@ -152,7 +169,9 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           <div className="flex flex-1 flex-col">
             {result.found ? (
               <>
-                <h2 className="mb-6 text-[18px] font-bold text-[#0F1117]">{t('findAccountResultTitle')}</h2>
+                <h2 className="mb-6 text-[18px] font-bold text-[#0F1117]">
+                  {t('findAccountResultTitle')}
+                </h2>
                 <div className="rounded-2xl border border-[#E8EAED] p-5">
                   <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail ?? '-'} />
                   <ResultRow
@@ -192,7 +211,9 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
 
 function ResultRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <div className={`flex items-center justify-between py-3 ${!last ? 'border-b border-[#E8EAED]' : ''}`}>
+    <div
+      className={`flex items-center justify-between py-3 ${!last ? 'border-b border-[#E8EAED]' : ''}`}
+    >
       <span className="text-[13px] text-[#9099A8]">{label}</span>
       <span className="text-[14px] font-medium text-[#0F1117]">{value}</span>
     </div>

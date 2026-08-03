@@ -28,12 +28,20 @@ export default function ResetPasswordPage() {
       else setExpired(true)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
       if (!mounted) return
-      if (session) { setReady(true); setExpired(false) }
+      if (session) {
+        setReady(true)
+        setExpired(false)
+      }
     })
 
-    return () => { mounted = false; subscription.unsubscribe() }
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const schema = z
@@ -62,7 +70,7 @@ export default function ResetPasswordPage() {
 
   if (expired) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center bg-white px-8 text-center gap-4">
+      <div className="flex h-dvh flex-col items-center justify-center gap-4 bg-white px-8 text-center">
         <p className="text-[15px] font-medium text-[#0F1117]">{t('resetLinkExpired')}</p>
         <button
           onClick={() => router.push(`/${locale}`)}
