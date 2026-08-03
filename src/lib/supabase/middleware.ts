@@ -30,10 +30,29 @@ export async function updateSession(request: NextRequest, response?: NextRespons
 
   // locale prefix 제거 후 pathname 체크 (/ko/home → /home)
   const pathname = request.nextUrl.pathname.replace(/^\/(ko|en)/, '') || '/'
+  const locale = request.nextUrl.pathname.match(/^\/(ko|en)/)?.[1] ?? 'ko'
 
   const protectedPaths = ['/home', '/trips', '/places', '/backlog', '/mypage', '/notifications']
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
   const isAuthRoute = pathname === '/' || pathname === '/onboarding'
+
+  // 소셜 로그인 유저 전화번호 미인증 체크
+  if (user && pathname !== '/phone-verify') {
+    const isSocialLogin = ['kakao', 'google'].includes(user.app_metadata?.provider ?? '')
+    if (isSocialLogin) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.phone) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${locale}/phone-verify`
+        return NextResponse.redirect(url)
+      }
+    }
+  }
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
@@ -43,7 +62,6 @@ export async function updateSession(request: NextRequest, response?: NextRespons
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    const locale = request.nextUrl.pathname.match(/^\/(ko|en)/)?.[1] ?? 'ko'
     url.pathname = `/${locale}/home`
     return NextResponse.redirect(url)
   }
