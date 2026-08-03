@@ -21,20 +21,30 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     let mounted = true
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return
-      if (session) setReady(true)
-      else setExpired(true)
-    })
+    let becameReady = false
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
-      if (session) {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        becameReady = true
         setReady(true)
         setExpired(false)
+      }
+    })
+
+    // PKCE 흐름: 콜백에서 교환 완료 후 세션이 이미 있는 경우
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
+      if (session) {
+        becameReady = true
+        setReady(true)
+      } else {
+        // hash 처리 후 PASSWORD_RECOVERY 이벤트를 기다림 (최대 2초)
+        setTimeout(() => {
+          if (mounted && !becameReady) setExpired(true)
+        }, 2000)
       }
     })
 
@@ -42,6 +52,7 @@ export default function ResetPasswordPage() {
       mounted = false
       subscription.unsubscribe()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const schema = z

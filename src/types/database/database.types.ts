@@ -314,6 +314,7 @@ export type Database = {
           id: string
           name: string | null
           onboarding_completed: boolean
+          phone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -322,6 +323,7 @@ export type Database = {
           id: string
           name?: string | null
           onboarding_completed?: boolean
+          phone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -330,6 +332,7 @@ export type Database = {
           id?: string
           name?: string | null
           onboarding_completed?: boolean
+          phone?: string | null
           updated_at?: string | null
         }
         Relationships: []

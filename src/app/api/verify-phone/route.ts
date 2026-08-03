@@ -43,7 +43,10 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (existing) {
-    return NextResponse.json({ error: '이미 해당 전화번호로 가입된 계정이 있어요' }, { status: 409 })
+    return NextResponse.json(
+      { error: '이미 해당 전화번호로 가입된 계정이 있어요' },
+      { status: 409 },
+    )
   }
 
   return NextResponse.json({ success: true })

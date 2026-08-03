@@ -107,7 +107,10 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
       },
     })
     if (error) {
-      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+      if (
+        error.message.includes('already registered') ||
+        error.message.includes('already exists')
+      ) {
         // 미인증 계정이면 인증 메일 재발송
         const { error: resendError } = await supabase.auth.resend({
           type: 'signup',

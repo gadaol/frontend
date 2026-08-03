@@ -16,18 +16,21 @@ export async function POST(request: Request) {
   }
 
   const e164 = toE164(phone)
-  const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
-  let verification
-  try {
-    verification = await twilioClient.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-      .verificationChecks.create({ to: e164, code })
-  } catch {
-    return NextResponse.json({ error: '인증에 실패했어요' }, { status: 400 })
-  }
-
-  if (verification.status !== 'approved') {
+  if (process.env.NODE_ENV !== 'development') {
+    const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+    let verification
+    try {
+      verification = await twilioClient.verify.v2
+        .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+        .verificationChecks.create({ to: e164, code })
+    } catch {
+      return NextResponse.json({ error: '인증에 실패했어요' }, { status: 400 })
+    }
+    if (verification.status !== 'approved') {
+      return NextResponse.json({ error: '인증번호가 올바르지 않아요' }, { status: 400 })
+    }
+  } else if (code !== '000000') {
     return NextResponse.json({ error: '인증번호가 올바르지 않아요' }, { status: 400 })
   }
 

@@ -40,6 +40,7 @@ export default function EmailVerificationView({ email, onBack }: Props) {
       subscription.unsubscribe()
       clearInterval(interval)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleResend = async () => {

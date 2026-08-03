@@ -52,13 +52,14 @@ export async function POST(request: Request) {
     .single()
 
   if (existing) {
-    return NextResponse.json({ error: '이미 해당 전화번호로 가입된 계정이 있어요' }, { status: 409 })
+    return NextResponse.json(
+      { error: '이미 해당 전화번호로 가입된 계정이 있어요' },
+      { status: 409 },
+    )
   }
 
   // 전화번호 저장
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .upsert({ id: user.id, phone })
+  const { error: updateError } = await supabase.from('profiles').upsert({ id: user.id, phone })
 
   if (updateError) {
     return NextResponse.json({ error: '저장에 실패했어요' }, { status: 500 })
