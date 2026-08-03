@@ -136,14 +136,15 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
             </div>
             {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
             <button
-              onClick={() => {
-                setStep('input')
+              onClick={async () => {
                 setOtp('')
                 setError(null)
+                await handleSendOtp()
               }}
-              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0]"
+              disabled={sending}
+              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
             >
-              {t('sendOtp')}
+              {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
               <button

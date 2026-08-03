@@ -22,11 +22,15 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const code = searchParams.get('code')
-    if (!code) return
-
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (!error) setReady(true)
-    })
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) setReady(true)
+      })
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setReady(true)
+      })
+    }
   }, [])
 
   const schema = z
