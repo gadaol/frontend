@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
 type Step = 'input' | 'otp' | 'result'
 
 interface AccountResult {
@@ -105,8 +112,9 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
               <label className="text-[13px] font-medium text-[#0F1117]">{t('phoneLabel')}</label>
               <input
                 type="tel"
+                inputMode="numeric"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
                 placeholder={t('phonePlaceholder')}
                 className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
               />

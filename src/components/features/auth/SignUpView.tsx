@@ -20,19 +20,25 @@ interface Props {
   onVerificationSent: (email: string) => void
 }
 
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
 export default function SignUpView({ onBack, onVerificationSent }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const locale = useLocale()
   const supabase = createClient()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [phoneValue, setPhoneValue] = useState('')
 
   const schema = z
     .object({
       name: z.string().min(1, t('nameError')),
-      phone: z
-        .string()
-        .regex(/^[0-9]{9,11}$|^010-\d{4}-\d{4}$|^01[0-9]-\d{3,4}-\d{4}$/, t('phoneError')),
+      phone: z.string().regex(/^01[0-9]-\d{3,4}-\d{4}$/, t('phoneError')),
       email: z.string().email(t('emailError')),
       password: z.string().min(6, t('passwordError')),
       confirmPassword: z.string(),
@@ -45,8 +51,15 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value)
+    setPhoneValue(formatted)
+    setValue('phone', formatted, { shouldValidate: formatted.length >= 13 })
+  }
 
   const onSubmit = async ({ name, phone, email, password }: FormValues) => {
     setServerError(null)
@@ -101,9 +114,11 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
 
           <Field label={t('phoneLabel')} error={errors.phone?.message}>
             <input
-              {...register('phone')}
               type="tel"
+              inputMode="numeric"
               placeholder={t('phonePlaceholder')}
+              value={phoneValue}
+              onChange={handlePhoneChange}
               className={inputClass(!!errors.phone)}
             />
           </Field>
