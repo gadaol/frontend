@@ -1,6 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import SocialLoginView from './SocialLoginView'
 import EmailLoginView from './EmailLoginView'
 import SignUpView from './SignUpView'
@@ -19,6 +22,21 @@ type View =
 export default function AuthPage() {
   const [view, setView] = useState<View>('social')
   const [verificationEmail, setVerificationEmail] = useState('')
+  const locale = useLocale()
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        router.replace(`/${locale}/reset-password`)
+      }
+    })
+    return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="flex h-dvh flex-col">
