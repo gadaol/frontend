@@ -20,24 +20,19 @@ export default function EmailVerificationView({ email, onBack }: Props) {
   const [resending, setResending] = useState(false)
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        router.push(`/${locale}/home`)
-      }
+    let mounted = true
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mounted && event === 'SIGNED_IN' && session) router.push(`/${locale}/home`)
     })
 
     const interval = setInterval(async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session) {
-        router.push(`/${locale}/home`)
-      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (mounted && session) router.push(`/${locale}/home`)
     }, 3000)
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
       clearInterval(interval)
     }
@@ -48,7 +43,7 @@ export default function EmailVerificationView({ email, onBack }: Props) {
     await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${location.origin}/${locale}/auth/callback` },
+      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback` },
     })
     setResending(false)
     setResent(true)

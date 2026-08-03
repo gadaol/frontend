@@ -98,7 +98,7 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
       password,
       options: {
         data: { name, phone },
-        emailRedirectTo: `${location.origin}/${locale}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
       },
     })
     if (error) return setServerError(error.message)
@@ -193,14 +193,15 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
             </div>
             {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
             <button
-              onClick={() => {
-                setStep('phone')
+              onClick={async () => {
                 setOtp('')
                 setError(null)
+                await handleSendOtp()
               }}
-              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0]"
+              disabled={sending}
+              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
             >
-              {t('resendOtp')}
+              {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
               <button

@@ -20,16 +20,20 @@ export default function ResetPasswordPage() {
   const [serverError, setServerError] = useState<string | null>(null)
 
   useEffect(() => {
+    let mounted = true
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
       if (session) setReady(true)
       else setExpired(true)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (!mounted) return
       if (session) { setReady(true); setExpired(false) }
     })
 
-    return () => subscription.unsubscribe()
+    return () => { mounted = false; subscription.unsubscribe() }
   }, [])
 
   const schema = z
@@ -58,7 +62,7 @@ export default function ResetPasswordPage() {
 
   if (expired) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-white px-8 text-center gap-4">
+      <div className="flex h-dvh flex-col items-center justify-center bg-white px-8 text-center gap-4">
         <p className="text-[15px] font-medium text-[#0F1117]">{t('resetLinkExpired')}</p>
         <button
           onClick={() => router.push(`/${locale}`)}
@@ -72,14 +76,14 @@ export default function ResetPasswordPage() {
 
   if (!ready) {
     return (
-      <div className="flex h-full items-center justify-center bg-white">
+      <div className="flex h-dvh items-center justify-center bg-white">
         <p className="text-[14px] text-[#9099A8]">{t('processing')}</p>
       </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-dvh flex-col bg-white">
       <div className="flex h-14 flex-shrink-0 items-center border-b border-[#E8EAED] px-4">
         <span className="text-[17px] font-semibold text-[#0F1117]">{t('resetPasswordTitle')}</span>
       </div>
