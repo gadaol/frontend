@@ -106,19 +106,9 @@ export default function ForgotPasswordView({ onBack }: Props) {
     }
   }
 
-  const handleVerifyOtp = async () => {
-    if (!otp.trim()) return
-    setVerifying(true)
-    setSmsError(null)
-    try {
-      await axios.post('/api/verify-phone', { phone, code: otp })
-      setSmsStep('password')
-    } catch (err) {
-      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
-      else setSmsError(tc('error'))
-    } finally {
-      setVerifying(false)
-    }
+  const handleVerifyOtp = () => {
+    if (otp.length < 6) return
+    setSmsStep('password')
   }
 
   const onPasswordSubmit = async ({ password }: PasswordFormValues) => {
@@ -299,10 +289,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <div className="mt-auto pt-8">
               <button
                 onClick={handleVerifyOtp}
-                disabled={verifying || otp.length < 6}
+                disabled={otp.length < 6}
                 className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
               >
-                {verifying ? t('processing') : t('verifyOtp')}
+                {t('verifyOtp')}
               </button>
             </div>
           </>
