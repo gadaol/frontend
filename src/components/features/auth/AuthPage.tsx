@@ -29,6 +29,10 @@ export default function AuthPage() {
           onSignUp={() => setView('signup')}
           onForgotPassword={() => setView('forgot-password')}
           onFindAccount={() => setView('find-account')}
+          onVerificationSent={(email) => {
+            setVerificationEmail(email)
+            setView('email-verification')
+          }}
         />
       )}
       {view === 'signup' && (

@@ -15,6 +15,7 @@ interface Props {
   onSignUp: () => void
   onForgotPassword: () => void
   onFindAccount: () => void
+  onVerificationSent: (email: string) => void
 }
 
 export default function EmailLoginView({
@@ -22,6 +23,7 @@ export default function EmailLoginView({
   onSignUp,
   onForgotPassword,
   onFindAccount,
+  onVerificationSent,
 }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
@@ -44,7 +46,22 @@ export default function EmailLoginView({
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return setServerError(t('invalidCredentials'))
+    if (error) {
+      if (error.message.includes('Email not confirmed')) {
+        const { error: resendError } = await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: {
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
+          },
+        })
+        if (!resendError) {
+          onVerificationSent(email)
+          return
+        }
+      }
+      return setServerError(t('invalidCredentials'))
+    }
     router.push(`/${locale}/home`)
   }
 
