@@ -52,7 +52,8 @@ export default function ResetPasswordPage() {
     setServerError(null)
     const { error } = await supabase.auth.updateUser({ password })
     if (error) return setServerError(error.message)
-    router.replace(`/${locale}/home`)
+    await supabase.auth.signOut()
+    router.replace(`/${locale}`)
   }
 
   if (expired) {

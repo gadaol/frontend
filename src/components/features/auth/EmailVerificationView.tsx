@@ -78,7 +78,7 @@ export default function EmailVerificationView({ email, onBack }: Props) {
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+      <div className="flex flex-1 flex-col items-center px-8 pt-12 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF2FF]">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect x="3" y="8" width="26" height="18" rx="3" stroke="#1B6FF0" strokeWidth="2" />
@@ -101,6 +101,15 @@ export default function EmailVerificationView({ email, onBack }: Props) {
         </button>
 
         {resent && <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>}
+
+        <div className="mt-auto w-full pb-6 pt-8">
+          <button
+            onClick={onBack}
+            className="h-[52px] w-full rounded-xl border border-[#E8EAED] text-[15px] font-medium text-[#0F1117]"
+          >
+            {t('backToLogin')}
+          </button>
+        </div>
       </div>
     </div>
   )
