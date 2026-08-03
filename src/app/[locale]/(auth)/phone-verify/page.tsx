@@ -54,10 +54,11 @@ export default function PhoneVerifyPage() {
         const status = err.response?.status
         const message = err.response?.data?.error ?? tc('error')
         if (status === 409) {
-          setError(t('phoneAlreadyRegistered'))
-        } else {
-          setError(message)
+          const existingProvider: string = err.response?.data?.existingProvider ?? ''
+          router.replace(`/${locale}?error=duplicate_account&provider=${existingProvider}`)
+          return
         }
+        setError(message)
       } else {
         setError(tc('error'))
       }

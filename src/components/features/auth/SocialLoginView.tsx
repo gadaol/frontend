@@ -5,9 +5,10 @@ import { useLocale, useTranslations } from 'next-intl'
 
 interface Props {
   onEmailClick: () => void
+  errorMessage?: string | null
 }
 
-export default function SocialLoginView({ onEmailClick }: Props) {
+export default function SocialLoginView({ onEmailClick, errorMessage }: Props) {
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
@@ -38,7 +39,12 @@ export default function SocialLoginView({ onEmailClick }: Props) {
 
       <div className="flex flex-1 flex-col overflow-y-auto rounded-t-[28px] bg-white px-6 pt-8 pb-10">
         <div className="mb-1 text-[22px] font-bold tracking-tight text-[#0F1117]">{t('title')}</div>
-        <div className="mb-7 text-sm text-[#9099A8]">{t('subtitle')}</div>
+        <div className="mb-4 text-sm text-[#9099A8]">{t('subtitle')}</div>
+        {errorMessage && (
+          <div className="mb-4 rounded-xl bg-[#FEF3F2] px-4 py-3 text-[13px] text-[#F04438]">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <button

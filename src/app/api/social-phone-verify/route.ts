@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { verifyOtp } from '@/lib/otp'
 
 export async function POST(request: Request) {
@@ -29,8 +30,15 @@ export async function POST(request: Request) {
     .single()
 
   if (existing) {
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+    const { data: existingUserData } = await adminSupabase.auth.admin.getUserById(existing.id)
+    const existingProvider = existingUserData?.user?.app_metadata?.provider ?? 'email'
+    await supabase.auth.signOut()
     return NextResponse.json(
-      { error: '이미 해당 전화번호로 가입된 계정이 있어요' },
+      { error: '이미 해당 전화번호로 가입된 계정이 있어요', existingProvider },
       { status: 409 },
     )
   }
