@@ -48,6 +48,9 @@ export async function POST(request: Request) {
 
   const userId = profiles[0].id
 
+  const { data: userData } = await supabase.auth.admin.getUserById(userId)
+  const email = userData?.user?.email
+
   const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
     password: newPassword,
   })
@@ -56,5 +59,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '비밀번호 변경에 실패했어요' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, email })
 }

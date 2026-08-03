@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
 function formatPhone(value: string): string {
@@ -16,7 +17,7 @@ function formatPhone(value: string): string {
 }
 
 type Method = 'email' | 'sms'
-type SmsStep = 'phone' | 'otp' | 'password' | 'done'
+type SmsStep = 'phone' | 'otp' | 'password'
 type EmailFormValues = { email: string }
 type PasswordFormValues = { password: string; confirmPassword: string }
 
@@ -28,6 +29,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const locale = useLocale()
+  const router = useRouter()
   const supabase = createClient()
 
   const [method, setMethod] = useState<Method>('email')
@@ -114,8 +116,11 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const onPasswordSubmit = async ({ password }: PasswordFormValues) => {
     setPwServerError(null)
     try {
-      await axios.post('/api/reset-password/sms', { phone, code: otp, newPassword: password })
-      setSmsStep('done')
+      const { data } = await axios.post('/api/reset-password/sms', { phone, code: otp, newPassword: password })
+      if (data.email) {
+        await supabase.auth.signInWithPassword({ email: data.email, password })
+      }
+      router.replace(`/${locale}/home`)
     } catch (err) {
       if (axios.isAxiosError(err)) setPwServerError(err.response?.data?.error ?? tc('error'))
       else setPwServerError(tc('error'))
@@ -132,8 +137,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   }
 
   const isEmailSent = method === 'email' && !!sentEmail
-  const isSmsResult = method === 'sms' && smsStep === 'done'
-  const showTabs = !isEmailSent && !isSmsResult && !(method === 'sms' && smsStep === 'password')
+  const showTabs = !isEmailSent && !(method === 'sms' && smsStep === 'password')
 
   const backAction = () => {
     if (method === 'sms') {
@@ -351,25 +355,6 @@ export default function ForgotPasswordView({ onBack }: Props) {
           </form>
         )}
 
-        {/* SMS - 완료 */}
-        {method === 'sms' && smsStep === 'done' && (
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF2FF]">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M8 16l5 5 11-11" stroke="#1B6FF0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h2 className="mb-2 text-[20px] font-bold text-[#0F1117]">{t('resetPasswordSuccess')}</h2>
-            <div className="mt-auto pt-8 w-full">
-              <button
-                onClick={onBack}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white"
-              >
-                {t('goToLogin')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
