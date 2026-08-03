@@ -21,21 +21,16 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    let resolved = false
-
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { resolved = true; setReady(true) }
+      if (session) setReady(true)
+      else setExpired(true)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session) { resolved = true; setReady(true) }
+      if (session) { setReady(true); setExpired(false) }
     })
 
-    const timer = setTimeout(() => {
-      if (!resolved) setExpired(true)
-    }, 5000)
-
-    return () => { subscription.unsubscribe(); clearTimeout(timer) }
+    return () => subscription.unsubscribe()
   }, [])
 
   const schema = z
