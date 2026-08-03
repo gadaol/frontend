@@ -20,11 +20,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
       } = await supabase.auth.getUser()
 
       if (user) {
+        const isSocialLogin = ['kakao', 'google'].includes(user.app_metadata?.provider ?? '')
+
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, phone')
           .eq('id', user.id)
           .single()
+
+        if (isSocialLogin && !profile?.phone) {
+          return NextResponse.redirect(`${origin}/${locale}/phone-verify`)
+        }
 
         if (!profile?.onboarding_completed) {
           return NextResponse.redirect(`${origin}/${locale}/onboarding`)

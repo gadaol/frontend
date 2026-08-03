@@ -22,7 +22,10 @@ export default function SocialLoginView({ onEmailClick }: Props) {
   const signInWithKakao = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
+      options: {
+        redirectTo: `${location.origin}/${locale}/auth/callback`,
+        scopes: 'profile_nickname profile_image account_email',
+      },
     })
   }
 

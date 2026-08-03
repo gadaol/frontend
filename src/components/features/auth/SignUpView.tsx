@@ -101,7 +101,12 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
       },
     })
-    if (error) return setServerError(error.message)
+    if (error) {
+      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        return setServerError(t('emailAlreadyRegistered'))
+      }
+      return setServerError(error.message)
+    }
     onVerificationSent(email)
   }
 
