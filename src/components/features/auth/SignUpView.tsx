@@ -84,8 +84,13 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
       await axios.post('/api/verify-phone', { phone, code: otp })
       setStep('info')
     } catch (err) {
-      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
-      else setError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status
+        if (status === 409) setError(t('phoneAlreadyRegistered'))
+        else setError(err.response?.data?.error ?? tc('error'))
+      } else {
+        setError(tc('error'))
+      }
     } finally {
       setVerifying(false)
     }

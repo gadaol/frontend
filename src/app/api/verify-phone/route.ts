@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
+import { createClient } from '@/lib/supabase/server'
 
 function toE164(phone: string): string {
   const digits = phone.replace(/\D/g, '')
@@ -25,9 +26,21 @@ export async function POST(request: Request) {
     if (verification.status !== 'approved') {
       return NextResponse.json({ error: '인증번호가 올바르지 않아요' }, { status: 400 })
     }
-
-    return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: '인증에 실패했어요' }, { status: 400 })
   }
+
+  // 전화번호 중복 체크
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('phone', phone)
+    .maybeSingle()
+
+  if (existing) {
+    return NextResponse.json({ error: '이미 해당 전화번호로 가입된 계정이 있어요' }, { status: 409 })
+  }
+
+  return NextResponse.json({ success: true })
 }
