@@ -28,18 +28,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
           .eq('id', user.id)
           .single()
 
-        if (isSocialLogin) {
-          const createdAt = new Date(user.created_at)
-          const secondsSinceCreation = (Date.now() - createdAt.getTime()) / 1000
-          const isNewUser = secondsSinceCreation < 60
-
-          if (isNewUser) {
-            return NextResponse.redirect(`${origin}/${locale}/terms-agree`)
-          }
-
-          if (!profile?.phone) {
-            return NextResponse.redirect(`${origin}/${locale}/phone-verify`)
-          }
+        if (isSocialLogin && !profile?.phone) {
+          return NextResponse.redirect(`${origin}/${locale}/phone-verify`)
         }
 
         if (!profile?.onboarding_completed) {
