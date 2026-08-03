@@ -16,19 +16,26 @@ export default function ResetPasswordPage() {
   const locale = useLocale()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
+  const [expired, setExpired] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
+    let resolved = false
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
+      if (session) { resolved = true; setReady(true) }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) setReady(true)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session) { resolved = true; setReady(true) }
     })
 
-    return () => subscription.unsubscribe()
+    const timer = setTimeout(() => {
+      if (!resolved) setExpired(true)
+    }, 5000)
+
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
   }, [])
 
   const schema = z
@@ -60,6 +67,20 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex h-full items-center justify-center bg-white px-8 text-center">
         <p className="text-[16px] font-medium text-[#1B6FF0]">{t('resetPasswordSuccess')}</p>
+      </div>
+    )
+  }
+
+  if (expired) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center bg-white px-8 text-center gap-4">
+        <p className="text-[15px] font-medium text-[#0F1117]">{t('resetLinkExpired')}</p>
+        <button
+          onClick={() => router.push(`/${locale}`)}
+          className="text-[14px] font-medium text-[#1B6FF0]"
+        >
+          {t('backToLogin')}
+        </button>
       </div>
     )
   }
