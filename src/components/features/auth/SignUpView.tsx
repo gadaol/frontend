@@ -108,6 +108,18 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
     })
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        // 미인증 계정이면 인증 메일 재발송
+        const { error: resendError } = await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: {
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
+          },
+        })
+        if (!resendError) {
+          onVerificationSent(email)
+          return
+        }
         return setServerError(t('emailAlreadyRegistered'))
       }
       return setServerError(error.message)
