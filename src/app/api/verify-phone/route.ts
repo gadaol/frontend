@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   if (existing) {
     return NextResponse.json(
-      { error: '이미 해당 전화번호로 가입된 계정이 있어요' },
+      { errorCode: 'phoneAlreadyRegistered' },
       { status: 409 },
     )
   }

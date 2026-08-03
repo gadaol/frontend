@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     .limit(1)
 
   if (profileError || !profiles || profiles.length === 0) {
-    return NextResponse.json({ error: '등록된 계정을 찾을 수 없어요' }, { status: 404 })
+    return NextResponse.json({ errorCode: 'accountNotFound' }, { status: 404 })
   }
 
   const { data: userData } = await supabase.auth.admin.getUserById(profiles[0].id)
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   })
 
   if (updateError) {
-    return NextResponse.json({ error: '비밀번호 변경에 실패했어요' }, { status: 500 })
+    return NextResponse.json({ errorCode: 'passwordUpdateFailed' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true, email })

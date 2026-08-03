@@ -101,8 +101,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
       await axios.post('/api/find-account/send', { phone })
       setSmsStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
-      else setSmsError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const code = err.response?.data?.errorCode
+        setSmsError(code ? t(code as never) : tc('error'))
+      } else setSmsError(tc('error'))
     } finally {
       setSending(false)
     }
@@ -116,8 +118,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
       await axios.post('/api/find-account/verify', { phone, code: otp })
       setSmsStep('password')
     } catch (err) {
-      if (axios.isAxiosError(err)) setSmsError(err.response?.data?.error ?? tc('error'))
-      else setSmsError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const code = err.response?.data?.errorCode
+        setSmsError(code ? t(code as never) : tc('error'))
+      } else setSmsError(tc('error'))
     } finally {
       setVerifyingOtp(false)
     }
@@ -136,8 +140,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
       }
       router.replace(`/${locale}/home`)
     } catch (err) {
-      if (axios.isAxiosError(err)) setPwServerError(err.response?.data?.error ?? tc('error'))
-      else setPwServerError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const code = err.response?.data?.errorCode
+        setPwServerError(code ? t(code as never) : tc('error'))
+      } else setPwServerError(tc('error'))
     }
   }
 

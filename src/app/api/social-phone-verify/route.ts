@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: '인증이 필요해요' }, { status: 401 })
+    return NextResponse.json({ errorCode: 'authRequired' }, { status: 401 })
   }
 
   const { error } = await verifyOtp(phone, code)
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const existingProvider = existingUserData?.user?.app_metadata?.provider ?? 'email'
     await supabase.auth.signOut()
     return NextResponse.json(
-      { error: '이미 해당 전화번호로 가입된 계정이 있어요', existingProvider },
+      { errorCode: 'phoneAlreadyRegistered', existingProvider },
       { status: 409 },
     )
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const { error: updateError } = await supabase.from('profiles').upsert({ id: user.id, phone })
 
   if (updateError) {
-    return NextResponse.json({ error: '저장에 실패했어요' }, { status: 500 })
+    return NextResponse.json({ errorCode: 'saveFailed' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

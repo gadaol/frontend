@@ -35,8 +35,10 @@ export default function PhoneVerifyPage() {
       await axios.post('/api/find-account/send', { phone })
       setStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
-      else setError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const code = err.response?.data?.errorCode
+        setError(code ? t(code as never) : tc('error'))
+      } else setError(tc('error'))
     } finally {
       setSending(false)
     }
@@ -52,13 +54,13 @@ export default function PhoneVerifyPage() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const status = err.response?.status
-        const message = err.response?.data?.error ?? tc('error')
         if (status === 409) {
           const existingProvider: string = err.response?.data?.existingProvider ?? ''
           router.replace(`/${locale}?error=duplicate_account&provider=${existingProvider}`)
           return
         }
-        setError(message)
+        const code = err.response?.data?.errorCode
+        setError(code ? t(code as never) : tc('error'))
       } else {
         setError(tc('error'))
       }

@@ -69,8 +69,10 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
       await axios.post('/api/find-account/send', { phone })
       setStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) setError(err.response?.data?.error ?? tc('error'))
-      else setError(tc('error'))
+      if (axios.isAxiosError(err)) {
+        const code = err.response?.data?.errorCode
+        setError(code ? t(code as never) : tc('error'))
+      } else setError(tc('error'))
     } finally {
       setSending(false)
     }
@@ -85,9 +87,8 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
       setStep('info')
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const status = err.response?.status
-        if (status === 409) setError(t('phoneAlreadyRegistered'))
-        else setError(err.response?.data?.error ?? tc('error'))
+        const code = err.response?.data?.errorCode
+        setError(code ? t(code as never) : tc('error'))
       } else {
         setError(tc('error'))
       }

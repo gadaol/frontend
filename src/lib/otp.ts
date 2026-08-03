@@ -18,14 +18,14 @@ export async function sendOtp(phone: string): Promise<{ error?: NextResponse }> 
       .verifications.create({ to: e164, channel: 'sms' })
     return {}
   } catch {
-    return { error: NextResponse.json({ error: 'SMS 발송에 실패했어요' }, { status: 500 }) }
+    return { error: NextResponse.json({ errorCode: 'smsSendFailed' }, { status: 500 }) }
   }
 }
 
 export async function verifyOtp(phone: string, code: string): Promise<{ error?: NextResponse }> {
   if (process.env.NODE_ENV === 'development') {
     if (code !== '000000') {
-      return { error: NextResponse.json({ error: '인증번호가 올바르지 않아요' }, { status: 400 }) }
+      return { error: NextResponse.json({ errorCode: 'invalidOtp' }, { status: 400 }) }
     }
     return {}
   }
@@ -37,10 +37,10 @@ export async function verifyOtp(phone: string, code: string): Promise<{ error?: 
       .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
       .verificationChecks.create({ to: e164, code })
     if (result.status !== 'approved') {
-      return { error: NextResponse.json({ error: '인증번호가 올바르지 않아요' }, { status: 400 }) }
+      return { error: NextResponse.json({ errorCode: 'invalidOtp' }, { status: 400 }) }
     }
     return {}
   } catch {
-    return { error: NextResponse.json({ error: '인증에 실패했어요' }, { status: 400 }) }
+    return { error: NextResponse.json({ errorCode: 'otpVerifyFailed' }, { status: 400 }) }
   }
 }
