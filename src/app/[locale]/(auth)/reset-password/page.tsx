@@ -18,7 +18,6 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false)
   const [expired, setExpired] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,17 +52,7 @@ export default function ResetPasswordPage() {
     setServerError(null)
     const { error } = await supabase.auth.updateUser({ password })
     if (error) return setServerError(error.message)
-    await supabase.auth.signOut()
-    setSuccess(true)
-    setTimeout(() => router.push(`/${locale}`), 2000)
-  }
-
-  if (success) {
-    return (
-      <div className="flex h-full items-center justify-center bg-white px-8 text-center">
-        <p className="text-[16px] font-medium text-[#1B6FF0]">{t('resetPasswordSuccess')}</p>
-      </div>
-    )
+    router.replace(`/${locale}/home`)
   }
 
   if (expired) {
