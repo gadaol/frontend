@@ -20,7 +20,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
       } = await supabase.auth.getUser()
 
       if (user) {
-        const isSocialLogin = ['kakao', 'google'].includes(user.app_metadata?.provider ?? '')
+        const provider = user.app_metadata?.provider ?? ''
+        const isSocialLogin = ['kakao', 'google'].includes(provider)
 
         const { data: profile } = await supabase
           .from('profiles')
@@ -30,6 +31,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
 
         if (isSocialLogin && !profile?.phone) {
           return NextResponse.redirect(`${origin}/${locale}/phone-verify`)
+        }
+
+        // 이메일 회원가입 인증 완료 시 확인 화면
+        if (provider === 'email' && !profile?.onboarding_completed) {
+          return NextResponse.redirect(`${origin}/${locale}/email-verified`)
         }
 
         if (!profile?.onboarding_completed) {
