@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   email: string
@@ -13,9 +14,34 @@ export default function EmailVerificationView({ email, onBack }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const locale = useLocale()
+  const router = useRouter()
   const supabase = createClient()
   const [resent, setResent] = useState(false)
   const [resending, setResending] = useState(false)
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push(`/${locale}/home`)
+      }
+    })
+
+    const interval = setInterval(async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session) {
+        router.push(`/${locale}/home`)
+      }
+    }, 3000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearInterval(interval)
+    }
+  }, [])
 
   const handleResend = async () => {
     setResending(true)
