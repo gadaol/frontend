@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronLeftIcon } from '@/components/icons'
 import { getCategoryInfo } from '@/utils/placeCategory'
-import { addToBacklog } from '@/app/actions/backlog'
+import { addToBacklog, removeFromBacklogByGooglePlaceId } from '@/app/actions/backlog'
 import type { GooglePlaceDetail } from '../page'
 
 interface Props {
@@ -47,21 +47,26 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(initialSaved)
-  const [showAllReviews, setShowAllReviews] = useState(false)
 
   const category = getCategoryInfo(place.types)
   const Icon = category.icon
   const coverGradient = getCoverGradient(place.types)
 
-  function handleSave() {
+  function handleSaveToggle() {
     startTransition(async () => {
-      await addToBacklog({
-        googlePlaceId: place.id,
-        name: place.displayName.text,
-        address: place.formattedAddress,
-        categoryName: place.types[0] ?? null,
-      })
-      setSaved(true)
+      if (saved) {
+        await removeFromBacklogByGooglePlaceId(place.id)
+        setSaved(false)
+      } else {
+        await addToBacklog({
+          googlePlaceId: place.id,
+          name: place.displayName.text,
+          address: place.formattedAddress,
+          categoryName: place.types[0] ?? null,
+        })
+        setSaved(true)
+      }
+      router.refresh()
     })
   }
 
@@ -178,7 +183,6 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
           place.reviews.length > 0 &&
           (() => {
             const COLORS = ['#1B6FF0', '#515966', '#059669', '#D97706', '#7C3AED', '#DB2777']
-            const visible = showAllReviews ? place.reviews : place.reviews.slice(0, 3)
             return (
               <div className="bg-bg mt-2 px-4 py-4">
                 <p className="text-ink mb-3 text-[15px] font-semibold">
@@ -186,7 +190,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
                   {place.userRatingCount?.toLocaleString() ?? place.reviews.length})
                 </p>
                 <div className="flex flex-col divide-y divide-[#F0F1F3]">
-                  {visible.map((review, i) => (
+                  {place.reviews.map((review, i) => (
                     <div key={i} className="flex gap-3 py-3">
                       <div
                         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
@@ -216,14 +220,6 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
                     </div>
                   ))}
                 </div>
-                {place.reviews.length > 3 && (
-                  <button
-                    onClick={() => setShowAllReviews((v) => !v)}
-                    className="text-primary mt-2 w-full py-2 text-[13px] font-semibold"
-                  >
-                    {showAllReviews ? '접기' : `리뷰 더보기 (${place.reviews.length - 3}개)`}
-                  </button>
-                )}
               </div>
             )
           })()}
@@ -235,11 +231,13 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
         style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
         <button
-          onClick={handleSave}
-          disabled={isPending || saved}
-          className="border-border flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border bg-white text-[15px] font-medium disabled:opacity-50"
+          onClick={handleSaveToggle}
+          disabled={isPending}
+          className={`flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border text-[15px] font-medium disabled:opacity-50 ${
+            saved ? 'border-primary text-primary bg-white' : 'border-border text-ink bg-white'
+          }`}
         >
-          <span className="text-ink">{saved ? t('savedToBacklog') : t('saveToBacklog')}</span>
+          {saved ? t('savedToBacklog') : t('saveToBacklog')}
         </button>
         <button className="bg-primary flex h-12 flex-[2] items-center justify-center gap-1.5 rounded-xl text-[15px] font-medium text-white">
           {t('addToTrip')}

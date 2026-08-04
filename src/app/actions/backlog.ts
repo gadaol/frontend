@@ -119,3 +119,29 @@ export async function removeFromBacklog(backlogItemId: string) {
   if (error) return { error: error.message }
   return { success: true }
 }
+
+export async function removeFromBacklogByGooglePlaceId(googlePlaceId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: place } = await supabase
+    .from('places')
+    .select('id')
+    .eq('google_place_id', googlePlaceId)
+    .single()
+
+  if (!place) return { error: 'place_not_found' }
+
+  const { error } = await supabase
+    .from('backlog_items')
+    .delete()
+    .eq('place_id', place.id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}

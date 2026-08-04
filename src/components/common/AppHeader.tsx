@@ -43,7 +43,7 @@ export default function AppHeader({ title, onBack, right, border = true }: Props
         <span className="text-ink flex-1 text-center text-[17px] font-semibold">{title}</span>
       )}
 
-      <div className="flex w-10 items-center justify-end">{right}</div>
+      <div className="flex min-w-10 items-center justify-end">{right}</div>
     </header>
   )
 }

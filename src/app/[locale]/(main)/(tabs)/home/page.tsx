@@ -10,9 +10,9 @@ import {
   ExploreIcon,
   GridIcon,
   ListIcon,
-  MapPinIcon,
   PlusIcon,
 } from '@/components/icons'
+import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import type { BacklogItemWithPlace, TripWithMembers } from '@/types/trip'
 
 const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
@@ -257,35 +257,40 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {backlogItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={
-                    item.places?.google_place_id
-                      ? `/${locale}/places/${item.places.google_place_id}`
-                      : `/${locale}/backlog`
-                  }
-                  className="border-border bg-bg flex items-center gap-3 rounded-2xl border px-4 py-3.5 active:opacity-80"
-                >
-                  <div className="bg-primary-light flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px]">
-                    <MapPinIcon size={24} className="text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-ink truncate text-[14px] font-semibold">
-                      {item.places?.name ?? '알 수 없는 장소'}
-                    </p>
-                    {item.places?.address && (
-                      <p className="text-ink3 truncate text-[12px]">{item.places.address}</p>
-                    )}
-                    {item.places?.place_categories?.name && (
-                      <p className="text-primary mt-0.5 text-[11px] font-medium">
-                        # {item.places.place_categories.name}
+              {backlogItems.map((item) => {
+                const catLabel = item.places?.place_categories?.name ?? '기타'
+                const category = getCategoryInfoByLabel(catLabel)
+                const Icon = category.icon
+                return (
+                  <Link
+                    key={item.id}
+                    href={
+                      item.places?.google_place_id
+                        ? `/${locale}/places/${item.places.google_place_id}`
+                        : `/${locale}/backlog`
+                    }
+                    className="border-border bg-bg flex items-center gap-3 rounded-2xl border px-4 py-3.5 active:opacity-80"
+                  >
+                    <div
+                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
+                    >
+                      <Icon size={24} className={category.color} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-ink truncate text-[14px] font-semibold">
+                        {item.places?.name ?? '알 수 없는 장소'}
                       </p>
-                    )}
-                  </div>
-                  <ChevronRightIcon className="text-ink3" />
-                </Link>
-              ))}
+                      {item.places?.address && (
+                        <p className="text-ink3 truncate text-[12px]">{item.places.address}</p>
+                      )}
+                      <p className={`mt-0.5 text-[11px] font-medium ${category.color}`}>
+                        # {catLabel}
+                      </p>
+                    </div>
+                    <ChevronRightIcon className="text-ink3" />
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>

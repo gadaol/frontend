@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
-import { SearchIcon, MapPinIcon } from '@/components/icons'
+import { removeFromBacklog } from '@/app/actions/backlog'
+import { SearchIcon, MapPinIcon, BacklogIcon } from '@/components/icons'
 
 type BacklogItem = {
   id: string
@@ -17,12 +19,40 @@ type BacklogItem = {
   } | null
 }
 
-const CATEGORY_TABS = ['전체', '식당', '카페', '숙소', '관광지', '쇼핑', '자연', '액티비티', '기타']
-
-export default function BacklogList({ items }: { items: BacklogItem[] }) {
+export default function BacklogList({ items: initialItems }: { items: BacklogItem[] }) {
   const locale = useLocale()
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeTab, setActiveTab] = useState('전체')
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set())
+  const [, startTransition] = useTransition()
+
+  const items = useMemo(
+    () => initialItems.filter((item) => !removedIds.has(item.id)),
+    [initialItems, removedIds],
+  )
+
+  const categoryTabs = useMemo(() => {
+    const cats = new Set(items.map((item) => item.places?.place_categories?.name ?? '기타'))
+    return ['전체', ...Array.from(cats)]
+  }, [items])
+
+  function handleRemove(itemId: string) {
+    setRemovedIds((prev) => {
+      const next = new Set(prev).add(itemId)
+      // 삭제 후 activeTab 카테고리 아이템이 전부 사라지면 '전체'로 리셋
+      const remaining = initialItems.filter((item) => !next.has(item.id))
+      const stillExists = remaining.some(
+        (item) => (item.places?.place_categories?.name ?? '기타') === activeTab,
+      )
+      if (!stillExists && activeTab !== '전체') setActiveTab('전체')
+      return next
+    })
+    startTransition(async () => {
+      await removeFromBacklog(itemId)
+      router.refresh()
+    })
+  }
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -75,8 +105,13 @@ export default function BacklogList({ items }: { items: BacklogItem[] }) {
         </div>
 
         {/* 카테고리 탭 */}
-        <div className="flex gap-2 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
-          {CATEGORY_TABS.map((tab) => (
+        <div
+          className="flex gap-2 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden"
+          style={
+            { scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties
+          }
+        >
+          {categoryTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -105,8 +140,21 @@ export default function BacklogList({ items }: { items: BacklogItem[] }) {
               ? `/${locale}/places/${item.places.google_place_id}`
               : null
 
-            const card = (
-              <div className="border-border bg-bg flex min-h-[80px] overflow-hidden rounded-2xl border active:opacity-80">
+            const removeButton = (
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleRemove(item.id)
+                }}
+                className="flex w-12 flex-shrink-0 items-center justify-center self-stretch active:opacity-50"
+                aria-label="백로그에서 제거"
+              >
+                <BacklogIcon size={20} filled className="text-primary" />
+              </button>
+            )
+
+            const inner = (
+              <>
                 {/* 썸네일 */}
                 <div
                   className={`flex w-20 flex-shrink-0 items-center justify-center ${category.bg}`}
@@ -134,15 +182,25 @@ export default function BacklogList({ items }: { items: BacklogItem[] }) {
                     </p>
                   )}
                 </div>
-              </div>
+                {removeButton}
+              </>
             )
 
-            return href ? (
-              <Link key={item.id} href={href}>
-                {card}
-              </Link>
-            ) : (
-              <div key={item.id}>{card}</div>
+            return (
+              <div key={item.id}>
+                {href ? (
+                  <Link
+                    href={href}
+                    className="border-border bg-bg flex min-h-[80px] overflow-hidden rounded-2xl border active:opacity-80"
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div className="border-border bg-bg flex min-h-[80px] overflow-hidden rounded-2xl border">
+                    {inner}
+                  </div>
+                )}
+              </div>
             )
           })
         )}

@@ -24,17 +24,7 @@ export default async function BacklogPage() {
 
   return (
     <div className="bg-bg2 flex min-h-full flex-col">
-      <AppHeader
-        title={t('title')}
-        border
-        right={
-          items.length > 0 ? (
-            <span className="text-ink3 text-[13px] font-medium">
-              {t('count', { count: items.length })}
-            </span>
-          ) : undefined
-        }
-      />
+      <AppHeader title={t('title')} border />
       <BacklogList items={items} />
     </div>
   )
