@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
-import axios from 'axios'
+import api, { isApiError } from '@/lib/axios/client'
 
 type Step = 'phone' | 'otp' | 'info'
 
@@ -66,13 +66,10 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
     setSending(true)
     setError(null)
     try {
-      await axios.post('/api/find-account/send', { phone })
+      await api.post('/api/find-account/send', { phone })
       setStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setError(code ? t(code as never) : tc('error'))
-      } else setError(tc('error'))
+      setError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setSending(false)
     }
@@ -83,15 +80,10 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
     setVerifying(true)
     setError(null)
     try {
-      await axios.post('/api/verify-phone', { phone, code: otp })
+      await api.post('/api/verify-phone', { phone, code: otp })
       setStep('info')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setError(code ? t(code as never) : tc('error'))
-      } else {
-        setError(tc('error'))
-      }
+      setError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setVerifying(false)
     }

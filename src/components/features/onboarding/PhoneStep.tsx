@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
-import axios from 'axios'
+import api, { isApiError } from '@/lib/axios/client'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -47,10 +47,10 @@ export default function PhoneStep({ nickname, onBack }: Props) {
     setError(null)
     setSending(true)
     try {
-      await axios.post('/api/find-account/send', { phone: rawPhone(phone) })
+      await api.post('/api/find-account/send', { phone: rawPhone(phone) })
       setOtpSent(true)
-    } catch {
-      setError(tAuth('smsSendFailed'))
+    } catch (err) {
+      setError(isApiError(err) ? tAuth(err.code as never) : tAuth('smsSendFailed'))
     } finally {
       setSending(false)
     }
@@ -60,17 +60,16 @@ export default function PhoneStep({ nickname, onBack }: Props) {
     setError(null)
     setVerifying(true)
     try {
-      await axios.post('/api/social-phone-verify', { phone: rawPhone(phone), code: otp })
+      await api.post('/api/social-phone-verify', { phone: rawPhone(phone), code: otp })
       await finish()
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 409) {
-        const { existingProvider, existingUserId } = err.response.data
-        setLinking({ existingProvider, existingUserId })
-      } else if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setError(code ? tAuth(code as never) : tAuth('otpVerifyFailed'))
+      if (isApiError(err) && err.status === 409) {
+        setLinking({
+          existingProvider: (err.data.existingProvider as string) ?? '',
+          existingUserId: (err.data.existingUserId as string) ?? '',
+        })
       } else {
-        setError(tAuth('otpVerifyFailed'))
+        setError(isApiError(err) ? tAuth(err.code as never) : tAuth('otpVerifyFailed'))
       }
     } finally {
       setVerifying(false)
@@ -85,11 +84,11 @@ export default function PhoneStep({ nickname, onBack }: Props) {
     if (!linking) return
     setLinkingLoading(true)
     try {
-      const res = await axios.post('/api/account-link', { primaryUserId: linking.existingUserId })
+      const res = await api.post('/api/account-link', { primaryUserId: linking.existingUserId })
       const { primaryProvider } = res.data
       router.replace(`/${locale}?provider=${primaryProvider}`)
-    } catch {
-      setError(tAuth('saveFailed'))
+    } catch (err) {
+      setError(isApiError(err) ? tAuth(err.code as never) : tAuth('saveFailed'))
       setLinking(null)
     } finally {
       setLinkingLoading(false)

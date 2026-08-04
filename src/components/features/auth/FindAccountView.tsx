@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import axios from 'axios'
+import api, { isApiError } from '@/lib/axios/client'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -40,13 +40,10 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
     setSending(true)
     setError(null)
     try {
-      await axios.post('/api/find-account/send', { phone })
+      await api.post('/api/find-account/send', { phone })
       setStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setError(code ? t(code as never) : tc('error'))
-      } else setError(tc('error'))
+      setError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setSending(false)
     }
@@ -57,14 +54,11 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
     setVerifying(true)
     setError(null)
     try {
-      const { data } = await axios.post('/api/find-account/verify', { phone, code: otp })
+      const { data } = await api.post('/api/find-account/verify', { phone, code: otp })
       setResult(data)
       setStep('result')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setError(code ? t(code as never) : tc('error'))
-      } else setError(tc('error'))
+      setError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setVerifying(false)
     }

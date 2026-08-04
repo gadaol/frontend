@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import api, { isApiError } from '@/lib/axios/client'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -98,13 +98,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
     setSending(true)
     setSmsError(null)
     try {
-      await axios.post('/api/find-account/send', { phone })
+      await api.post('/api/find-account/send', { phone })
       setSmsStep('otp')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setSmsError(code ? t(code as never) : tc('error'))
-      } else setSmsError(tc('error'))
+      setSmsError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setSending(false)
     }
@@ -115,13 +112,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
     setVerifyingOtp(true)
     setSmsError(null)
     try {
-      await axios.post('/api/find-account/verify', { phone, code: otp })
+      await api.post('/api/find-account/verify', { phone, code: otp })
       setSmsStep('password')
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setSmsError(code ? t(code as never) : tc('error'))
-      } else setSmsError(tc('error'))
+      setSmsError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
       setVerifyingOtp(false)
     }
@@ -130,7 +124,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const onPasswordSubmit = async ({ password }: PasswordFormValues) => {
     setPwServerError(null)
     try {
-      const { data } = await axios.post('/api/reset-password/sms', {
+      const { data } = await api.post('/api/reset-password/sms', {
         phone,
         code: otp,
         newPassword: password,
@@ -140,10 +134,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
       }
       router.replace(`/${locale}/home`)
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const code = err.response?.data?.errorCode
-        setPwServerError(code ? t(code as never) : tc('error'))
-      } else setPwServerError(tc('error'))
+      setPwServerError(isApiError(err) ? t(err.code as never) : tc('error'))
     }
   }
 
