@@ -7,7 +7,16 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = routing.defaultLocale
   }
 
-  const namespaces = ['common', 'auth', 'onboarding', 'home', 'trips', 'places', 'mypage']
+  const namespaces = [
+    'common',
+    'auth',
+    'onboarding',
+    'home',
+    'trips',
+    'places',
+    'mypage',
+    'backlog',
+  ]
   const messages = Object.fromEntries(
     await Promise.all(
       namespaces.map(async (ns) => [

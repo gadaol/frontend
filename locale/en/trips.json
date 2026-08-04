@@ -1,3 +1,19 @@
 {
-  "title": "Trips"
+  "title": "Trips",
+  "newTitle": "New Trip",
+  "fieldTitle": "Trip Title",
+  "fieldTitlePlaceholder": "e.g. Tokyo Spring Trip",
+  "fieldDate": "Travel Dates",
+  "fieldDateHint": "You can create a trip without setting dates",
+  "create": "Create Trip",
+  "creating": "Creating...",
+  "tabUpcoming": "Upcoming",
+  "tabOngoing": "Ongoing",
+  "tabDone": "Done",
+  "emptyAll": "No trips yet",
+  "empty_upcoming": "No upcoming trips",
+  "empty_ongoing": "No ongoing trips",
+  "empty_done": "No completed trips",
+  "badgeOngoing": "Ongoing",
+  "badgePlanning": "Planning"
 }

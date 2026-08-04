@@ -1,3 +1,19 @@
 {
-  "title": "여행"
+  "title": "여행",
+  "newTitle": "새 여행",
+  "fieldTitle": "여행 제목",
+  "fieldTitlePlaceholder": "예: 도쿄 봄 여행",
+  "fieldDate": "여행 날짜",
+  "fieldDateHint": "날짜를 정하지 않아도 여행을 만들 수 있어요",
+  "create": "여행 만들기",
+  "creating": "만드는 중...",
+  "tabUpcoming": "예정",
+  "tabOngoing": "진행 중",
+  "tabDone": "완료",
+  "emptyAll": "아직 여행이 없어요",
+  "empty_upcoming": "예정된 여행이 없어요",
+  "empty_ongoing": "진행 중인 여행이 없어요",
+  "empty_done": "완료된 여행이 없어요",
+  "badgeOngoing": "진행 중",
+  "badgePlanning": "계획 중"
 }

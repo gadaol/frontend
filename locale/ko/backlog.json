@@ -8,5 +8,6 @@
   "noMemo": "메모 없음",
   "from": "{trip} 에서 저장",
   "noTrip": "여행 미지정",
-  "deleteConfirm": "이 장소를 백로그에서 삭제할까요?"
+  "deleteConfirm": "이 장소를 백로그에서 삭제할까요?",
+  "count": "저장된 장소 {count}곳"
 }

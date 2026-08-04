@@ -46,7 +46,7 @@ export default async function HomePage() {
       .order('start_date', { ascending: true }),
     supabase
       .from('backlog_items')
-      .select('*, places(name, address, place_categories(name))')
+      .select('*, places(google_place_id, name, address, place_categories(name))')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(3),
@@ -258,9 +258,14 @@ export default async function HomePage() {
           ) : (
             <div className="flex flex-col gap-2">
               {backlogItems.map((item) => (
-                <div
+                <Link
                   key={item.id}
-                  className="border-border bg-bg flex items-center gap-3 rounded-2xl border px-4 py-3.5"
+                  href={
+                    item.places?.google_place_id
+                      ? `/${locale}/places/${item.places.google_place_id}`
+                      : `/${locale}/backlog`
+                  }
+                  className="border-border bg-bg flex items-center gap-3 rounded-2xl border px-4 py-3.5 active:opacity-80"
                 >
                   <div className="bg-primary-light flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px]">
                     <MapPinIcon size={24} className="text-primary" />
@@ -279,7 +284,7 @@ export default async function HomePage() {
                     )}
                   </div>
                   <ChevronRightIcon className="text-ink3" />
-                </div>
+                </Link>
               ))}
             </div>
           )}

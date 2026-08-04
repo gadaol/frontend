@@ -1,3 +1,23 @@
 {
-  "title": "장소"
+  "title": "장소",
+  "searchPlaceholder": "장소, 식당, 관광지 검색",
+  "searchHint": "어디로 떠나고 싶으세요?",
+  "searchHintDesc": "장소 이름이나 주소로 검색해보세요",
+  "noResults": "검색 결과가 없어요",
+  "reviews": "개 리뷰",
+  "phone": "전화",
+  "website": "웹사이트",
+  "hours": "영업시간",
+  "saveToBacklog": "백로그에 저장",
+  "savedToBacklog": "저장됨",
+  "saving": "저장 중...",
+  "viewDetail": "상세 보기",
+  "results": "검색결과 {count}개",
+  "showList": "목록 보기",
+  "hideList": "목록 닫기",
+  "rating": "평점",
+  "reviewCount": "리뷰",
+  "call": "전화",
+  "addToTrip": "일정에 추가",
+  "reviewsTitle": "리뷰"
 }

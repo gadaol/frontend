@@ -1,3 +1,23 @@
 {
-  "title": "Places"
+  "title": "Places",
+  "searchPlaceholder": "Search places, restaurants, attractions",
+  "searchHint": "Where do you want to go?",
+  "searchHintDesc": "Search by place name or address",
+  "noResults": "No results found",
+  "reviews": " reviews",
+  "phone": "Phone",
+  "website": "Website",
+  "hours": "Hours",
+  "saveToBacklog": "Save to Backlog",
+  "savedToBacklog": "Saved",
+  "saving": "Saving...",
+  "viewDetail": "View Details",
+  "results": "{count} results",
+  "showList": "Show List",
+  "hideList": "Hide List",
+  "rating": "Rating",
+  "reviewCount": "Reviews",
+  "call": "Call",
+  "addToTrip": "Add to Trip",
+  "reviewsTitle": "Reviews"
 }
