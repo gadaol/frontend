@@ -36,9 +36,8 @@ export async function POST(request: Request) {
     )
     const { data: existingUserData } = await adminSupabase.auth.admin.getUserById(existing.id)
     const existingProvider = existingUserData?.user?.app_metadata?.provider ?? 'email'
-    await supabase.auth.signOut()
     return NextResponse.json(
-      { errorCode: 'phoneAlreadyRegistered', existingProvider },
+      { errorCode: 'phoneAlreadyRegistered', existingProvider, existingUserId: existing.id },
       { status: 409 },
     )
   }

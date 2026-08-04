@@ -28,7 +28,7 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
   return (
     <div className="flex flex-1 flex-col px-6 pb-8">
       <div className="flex items-center justify-between py-5">
-        <StepIndicator current={1} total={2} />
+        <StepIndicator current={1} total={3} />
         <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
           {t('skip')}
         </button>

@@ -1,3 +1,15 @@
 {
-  "title": "My Page"
+  "title": "My Page",
+  "linkedAccounts": "Linked accounts",
+  "connected": "Connected",
+  "connect": "Link",
+  "phoneNumber": "Phone number",
+  "noPhone": "No number registered",
+  "verifyPhone": "Verify",
+  "changePhone": "Change",
+  "provider": {
+    "kakao": "Kakao",
+    "google": "Google",
+    "email": "Email"
+  }
 }

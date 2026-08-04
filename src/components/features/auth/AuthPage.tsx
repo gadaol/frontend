@@ -37,6 +37,11 @@ export default function AuthPage() {
       else if (provider === 'google') setSocialError(t('duplicateAccountGoogle'))
       else if (provider === 'email') setSocialError(t('duplicateAccountEmail'))
       else setSocialError(t('duplicateAccount'))
+    } else if (error === 'use_primary_account') {
+      if (provider === 'kakao') setSocialError(t('usePrimaryAccountKakao'))
+      else if (provider === 'google') setSocialError(t('usePrimaryAccountGoogle'))
+      else if (provider === 'email') setSocialError(t('usePrimaryAccountEmail'))
+      else setSocialError(t('usePrimaryAccount'))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -1,16 +1,46 @@
 // 자동 생성 — 스키마 변경 시 Supabase MCP generate_typescript_types로 재생성
 // 직접 수정 금지
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      account_links: {
+        Row: {
+          created_at: string
+          id: string
+          linked_provider: string
+          linked_user_id: string
+          primary_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked_provider: string
+          linked_user_id: string
+          primary_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked_provider?: string
+          linked_user_id?: string
+          primary_user_id?: string
+        }
+        Relationships: []
+      }
       backlog_items: {
         Row: {
           created_at: string | null
@@ -38,18 +68,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'backlog_items_place_id_fkey'
-            columns: ['place_id']
+            foreignKeyName: "backlog_items_place_id_fkey"
+            columns: ["place_id"]
             isOneToOne: false
-            referencedRelation: 'places'
-            referencedColumns: ['id']
+            referencedRelation: "places"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'backlog_items_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "backlog_items_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -74,11 +104,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'itinerary_days_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "itinerary_days_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -109,18 +139,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'itinerary_items_day_id_fkey'
-            columns: ['day_id']
+            foreignKeyName: "itinerary_items_day_id_fkey"
+            columns: ["day_id"]
             isOneToOne: false
-            referencedRelation: 'itinerary_days'
-            referencedColumns: ['id']
+            referencedRelation: "itinerary_days"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'itinerary_items_place_id_fkey'
-            columns: ['place_id']
+            foreignKeyName: "itinerary_items_place_id_fkey"
+            columns: ["place_id"]
             isOneToOne: false
-            referencedRelation: 'places'
-            referencedColumns: ['id']
+            referencedRelation: "places"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -223,11 +253,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'place_interactions_place_id_fkey'
-            columns: ['place_id']
+            foreignKeyName: "place_interactions_place_id_fkey"
+            columns: ["place_id"]
             isOneToOne: false
-            referencedRelation: 'places'
-            referencedColumns: ['id']
+            referencedRelation: "places"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -258,11 +288,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'place_reviews_place_id_fkey'
-            columns: ['place_id']
+            foreignKeyName: "place_reviews_place_id_fkey"
+            columns: ["place_id"]
             isOneToOne: false
-            referencedRelation: 'places'
-            referencedColumns: ['id']
+            referencedRelation: "places"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -299,11 +329,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'places_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "places_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'place_categories'
-            referencedColumns: ['id']
+            referencedRelation: "place_categories"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -361,11 +391,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'recommendation_logs_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "recommendation_logs_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -420,11 +450,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'trip_members_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "trip_members_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -458,11 +488,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'trip_reviews_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "trip_reviews_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -484,11 +514,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'trip_tags_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "trip_tags_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -579,18 +609,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'votes_place_id_fkey'
-            columns: ['place_id']
+            foreignKeyName: "votes_place_id_fkey"
+            columns: ["place_id"]
             isOneToOne: false
-            referencedRelation: 'places'
-            referencedColumns: ['id']
+            referencedRelation: "places"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'votes_trip_id_fkey'
-            columns: ['trip_id']
+            foreignKeyName: "votes_trip_id_fkey"
+            columns: ["trip_id"]
             isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -610,31 +640,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -643,23 +675,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -668,23 +700,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -693,36 +725,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {

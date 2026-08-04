@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useLocale, useTranslations } from 'next-intl'
-import { createClient } from '@/lib/supabase/client'
+import { useTranslations } from 'next-intl'
 import StepIndicator from './StepIndicator'
 
 type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
@@ -17,31 +15,22 @@ const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends']
 interface Props {
   nickname: string
   onBack: () => void
+  onNext: () => void
 }
 
-export default function TravelStyleStep({ nickname, onBack }: Props) {
+export default function TravelStyleStep({ onBack, onNext }: Props) {
   const t = useTranslations('onboarding')
-  const router = useRouter()
-  const locale = useLocale()
   const [pace, setPace] = useState<PaceKey[]>([])
   const [places, setPlaces] = useState<PlaceKey[]>([])
   const [companion, setCompanion] = useState<CompanionKey[]>([])
-  const [loading, setLoading] = useState(false)
 
   const toggle = <T,>(list: T[], item: T, setter: (v: T[]) => void) => {
     setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
   }
 
-  const handleSkip = async () => {
-    await saveAndFinish({ nickname })
-    router.push(`/${locale}/home`)
-  }
+  const handleSkip = () => onNext()
 
-  const handleSubmit = async () => {
-    setLoading(true)
-    await saveAndFinish({ nickname })
-    router.push(`/${locale}/home`)
-  }
+  const handleSubmit = () => onNext()
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -58,7 +47,7 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
               />
             </svg>
           </button>
-          <StepIndicator current={2} total={2} />
+          <StepIndicator current={2} total={3} />
         </div>
         <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
           {t('skip')}
@@ -108,10 +97,9 @@ export default function TravelStyleStep({ nickname, onBack }: Props) {
         <div className="pt-4">
           <button
             onClick={handleSubmit}
-            disabled={loading}
-            className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-40"
+            className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white"
           >
-            {loading ? t('saving') : t('start')}
+            {t('next')}
           </button>
         </div>
       </div>
@@ -155,20 +143,4 @@ function ChipSection<T extends string>({
       </div>
     </div>
   )
-}
-
-async function saveAndFinish({ nickname }: { nickname: string }) {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return
-
-  await supabase
-    .from('profiles')
-    .update({
-      ...(nickname.trim() ? { name: nickname.trim() } : {}),
-      onboarding_completed: true,
-    })
-    .eq('id', user.id)
 }

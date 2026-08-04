@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
@@ -23,17 +24,36 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
         const provider = user.app_metadata?.provider ?? ''
         const isSocialLogin = ['kakao', 'google'].includes(provider)
 
+        // 소셜 로그인: account_links 체크 (연동된 보조 계정인지 확인)
+        if (isSocialLogin) {
+          const adminClient = createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          )
+          const { data: link } = await adminClient
+            .from('account_links')
+            .select('primary_user_id, linked_provider')
+            .eq('linked_user_id', user.id)
+            .maybeSingle()
+
+          if (link) {
+            const { data: primaryUserData } = await adminClient.auth.admin.getUserById(
+              link.primary_user_id,
+            )
+            const primaryProvider = primaryUserData?.user?.app_metadata?.provider ?? 'email'
+            await supabase.auth.signOut()
+            return NextResponse.redirect(
+              `${origin}/${locale}?error=use_primary_account&provider=${primaryProvider}`,
+            )
+          }
+        }
+
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed, phone')
+          .select('onboarding_completed')
           .eq('id', user.id)
           .single()
 
-        if (isSocialLogin && !profile?.phone) {
-          return NextResponse.redirect(`${origin}/${locale}/phone-verify`)
-        }
-
-        // 이메일 회원가입 인증 완료 시 확인 화면
         if (provider === 'email' && !profile?.onboarding_completed) {
           return NextResponse.redirect(`${origin}/${locale}/email-verified`)
         }

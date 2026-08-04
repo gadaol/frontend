@@ -1,3 +1,15 @@
 {
-  "title": "마이페이지"
+  "title": "마이페이지",
+  "linkedAccounts": "연동된 계정",
+  "connected": "연결됨",
+  "connect": "연동하기",
+  "phoneNumber": "전화번호",
+  "noPhone": "등록된 번호 없음",
+  "verifyPhone": "인증하기",
+  "changePhone": "변경",
+  "provider": {
+    "kakao": "카카오",
+    "google": "Google",
+    "email": "이메일"
+  }
 }
