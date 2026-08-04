@@ -1,23 +1,19 @@
-import dayjs from 'dayjs'
-import 'dayjs/locale/ko'
-
-const KO_DAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
-const EN_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+import dayjs from '@/lib/dayjs'
 
 export function formatDateRange(start: string | null, end: string | null, locale = 'ko'): string {
   if (!start) return ''
-  const days = locale === 'ko' ? KO_DAYS : EN_DAYS
-  const fmt = (s: string) => {
-    const d = dayjs(s)
-    return `${d.month() + 1}.${String(d.date()).padStart(2, '0')}(${days[d.day()]})`
-  }
+  const fmt = (s: string) => dayjs(s).locale(locale).format('M.DD(ddd)')
   return end ? `${fmt(start)} - ${fmt(end)}` : fmt(start)
 }
 
-export function formatDateShort(dateStr: string | null): string {
+export function formatDateShort(dateStr: string | null, locale = 'ko'): string {
   if (!dateStr) return ''
-  const d = dayjs(dateStr)
-  return `${d.month() + 1}/${d.date()}`
+  return dayjs(dateStr).locale(locale).format('M/D')
+}
+
+export function formatDateFull(dateStr: string | null, locale = 'ko'): string {
+  if (!dateStr) return ''
+  return dayjs(dateStr).locale(locale).format('YYYY.MM.DD(ddd)')
 }
 
 export function today(): string {
@@ -42,6 +38,5 @@ export function tripDuration(start: string | null, end: string | null): number {
 
 export function daysUntil(start: string | null): number {
   if (!start) return 0
-  const diff = dayjs(start).diff(dayjs().startOf('day'), 'day')
-  return Math.max(0, diff)
+  return Math.max(0, dayjs(start).diff(dayjs().startOf('day'), 'day'))
 }
