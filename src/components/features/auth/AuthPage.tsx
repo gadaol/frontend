@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -22,29 +22,33 @@ type View =
 export default function AuthPage() {
   const [view, setView] = useState<View>('social')
   const [verificationEmail, setVerificationEmail] = useState('')
-  const [socialError, setSocialError] = useState<string | null>(null)
   const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations('auth')
   const supabase = createClient()
 
-  useEffect(() => {
+  const initialError = useMemo(() => {
     const error = searchParams.get('error')
     const provider = searchParams.get('provider')
     if (error === 'duplicate_account') {
-      if (provider === 'kakao') setSocialError(t('duplicateAccountKakao'))
-      else if (provider === 'google') setSocialError(t('duplicateAccountGoogle'))
-      else if (provider === 'email') setSocialError(t('duplicateAccountEmail'))
-      else setSocialError(t('duplicateAccount'))
-    } else if (error === 'use_primary_account') {
-      if (provider === 'kakao') setSocialError(t('usePrimaryAccountKakao'))
-      else if (provider === 'google') setSocialError(t('usePrimaryAccountGoogle'))
-      else if (provider === 'email') setSocialError(t('usePrimaryAccountEmail'))
-      else setSocialError(t('usePrimaryAccount'))
+      if (provider === 'kakao') return t('duplicateAccountKakao')
+      if (provider === 'google') return t('duplicateAccountGoogle')
+      if (provider === 'email') return t('duplicateAccountEmail')
+      return t('duplicateAccount')
     }
+    if (error === 'use_primary_account') {
+      if (provider === 'kakao') return t('usePrimaryAccountKakao')
+      if (provider === 'google') return t('usePrimaryAccountGoogle')
+      if (provider === 'email') return t('usePrimaryAccountEmail')
+      return t('usePrimaryAccount')
+    }
+    return null
+    // searchParams, t는 마운트 시점 스냅샷으로만 사용
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const socialError = initialError
 
   useEffect(() => {
     const {

@@ -30,10 +30,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ errorCode: 'accountNotFound' }, { status: 404 })
   }
 
-  const { error } = await adminClient.from('account_links').upsert(
-    { primary_user_id: primaryUserId, linked_user_id: user.id, linked_provider: linkedProvider },
-    { onConflict: 'linked_user_id' },
-  )
+  const { error } = await adminClient
+    .from('account_links')
+    .upsert(
+      { primary_user_id: primaryUserId, linked_user_id: user.id, linked_provider: linkedProvider },
+      { onConflict: 'linked_user_id' },
+    )
 
   if (error) {
     return NextResponse.json({ errorCode: 'saveFailed' }, { status: 500 })

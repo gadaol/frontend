@@ -20,10 +20,7 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (existing) {
-    return NextResponse.json(
-      { errorCode: 'phoneAlreadyRegistered' },
-      { status: 409 },
-    )
+    return NextResponse.json({ errorCode: 'phoneAlreadyRegistered' }, { status: 409 })
   }
 
   return NextResponse.json({ success: true })
