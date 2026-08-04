@@ -41,3 +41,92 @@ export async function createTrip(formData: FormData) {
 
   redirect(`/${locale}/trips/${trip.id}`)
 }
+
+export async function ensureItineraryDay(
+  tripId: string,
+  dayDate: string,
+  dayNumber: number,
+): Promise<string | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: existing } = await supabase
+    .from('itinerary_days')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('day_date', dayDate)
+    .single()
+
+  if (existing) return existing.id
+
+  const { data: created } = await supabase
+    .from('itinerary_days')
+    .insert({ trip_id: tripId, day_date: dayDate, day_number: dayNumber })
+    .select('id')
+    .single()
+
+  return created?.id ?? null
+}
+
+export async function addItineraryItem(
+  tripId: string,
+  dayDate: string,
+  dayNumber: number,
+  placeId: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const dayId = await ensureItineraryDay(tripId, dayDate, dayNumber)
+  if (!dayId) return { error: 'day_create_failed' }
+
+  const { data: existing } = await supabase
+    .from('itinerary_items')
+    .select('order_index')
+    .eq('day_id', dayId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .single()
+
+  const nextOrder = (existing?.order_index ?? -1) + 1
+
+  const { error } = await supabase
+    .from('itinerary_items')
+    .insert({ day_id: dayId, place_id: placeId, order_index: nextOrder })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function removeItineraryItem(itemId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { error } = await supabase.from('itinerary_items').delete().eq('id', itemId)
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function updateTrip(
+  tripId: string,
+  data: { title?: string; start_date?: string | null; end_date?: string | null },
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { error } = await supabase.from('trips').update(data).eq('id', tripId).eq('owner_id', user.id)
+  if (error) return { error: error.message }
+  return {}
+}
