@@ -1,6 +1,9 @@
 {
   "title": "Home",
-  "greetingSub": "Have a great day ☀️",
+  "greetingMorning": "Good morning ☀️",
+  "greetingAfternoon": "Good afternoon 🌤️",
+  "greetingEvening": "Good evening 🌙",
+  "greetingNight": "Burning the midnight oil 🌙",
   "greeting": "Hi, {name}!",
   "greetingDefault": "Welcome!",
   "upcomingSection": "Upcoming Trip",

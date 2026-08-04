@@ -9,5 +9,9 @@ export type TripWithMembers = Tables<'trips'> & {
 }
 
 export type BacklogItemWithPlace = Tables<'backlog_items'> & {
-  places: Pick<Tables<'places'>, 'name' | 'address'> | null
+  places:
+    | (Pick<Tables<'places'>, 'name' | 'address'> & {
+        place_categories: Pick<Tables<'place_categories'>, 'name'> | null
+      })
+    | null
 }

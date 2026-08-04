@@ -1,6 +1,9 @@
 {
   "title": "홈",
-  "greetingSub": "좋은 하루예요 ☀️",
+  "greetingMorning": "좋은 아침이에요 ☀️",
+  "greetingAfternoon": "좋은 오후예요 🌤️",
+  "greetingEvening": "좋은 저녁이에요 🌙",
+  "greetingNight": "늦은 밤이네요 🌙",
   "greeting": "{name} 님, 반가워요",
   "greetingDefault": "반가워요!",
   "upcomingSection": "다가오는 여행",
