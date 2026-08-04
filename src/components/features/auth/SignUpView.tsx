@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import api from '@/lib/axios/client'
 
 type FormValues = {
   name: string
@@ -23,6 +25,7 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const locale = useLocale()
+  const router = useRouter()
   const supabase = createClient()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -46,34 +49,37 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
 
   const onSubmit = async ({ name, email, password }: FormValues) => {
     setServerError(null)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { name },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
-      },
+      options: { data: { name } },
     })
     if (error) {
       if (
         error.message.includes('already registered') ||
         error.message.includes('already exists')
       ) {
-        const { error: resendError } = await supabase.auth.resend({
-          type: 'signup',
-          email,
-          options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback`,
-          },
-        })
-        if (!resendError) {
-          onVerificationSent(email)
-          return
+        // 어떤 소셜 프로바이더로 가입됐는지 확인
+        try {
+          const res = await api.post<{ provider: string | null }>('/api/check-email-provider', {
+            email,
+          })
+          const { provider } = res.data
+          if (provider === 'kakao') return setServerError(t('duplicateAccountKakao'))
+          if (provider === 'google') return setServerError(t('duplicateAccountGoogle'))
+        } catch {
+          // 확인 실패 시 generic 메시지
         }
         return setServerError(t('emailAlreadyRegistered'))
       }
       return setServerError(error.message)
     }
+    // Confirm email OFF: 세션 즉시 발급 → 온보딩으로 이동
+    if (data.session) {
+      router.replace(`/${locale}/onboarding`)
+      return
+    }
+    // Confirm email ON: 인증메일 발송됨
     onVerificationSent(email)
   }
 
