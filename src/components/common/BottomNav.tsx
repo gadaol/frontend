@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { BacklogIcon, HomeIcon, MypageIcon, PlacesIcon, TripsIcon } from '@/components/icons'
 
 type Tab = {
   key: 'home' | 'trips' | 'places' | 'backlog' | 'mypage'
@@ -19,103 +20,29 @@ export default function BottomNav() {
     {
       key: 'home',
       href: `/${locale}/home`,
-      icon: (active) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M9 21V12h6v9"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
+      icon: (active) => <HomeIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'trips',
       href: `/${locale}/trips`,
-      icon: (active) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <rect
-            x="3"
-            y="8"
-            width="18"
-            height="13"
-            rx="2"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-          />
-          <path
-            d="M8 8V6a4 4 0 0 1 8 0v2"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M3 13h18"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
+      icon: (active) => <TripsIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'places',
       href: `/${locale}/places`,
-      icon: (active) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="11" cy="11" r="7" stroke={active ? '#1B6FF0' : '#9099A8'} strokeWidth="1.7" />
-          <path
-            d="M21 21l-3.5-3.5"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
+      icon: (active) => <PlacesIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'backlog',
       href: `/${locale}/backlog`,
       icon: (active) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M5 3h14a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinejoin="round"
-            fill={active ? '#EBF2FF' : 'none'}
-          />
-        </svg>
+        <BacklogIcon size={24} filled={active} className={active ? 'text-primary' : 'text-ink3'} />
       ),
     },
     {
       key: 'mypage',
       href: `/${locale}/mypage`,
-      icon: (active) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle
-            cx="12"
-            cy="8"
-            r="3.5"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-          />
-          <path
-            d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6"
-            stroke={active ? '#1B6FF0' : '#9099A8'}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
+      icon: (active) => <MypageIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
     },
   ]
 
@@ -125,7 +52,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="flex-shrink-0 border-t border-[#E8EAED] bg-white">
+    <nav className="border-border bg-bg flex-shrink-0 border-t">
       <div className="flex items-center" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {tabs.map((tab) => {
           const active = isActive(tab.href)
@@ -137,8 +64,7 @@ export default function BottomNav() {
             >
               {tab.icon(active)}
               <span
-                className="text-[10px] leading-none font-medium"
-                style={{ color: active ? '#1B6FF0' : '#9099A8' }}
+                className={`text-[10px] leading-none font-medium ${active ? 'text-primary' : 'text-ink3'}`}
               >
                 {t(tab.key)}
               </span>

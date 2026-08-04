@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ChevronLeftIcon } from '@/components/icons'
 
 interface Props {
   title?: string
@@ -22,32 +23,24 @@ export default function AppHeader({ title, onBack, right, border = true }: Props
 
   return (
     <header
-      className={`sticky top-0 z-10 flex h-14 flex-shrink-0 items-center bg-white px-4 ${
-        border ? 'border-b border-[#E8EAED]' : ''
+      className={`bg-bg sticky top-0 z-10 flex h-14 flex-shrink-0 items-center px-4 ${
+        border ? 'border-border border-b' : ''
       }`}
     >
       {onBack ? (
         <button
           onClick={handleBack}
-          className="flex h-10 w-10 items-center justify-center"
+          className="text-ink flex h-10 w-10 items-center justify-center"
           aria-label={t('back')}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ChevronLeftIcon size={24} />
         </button>
       ) : (
         <div className="w-10" />
       )}
 
       {title && (
-        <span className="flex-1 text-center text-[17px] font-semibold text-[#0F1117]">{title}</span>
+        <span className="text-ink flex-1 text-center text-[17px] font-semibold">{title}</span>
       )}
 
       <div className="flex w-10 items-center justify-end">{right}</div>

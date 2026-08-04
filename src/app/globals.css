@@ -7,31 +7,37 @@
 /* ── 가다올 디자인 토큰 ── */
 @theme {
   /* 브랜드 */
-  --color-primary: #ff5a5f;
-  --color-primary-hover: #e04e53;
-  --color-primary-light: #fff0f0;
+  --color-primary: #1b6ff0;
+  --color-primary-hover: #1558c0;
+  --color-primary-light: #ebf2ff;
+
+  /* 히어로 */
+  --color-hero-top: #070e1a;
+  --color-hero-bot: #0f2351;
 
   /* 서피스 */
   --color-bg: #ffffff;
-  --color-bg-subtle: #f7f7f7;
+  --color-bg2: #f5f7fa;
 
   /* 텍스트 */
-  --color-ink: #222222;
-  --color-secondary: #717171;
-  --color-tertiary: #b0b0b0;
+  --color-ink: #0f1117;
+  --color-ink2: #515966;
+  --color-ink3: #9099a8;
 
   /* 시맨틱 */
-  --color-success: #00a699;
-  --color-warning: #ffb400;
-  --color-border: #dddddd;
+  --color-success: #12b76a;
+  --color-warning: #f79009;
+  --color-error: #f04438;
+  --color-border: #e8eaed;
 
   /* 폰트 */
   --font-sans: 'Pretendard Variable', Pretendard, sans-serif;
 
   /* 라디우스 */
   --radius-pill: 9999px;
-  --radius-card: 12px;
-  --radius-btn: 8px;
+  --radius-card: 16px;
+  --radius-card-lg: 24px;
+  --radius-icon: 12px;
 }
 
 /* ── shadcn 변수를 가다올 토큰으로 오버라이드 ── */
@@ -40,31 +46,15 @@
   --color-foreground: var(--color-ink);
   --color-primary: var(--color-primary);
   --color-primary-foreground: #ffffff;
-  --color-muted: var(--color-bg-subtle);
-  --color-muted-foreground: var(--color-secondary);
+  --color-muted: var(--color-bg2);
+  --color-muted-foreground: var(--color-ink3);
   --color-border: var(--color-border);
   --color-input: var(--color-border);
   --color-ring: var(--color-primary);
-  --color-destructive: var(--color-primary);
-  --radius-sm: var(--radius-btn);
+  --color-destructive: var(--color-error);
+  --radius-sm: var(--radius-icon);
   --radius-md: var(--radius-card);
-  --radius-lg: var(--radius-card);
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #222222;
-  --primary: #ff5a5f;
-  --primary-foreground: #ffffff;
-  --secondary: #f7f7f7;
-  --secondary-foreground: #222222;
-  --muted: #f7f7f7;
-  --muted-foreground: #717171;
-  --border: #dddddd;
-  --input: #dddddd;
-  --ring: #ff5a5f;
-  --destructive: #ff5a5f;
-  --radius: 0.5rem;
+  --radius-lg: var(--radius-card-lg);
 }
 
 @layer base {
