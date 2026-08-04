@@ -1,3 +1,17 @@
 {
-  "title": "Home"
+  "title": "Home",
+  "greeting": "Hello, {name}!",
+  "greetingDefault": "Hello!",
+  "ongoingSection": "Ongoing Trips",
+  "upcomingSection": "Upcoming Trips",
+  "backlogSection": "Recently Saved",
+  "viewAll": "View all",
+  "noOngoing": "No ongoing trips",
+  "noUpcoming": "No upcoming trips",
+  "noBacklog": "No saved places",
+  "newTrip": "New Trip",
+  "dDay": "D-{n}",
+  "dToday": "D-Day",
+  "nights": "{n}N{m}D",
+  "memberCount": "{n} members"
 }

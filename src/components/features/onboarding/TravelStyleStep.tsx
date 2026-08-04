@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { createClient } from '@/lib/supabase/client'
 import StepIndicator from './StepIndicator'
 
 type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
@@ -23,6 +24,7 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
   const [pace, setPace] = useState<PaceKey[]>([])
   const [places, setPlaces] = useState<PlaceKey[]>([])
   const [companion, setCompanion] = useState<CompanionKey[]>([])
+  const [saving, setSaving] = useState(false)
 
   const toggle = <T,>(list: T[], item: T, setter: (v: T[]) => void) => {
     setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
@@ -30,7 +32,28 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
 
   const handleSkip = () => onNext()
 
-  const handleSubmit = () => onNext()
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({
+            travel_pace: pace,
+            travel_places: places,
+            travel_companion: companion,
+          })
+          .eq('id', user.id)
+      }
+    } finally {
+      setSaving(false)
+      onNext()
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -97,7 +120,8 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
         <div className="pt-4">
           <button
             onClick={handleSubmit}
-            className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white"
+            disabled={saving}
+            className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-50"
           >
             {t('next')}
           </button>

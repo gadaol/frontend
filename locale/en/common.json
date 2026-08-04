@@ -8,5 +8,12 @@
   "delete": "Delete",
   "edit": "Edit",
   "loading": "Loading...",
-  "error": "Something went wrong"
+  "error": "Something went wrong",
+  "nav": {
+    "home": "Home",
+    "trips": "Trips",
+    "places": "Places",
+    "backlog": "Saved",
+    "mypage": "Profile"
+  }
 }

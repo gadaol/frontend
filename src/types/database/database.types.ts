@@ -345,6 +345,9 @@ export type Database = {
           name: string | null
           onboarding_completed: boolean
           phone: string | null
+          travel_companion: string[] | null
+          travel_pace: string[] | null
+          travel_places: string[] | null
           updated_at: string | null
         }
         Insert: {
@@ -354,6 +357,9 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
+          travel_companion?: string[] | null
+          travel_pace?: string[] | null
+          travel_places?: string[] | null
           updated_at?: string | null
         }
         Update: {
@@ -363,6 +369,9 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
+          travel_companion?: string[] | null
+          travel_pace?: string[] | null
+          travel_places?: string[] | null
           updated_at?: string | null
         }
         Relationships: []

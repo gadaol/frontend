@@ -8,5 +8,12 @@
   "delete": "삭제",
   "edit": "편집",
   "loading": "로딩 중...",
-  "error": "오류가 발생했어요"
+  "error": "오류가 발생했어요",
+  "nav": {
+    "home": "홈",
+    "trips": "여행",
+    "places": "장소",
+    "backlog": "백로그",
+    "mypage": "마이페이지"
+  }
 }

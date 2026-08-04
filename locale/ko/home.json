@@ -1,3 +1,17 @@
 {
-  "title": "홈"
+  "title": "홈",
+  "greeting": "{name}님, 안녕하세요!",
+  "greetingDefault": "안녕하세요!",
+  "ongoingSection": "진행 중인 여행",
+  "upcomingSection": "예정된 여행",
+  "backlogSection": "최근 저장한 장소",
+  "viewAll": "전체보기",
+  "noOngoing": "진행 중인 여행이 없어요",
+  "noUpcoming": "예정된 여행이 없어요",
+  "noBacklog": "저장한 장소가 없어요",
+  "newTrip": "새 여행 만들기",
+  "dDay": "D-{n}",
+  "dToday": "D-Day",
+  "nights": "{n}박 {m}일",
+  "memberCount": "{n}명"
 }
