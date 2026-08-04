@@ -35,6 +35,43 @@ const GOOGLE_TYPE_TO_CATEGORY: Record<string, string> = {
   campground: '자연',
 }
 
+/** places 테이블에서 조회하거나 없으면 생성 후 place ID 반환 */
+export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string | null> {
+  const supabase = await createClient()
+
+  const { data: existing } = await supabase
+    .from('places')
+    .select('id')
+    .eq('google_place_id', input.googlePlaceId)
+    .single()
+
+  if (existing) return existing.id
+
+  let categoryId: string | null = null
+  const koName = input.categoryName ? GOOGLE_TYPE_TO_CATEGORY[input.categoryName] : null
+  if (koName) {
+    const { data: cat } = await supabase
+      .from('place_categories')
+      .select('id')
+      .eq('name', koName)
+      .single()
+    categoryId = cat?.id ?? null
+  }
+
+  const { data: newPlace } = await supabase
+    .from('places')
+    .insert({
+      google_place_id: input.googlePlaceId,
+      name: input.name,
+      address: input.address,
+      category_id: categoryId,
+    })
+    .select('id')
+    .single()
+
+  return newPlace?.id ?? null
+}
+
 export async function addToBacklog(input: AddToBacklogInput) {
   const supabase = await createClient()
   const locale = await getLocale()
@@ -44,45 +81,9 @@ export async function addToBacklog(input: AddToBacklogInput) {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  // 기존 place 조회 (upsert 대신 SELECT → INSERT — UPDATE RLS 없음)
-  let placeId: string
-  const { data: existing } = await supabase
-    .from('places')
-    .select('id')
-    .eq('google_place_id', input.googlePlaceId)
-    .single()
+  const placeId = await getOrCreatePlace(input)
+  if (!placeId) return { error: 'place_insert_failed' }
 
-  if (existing) {
-    placeId = existing.id
-  } else {
-    // category_id 해석
-    let categoryId: string | null = null
-    const koName = input.categoryName ? GOOGLE_TYPE_TO_CATEGORY[input.categoryName] : null
-    if (koName) {
-      const { data: cat } = await supabase
-        .from('place_categories')
-        .select('id')
-        .eq('name', koName)
-        .single()
-      categoryId = cat?.id ?? null
-    }
-
-    const { data: newPlace } = await supabase
-      .from('places')
-      .insert({
-        google_place_id: input.googlePlaceId,
-        name: input.name,
-        address: input.address,
-        category_id: categoryId,
-      })
-      .select('id')
-      .single()
-
-    if (!newPlace) return { error: 'place_insert_failed' }
-    placeId = newPlace.id
-  }
-
-  // 이미 백로그에 있으면 스킵
   const { data: existingItem } = await supabase
     .from('backlog_items')
     .select('id')
