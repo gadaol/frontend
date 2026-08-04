@@ -10,11 +10,16 @@ export default function NewTripPage() {
   const [isPending, startTransition] = useTransition()
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setErrorMsg(null)
     const formData = new FormData(e.currentTarget)
-    startTransition(() => createTrip(formData))
+    startTransition(async () => {
+      const result = await createTrip(formData)
+      if (result?.error) setErrorMsg(result.error)
+    })
   }
 
   return (
@@ -61,6 +66,10 @@ export default function NewTripPage() {
           </div>
           <p className="text-ink3 text-[12px]">{t('fieldDateHint')}</p>
         </div>
+
+        {errorMsg && (
+          <p className="text-center text-[13px] text-red-500">{errorMsg}</p>
+        )}
 
         <div className="mt-auto pt-4">
           <button

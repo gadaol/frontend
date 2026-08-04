@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function createTrip(formData: FormData) {
+export async function createTrip(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()
 
@@ -17,7 +17,7 @@ export async function createTrip(formData: FormData) {
   const startDate = (formData.get('start_date') as string) || null
   const endDate = (formData.get('end_date') as string) || null
 
-  if (!title) return
+  if (!title) return { error: '여행 제목을 입력해주세요' }
 
   const { data: trip, error } = await supabase
     .from('trips')
@@ -26,18 +26,24 @@ export async function createTrip(formData: FormData) {
       start_date: startDate,
       end_date: endDate,
       owner_id: user.id,
-      status: 'planning',
     })
     .select('id')
     .single()
 
-  if (error || !trip) return
+  if (error || !trip) {
+    console.error('[createTrip] insert error:', error)
+    return { error: error?.message ?? '여행 생성에 실패했어요' }
+  }
 
-  await supabase.from('trip_members').insert({
+  const { error: memberError } = await supabase.from('trip_members').insert({
     trip_id: trip.id,
     user_id: user.id,
     role: 'owner',
   })
+
+  if (memberError) {
+    console.error('[createTrip] member insert error:', memberError)
+  }
 
   redirect(`/${locale}/trips/${trip.id}`)
 }
