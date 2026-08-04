@@ -20,29 +20,29 @@ export default function BottomNav() {
     {
       key: 'home',
       href: `/${locale}/home`,
-      icon: (active) => <HomeIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
+      icon: (active) => <HomeIcon size={22} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'trips',
       href: `/${locale}/trips`,
-      icon: (active) => <TripsIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
+      icon: (active) => <TripsIcon size={22} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'places',
       href: `/${locale}/places`,
-      icon: (active) => <PlacesIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
+      icon: (active) => <PlacesIcon size={22} className={active ? 'text-primary' : 'text-ink3'} />,
     },
     {
       key: 'backlog',
       href: `/${locale}/backlog`,
       icon: (active) => (
-        <BacklogIcon size={24} filled={active} className={active ? 'text-primary' : 'text-ink3'} />
+        <BacklogIcon size={22} filled={active} className={active ? 'text-primary' : 'text-ink3'} />
       ),
     },
     {
       key: 'mypage',
       href: `/${locale}/mypage`,
-      icon: (active) => <MypageIcon size={24} className={active ? 'text-primary' : 'text-ink3'} />,
+      icon: (active) => <MypageIcon size={22} className={active ? 'text-primary' : 'text-ink3'} />,
     },
   ]
 

@@ -9,13 +9,13 @@ export function HomeIcon({ size = 24, className }: IconProps) {
       <path
         d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
       <path
         d="M9 21V12h6v9"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -55,8 +55,7 @@ export function BacklogIcon({ size = 24, className, filled }: IconProps & { fill
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinejoin="round"
-        fill={filled ? 'currentColor' : 'none'}
-        fillOpacity={filled ? 0.15 : undefined}
+        fill={filled ? 'var(--color-primary-light)' : 'none'}
       />
     </svg>
   )
@@ -133,12 +132,7 @@ export function MapPinIcon({ size = 24, className }: IconProps) {
 export function PlusIcon({ size = 22, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
-      <path
-        d="M11 3v4M11 15v4M3 11h4M15 11h4M5.6 5.6l2.8 2.8M13.6 13.6l2.8 2.8M5.6 16.4l2.8-2.8M13.6 8.4l2.8-2.8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M11 4v14M4 11h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -156,6 +150,32 @@ export function ListIcon({ size = 22, className }: IconProps) {
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function ExploreIcon({ size = 22, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
+      <path
+        d="M11 2C7.69 2 5 4.69 5 8c0 4.5 6 11 6 11s6-6.5 6-11c0-3.31-2.69-6-6-6z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <circle cx="11" cy="8" r="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+export function GridIcon({ size = 22, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
+      <path
+        d="M4 4h6v6H4zM12 4h6v6h-6zM4 12h6v6H4zM12 12h6v6h-6z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
       />
     </svg>
   )

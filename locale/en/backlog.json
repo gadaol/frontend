@@ -1,0 +1,12 @@
+{
+  "title": "Backlog",
+  "subtitle": "Your saved places",
+  "empty": "No saved places yet",
+  "emptyDesc": "Explore destinations and save places you want to visit",
+  "explore": "Explore places",
+  "memo": "Note",
+  "noMemo": "No note",
+  "from": "Saved in {trip}",
+  "noTrip": "No trip assigned",
+  "deleteConfirm": "Remove this place from your backlog?"
+}

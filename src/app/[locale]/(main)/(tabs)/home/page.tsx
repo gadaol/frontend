@@ -2,13 +2,15 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import dayjs from '@/lib/dayjs'
 import { daysUntil, formatDateRange, isTripOngoing, isTripUpcoming } from '@/utils/date'
 import {
   BellIcon,
   ChevronRightIcon,
+  ExploreIcon,
+  GridIcon,
   ListIcon,
   MapPinIcon,
-  PlacesIcon,
   PlusIcon,
 } from '@/components/icons'
 import type { BacklogItemWithPlace, TripWithMembers } from '@/types/trip'
@@ -20,7 +22,7 @@ function greetingSubKey():
   | 'greetingAfternoon'
   | 'greetingEvening'
   | 'greetingNight' {
-  const h = new Date().getHours()
+  const h = dayjs().hour()
   if (h >= 5 && h < 12) return 'greetingMorning'
   if (h >= 12 && h < 18) return 'greetingAfternoon'
   if (h >= 18 && h < 22) return 'greetingEvening'
@@ -88,7 +90,7 @@ export default async function HomePage() {
     {
       label: t('quickExplore'),
       href: `/${locale}/places`,
-      icon: <PlacesIcon className="text-ink2" />,
+      icon: <ExploreIcon className="text-ink2" />,
     },
     {
       label: t('quickItinerary'),
@@ -98,7 +100,7 @@ export default async function HomePage() {
     {
       label: t('quickBacklog'),
       href: `/${locale}/backlog`,
-      icon: <MapPinIcon className="text-ink2" />,
+      icon: <GridIcon className="text-ink2" />,
     },
   ]
 
@@ -120,9 +122,10 @@ export default async function HomePage() {
         <p className="text-[22px] font-bold tracking-tight text-white">
           {displayName ? t('greeting', { name: displayName }) : t('greetingDefault')}
         </p>
+        {/* 벨 버튼: 디자인 background rgba(255,255,255,.12) / border rgba(255,255,255,.18) */}
         <Link
           href={`/${locale}/notifications`}
-          className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10"
+          className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.18] bg-white/12"
         >
           <BellIcon size={18} className="text-white" />
           {unreadCount > 0 && (
@@ -150,8 +153,9 @@ export default async function HomePage() {
               href={`/${locale}/trips/${upcomingTrip.id}`}
               className="border-border relative block overflow-hidden rounded-3xl border p-5"
               style={{
+                // 디자인: linear-gradient(135deg, #1B6FF020, #0F235130) → 알파 0x20≈12.5%, 0x30≈18.8%
                 background:
-                  'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 8%, transparent), color-mix(in srgb, var(--color-hero-bot) 12%, transparent))',
+                  'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12.5%, transparent), color-mix(in srgb, var(--color-hero-bot) 18.8%, transparent))',
               }}
             >
               <div
@@ -160,7 +164,8 @@ export default async function HomePage() {
                   background: 'linear-gradient(135deg, var(--color-primary-light), transparent)',
                 }}
               />
-              <div className="bg-primary-light text-primary mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
+              {/* 트립 배지: 디자인 padding 3px 10px / gap 5px */}
+              <div className="bg-primary-light text-primary mb-3 inline-flex items-center gap-[5px] rounded-full px-2.5 py-[3px] text-[11px] font-semibold">
                 <span className="bg-primary inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
                 {isTripOngoing(upcomingTrip.start_date, upcomingTrip.end_date)
                   ? t('badgeOngoing')
@@ -169,7 +174,8 @@ export default async function HomePage() {
               <p className="text-ink mb-1.5 text-[20px] font-bold tracking-tight">
                 {upcomingTrip.title}
               </p>
-              <p className="text-ink2 mb-4 text-[13px]">
+              {/* 트립 날짜: 디자인 margin-bottom 14px */}
+              <p className="text-ink2 mb-3.5 text-[13px]">
                 {formatDateRange(upcomingTrip.start_date, upcomingTrip.end_date, locale)}
                 {upcomingTrip.start_date &&
                   !isTripOngoing(upcomingTrip.start_date, upcomingTrip.end_date) && (
@@ -224,7 +230,8 @@ export default async function HomePage() {
                 href={item.href}
                 className="flex flex-col items-center gap-1.5"
               >
-                <div className="border-border bg-bg flex h-13 w-13 items-center justify-center rounded-[14px] border shadow-sm">
+                {/* 퀵 아이콘: 디자인 box-shadow 0 1px 4px rgba(0,0,0,.06) */}
+                <div className="border-border bg-bg flex h-13 w-13 items-center justify-center rounded-[14px] border shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
                   {item.icon}
                 </div>
                 <span className="text-ink2 text-center text-[11px] font-medium">{item.label}</span>
