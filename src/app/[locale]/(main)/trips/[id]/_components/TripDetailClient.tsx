@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useTransition } from 'react'
+import React, { useState, useMemo, useTransition, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
@@ -370,90 +370,16 @@ function ItineraryTab({
 
             {/* 아이템 리스트 */}
             <div className="mb-4 flex flex-col gap-2 border-b border-[#E8EAED] pb-4">
-              {items.map((item, idx) => {
-                const catLabel = item.places?.place_categories?.name ?? '기타'
-                const category = getCategoryInfoByLabel(catLabel)
-                const Icon = category.icon
-                const placeHref = item.places?.google_place_id
-                  ? `/${locale}/places/${item.places.google_place_id}`
-                  : null
-                const isLast = idx === items.length - 1
-
-                return (
-                  <div key={item.id} className="flex items-start gap-3">
-                    {/* 시간 */}
-                    <div className="relative w-10 flex-shrink-0 pt-0.5">
-                      <input
-                        type="time"
-                        defaultValue={item.visit_time ? item.visit_time.slice(0, 5) : ''}
-                        onChange={(e) => onTimeChange(item.id, e.target.value)}
-                        className="w-full bg-transparent text-[11px] text-[#1B6FF0] outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-                        style={{ colorScheme: 'light' }}
-                      />
-                    </div>
-                    {/* Dot + line */}
-                    <div className="flex flex-shrink-0 flex-col items-center">
-                      <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1B6FF0]" />
-                      {!isLast && (
-                        <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />
-                      )}
-                    </div>
-                    {/* 카드 */}
-                    <div className="mb-1 flex flex-1 overflow-hidden rounded-[10px] bg-[#F5F7FA]">
-                      <div
-                        className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}
-                      >
-                        <Icon size={20} className={category.color} />
-                      </div>
-                      <div className="flex-1 px-3 py-2.5">
-                        <p className="text-[13px] font-semibold text-[#0F1117]">
-                          {item.places?.name ?? '알 수 없는 장소'}
-                        </p>
-                        {item.places?.address && (
-                          <p className="truncate text-[11px] text-[#9099A8]">
-                            {item.places.address}
-                          </p>
-                        )}
-                        {catLabel !== '기타' && (
-                          <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
-                            {catLabel}
-                          </span>
-                        )}
-                      </div>
-                      {placeHref && (
-                        <Link
-                          href={placeHref}
-                          className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path
-                              d="M5.5 3.5l3.5 3.5-3.5 3.5"
-                              stroke="currentColor"
-                              strokeWidth="1.4"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => onRemove(item.id)}
-                        className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8] active:opacity-50"
-                        aria-label="일정에서 제거"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path
-                            d="M2.5 7h9"
-                            stroke="currentColor"
-                            strokeWidth="1.4"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+              {items.map((item, idx) => (
+                <ItineraryItemRow
+                  key={item.id}
+                  item={item}
+                  isLast={idx === items.length - 1}
+                  locale={locale}
+                  onRemove={onRemove}
+                  onTimeChange={onTimeChange}
+                />
+              ))}
 
               {/* + 장소 추가 */}
               <div className="flex items-start gap-3">
@@ -516,6 +442,120 @@ function MateTab({
             <PlusIcon size={16} className="text-[#9099A8]" />
           </div>
           <span className="text-[14px] text-[#9099A8]">메이트 초대하기</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── 일정 아이템 row ── */
+function ItineraryItemRow({
+  item,
+  isLast,
+  locale,
+  onRemove,
+  onTimeChange,
+}: {
+  item: ItineraryItemDB
+  isLast: boolean
+  locale: string
+  onRemove: (id: string) => void
+  onTimeChange: (itemId: string, time: string) => void
+}) {
+  const timeRef = useRef<HTMLInputElement>(null)
+  const catLabel = item.places?.place_categories?.name ?? '기타'
+  const category = getCategoryInfoByLabel(catLabel)
+  const Icon = category.icon
+  const placeHref = item.places?.google_place_id
+    ? `/${locale}/places/${item.places.google_place_id}`
+    : null
+
+  function openTimePicker() {
+    const el = timeRef.current
+    if (!el) return
+    if ('showPicker' in el) {
+      ;(el as HTMLInputElement & { showPicker: () => void }).showPicker()
+    } else {
+      ;(el as HTMLInputElement).focus()
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-3">
+      {/* 시간 버튼 */}
+      <div className="w-10 flex-shrink-0 pt-1">
+        <button
+          onClick={openTimePicker}
+          className="w-full text-left text-[11px] leading-tight font-medium"
+        >
+          {item.visit_time ? (
+            <span className="text-[#1B6FF0]">{item.visit_time.slice(0, 5)}</span>
+          ) : (
+            <span className="text-[#C0C6D0]">--:--</span>
+          )}
+        </button>
+        <input
+          ref={timeRef}
+          type="time"
+          className="sr-only"
+          defaultValue={item.visit_time ? item.visit_time.slice(0, 5) : ''}
+          onChange={(e) => onTimeChange(item.id, e.target.value)}
+        />
+      </div>
+
+      {/* Dot + line */}
+      <div className="flex flex-shrink-0 flex-col items-center">
+        <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1B6FF0]" />
+        {!isLast && <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />}
+      </div>
+
+      {/* 카드 */}
+      <div className="mb-1 flex flex-1 overflow-hidden rounded-[10px] bg-[#F5F7FA]">
+        <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
+          <Icon size={20} className={category.color} />
+        </div>
+        <div className="flex-1 px-3 py-2.5">
+          <p className="text-[13px] font-semibold text-[#0F1117]">
+            {item.places?.name ?? '알 수 없는 장소'}
+          </p>
+          {item.places?.address && (
+            <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
+          )}
+          {catLabel !== '기타' && (
+            <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
+              {catLabel}
+            </span>
+          )}
+        </div>
+        {placeHref && (
+          <Link
+            href={placeHref}
+            className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M5.5 3.5l3.5 3.5-3.5 3.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        )}
+        <button
+          onClick={() => onRemove(item.id)}
+          className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#C0C6D0] active:text-red-400 active:opacity-70"
+          aria-label="일정에서 제거"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M2 2l10 10M12 2L2 12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
     </div>
