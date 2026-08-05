@@ -449,6 +449,8 @@ function MateTab({
 }
 
 /* ── 일정 아이템 row ── */
+const SWIPE_DELETE_WIDTH = 68
+
 function ItineraryItemRow({
   item,
   isLast,
@@ -463,6 +465,9 @@ function ItineraryItemRow({
   onTimeChange: (itemId: string, time: string) => void
 }) {
   const timeRef = useRef<HTMLInputElement>(null)
+  const touchStartX = useRef(0)
+  const [swiped, setSwiped] = useState(false)
+
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
   const Icon = category.icon
@@ -478,6 +483,16 @@ function ItineraryItemRow({
     } else {
       ;(el as HTMLInputElement).focus()
     }
+  }
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    const diff = touchStartX.current - e.changedTouches[0].clientX
+    if (diff > 40) setSwiped(true)
+    else if (diff < -20) setSwiped(false)
   }
 
   return (
@@ -509,54 +524,62 @@ function ItineraryItemRow({
         {!isLast && <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />}
       </div>
 
-      {/* 카드 */}
-      <div className="mb-1 flex flex-1 overflow-hidden rounded-[10px] bg-[#F5F7FA]">
-        <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
-          <Icon size={20} className={category.color} />
-        </div>
-        <div className="flex-1 px-3 py-2.5">
-          <p className="text-[13px] font-semibold text-[#0F1117]">
-            {item.places?.name ?? '알 수 없는 장소'}
-          </p>
-          {item.places?.address && (
-            <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
-          )}
-          {catLabel !== '기타' && (
-            <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
-              {catLabel}
-            </span>
-          )}
-        </div>
-        {placeHref && (
-          <Link
-            href={placeHref}
-            className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M5.5 3.5l3.5 3.5-3.5 3.5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        )}
+      {/* 스와이프 컨테이너 */}
+      <div className="relative mb-1 flex-1 overflow-hidden rounded-[10px]">
+        {/* 삭제 버튼 (뒤에 고정) */}
         <button
           onClick={() => onRemove(item.id)}
-          className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#C0C6D0] active:text-red-400 active:opacity-70"
+          className="absolute top-0 right-0 flex h-full items-center justify-center rounded-r-[10px] bg-red-500 text-[12px] font-semibold text-white active:bg-red-600"
+          style={{ width: SWIPE_DELETE_WIDTH }}
           aria-label="일정에서 제거"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M2 2l10 10M12 2L2 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+          삭제
         </button>
+
+        {/* 슬라이드 카드 */}
+        <div
+          className="flex overflow-hidden rounded-[10px] bg-[#F5F7FA]"
+          style={{
+            transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
+            transition: 'transform 0.2s ease',
+          }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onClick={() => swiped && setSwiped(false)}
+        >
+          <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
+            <Icon size={20} className={category.color} />
+          </div>
+          <div className="flex-1 px-3 py-2.5">
+            <p className="text-[13px] font-semibold text-[#0F1117]">
+              {item.places?.name ?? '알 수 없는 장소'}
+            </p>
+            {item.places?.address && (
+              <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
+            )}
+            {catLabel !== '기타' && (
+              <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
+                {catLabel}
+              </span>
+            )}
+          </div>
+          {placeHref && (
+            <Link
+              href={placeHref}
+              className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M5.5 3.5l3.5 3.5-3.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )
