@@ -5,20 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import dayjs from '@/lib/dayjs'
-import { ChevronLeftIcon, MapPinIcon, PlusIcon } from '@/components/icons'
+import { MapPinIcon, PlusIcon } from '@/components/icons'
+import PlacesMapTab from './PlacesMapTab'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
-import {
-  formatDateRange,
-  daysUntil,
-  isTripOngoing,
-  isTripUpcoming,
-  tripDuration,
-} from '@/utils/date'
+import { formatDateRange, daysUntil, isTripOngoing, isTripUpcoming, tripDuration } from '@/utils/date'
 import { removeItineraryItem } from '@/app/actions/trip'
 import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
 
 const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
+
+type Tab = '일정' | '장소' | '메이트'
 
 interface Props {
   trip: TripDetail
@@ -31,6 +28,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<Tab>('일정')
   const [copyToast, setCopyToast] = useState(false)
   const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -61,7 +59,6 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
 
   const profileMap = new Map(memberProfiles.map((p) => [p.id, p.name]))
 
-  // Day 목록 생성 (start ~ end)
   const expectedDays = useMemo(() => {
     if (!trip.start_date || !trip.end_date) return []
     const start = dayjs(trip.start_date)
@@ -73,22 +70,9 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
     }))
   }, [trip.start_date, trip.end_date])
 
-  const [activeDay, setActiveDay] = useState(1)
-
-  // DB itinerary_days를 날짜 키로 매핑
   const dayMap = useMemo(
     () => new Map(trip.itinerary_days.map((d) => [d.day_date, d])),
     [trip.itinerary_days],
-  )
-
-  const activeDayInfo = expectedDays.find((d) => d.dayNumber === activeDay)
-  const activeDayDB = activeDayInfo ? dayMap.get(activeDayInfo.dayDate) : null
-  const activeItems = useMemo(
-    () =>
-      (activeDayDB?.itinerary_items ?? [])
-        .filter((item) => !removedItemIds.has(item.id))
-        .sort((a, b) => a.order_index - b.order_index),
-    [activeDayDB, removedItemIds],
   )
 
   function handleRemoveItem(itemId: string) {
@@ -99,7 +83,6 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
     })
   }
 
-  // 상태 표시
   const ongoing = isTripOngoing(trip.start_date, trip.end_date)
   const upcoming = isTripUpcoming(trip.start_date)
   const numDays = tripDuration(trip.start_date, trip.end_date)
@@ -119,53 +102,57 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
   const isOwner = trip.owner_id === currentUserId
 
   return (
-    <div className="bg-bg2 flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col bg-[#F5F7FA]">
       {copyToast && (
         <div className="fixed top-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#0F1117] px-4 py-2 text-[13px] font-medium text-white shadow-lg">
           초대 링크가 복사됐어요
         </div>
       )}
-      {/* 히어로 커버 */}
+
+      {/* 커버 */}
       <div
-        className="relative h-52 flex-shrink-0"
-        style={{ background: trip.cover_url ?? 'linear-gradient(135deg, #0c1f45, #1B6FF0)' }}
+        className="relative h-[220px] flex-shrink-0"
+        style={{ background: trip.cover_url ?? 'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)' }}
       >
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,.1) 60%, transparent 100%)',
-          }}
+          style={{ background: 'linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5))' }}
         />
         {/* 상단 버튼 */}
-        <div className="absolute top-12 right-3 left-3 z-10 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/30 backdrop-blur-sm"
-          >
-            <ChevronLeftIcon size={20} className="text-white" />
-          </button>
+        <button
+          onClick={() => router.back()}
+          className="absolute top-[52px] left-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M11 4L6 9l5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div className="absolute top-[52px] right-4 flex gap-2">
           {isOwner && (
             <Link
               href={`/${locale}/trips/${trip.id}/edit`}
-              className="flex h-9 items-center justify-center rounded-full border border-white/20 bg-black/30 px-3.5 text-[13px] font-medium text-white backdrop-blur-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
             >
-              편집
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="white" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
             </Link>
           )}
+          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="5" cy="9" r="1.5" fill="white" />
+              <circle cx="9" cy="9" r="1.5" fill="white" />
+              <circle cx="13" cy="9" r="1.5" fill="white" />
+            </svg>
+          </button>
         </div>
         {/* 하단 정보 */}
-        <div className="absolute right-0 bottom-0 left-0 z-10 px-4 pb-4">
-          {/* 상태 뱃지 */}
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-2.5 py-1 backdrop-blur-sm">
-            {ongoing && (
-              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            )}
+        <div className="absolute right-0 bottom-4 left-4">
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
+            {ongoing && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
             <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
           </div>
-          <h1 className="mb-1 text-[22px] leading-tight font-bold tracking-tight text-white">
-            {trip.title}
-          </h1>
+          <h1 className="mb-1 text-[24px] font-extrabold tracking-tight text-white">{trip.title}</h1>
           {trip.destination && (
             <div className="mb-0.5 flex items-center gap-1">
               <MapPinIcon size={12} className="text-white/60" />
@@ -180,201 +167,301 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
         </div>
       </div>
 
-      {/* 멤버 섹션 */}
-      <div className="border-border bg-bg flex items-center gap-3 border-b px-4 py-3">
-        <div className="flex">
-          {trip.trip_members.slice(0, 5).map((m, i) => {
-            const name = profileMap.get(m.user_id) ?? '?'
-            return (
-              <div
-                key={m.user_id}
-                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
-                style={{
-                  backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                  marginLeft: i > 0 ? -8 : 0,
-                  zIndex: trip.trip_members.length - i,
-                  position: 'relative',
-                }}
-              >
-                {name[0]}
-              </div>
-            )
-          })}
-        </div>
-        <span className="text-ink2 text-[13px]">{trip.trip_members.length}명</span>
-        <button
-          onClick={handleInvite}
-          className="border-border ml-auto flex h-8 items-center gap-1.5 rounded-full border bg-white px-3 text-[12px] font-medium text-[#515966]"
-        >
-          <PlusIcon size={14} className="text-[#515966]" />
-          메이트 초대
-        </button>
-      </div>
-
-      {/* 일정 섹션 */}
-      <div className="flex flex-1 flex-col">
-        {expectedDays.length === 0 ? (
-          /* 날짜 미설정 상태 */
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-20 text-center">
-            <div className="bg-primary-light flex h-20 w-20 items-center justify-center rounded-[24px]">
-              <MapPinIcon size={36} className="text-primary" />
-            </div>
-            <div>
-              <p className="text-ink mb-1 text-[16px] font-semibold">일정이 없어요</p>
-              <p className="text-ink3 text-[13px] leading-relaxed">
-                여행 날짜를 설정하면 일정을 관리할 수 있어요
-              </p>
-            </div>
-            {isOwner && (
-              <Link
-                href={`/${locale}/trips/${trip.id}/edit`}
-                className="bg-primary mt-2 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
-              >
-                날짜 설정하기
-              </Link>
-            )}
+      {/* 바디 카드 */}
+      <div className="relative z-10 -mt-3 flex flex-1 flex-col rounded-t-3xl bg-white">
+        {/* 멤버 row */}
+        <div className="flex items-center gap-2.5 px-4 pt-4 pb-0">
+          <div className="flex">
+            {trip.trip_members.slice(0, 5).map((m, i) => {
+              const name = profileMap.get(m.user_id) ?? '?'
+              return (
+                <div
+                  key={m.user_id}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
+                  style={{
+                    backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                    marginLeft: i > 0 ? -8 : 0,
+                    position: 'relative',
+                    zIndex: trip.trip_members.length - i,
+                  }}
+                >
+                  {name[0]}
+                </div>
+              )
+            })}
+            <button
+              onClick={handleInvite}
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-[#E8EAED] bg-white"
+              style={{ marginLeft: -8, zIndex: 0 }}
+            >
+              <PlusIcon size={12} className="text-[#9099A8]" />
+            </button>
           </div>
-        ) : (
-          <>
-            {/* Day 탭 */}
-            <div className="border-border bg-bg sticky top-0 z-10 border-b">
-              <div
-                className="flex gap-1 overflow-x-auto px-4 py-3 [&::-webkit-scrollbar]:hidden"
-                style={{ scrollbarWidth: 'none' } as React.CSSProperties}
-              >
-                {expectedDays.map((day) => (
-                  <button
-                    key={day.dayNumber}
-                    onClick={() => setActiveDay(day.dayNumber)}
-                    className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
-                      activeDay === day.dayNumber
-                        ? 'bg-primary text-white'
-                        : 'border-border border bg-white text-[#515966]'
-                    }`}
-                  >
-                    Day {day.dayNumber}
-                  </button>
-                ))}
-              </div>
-              {activeDayInfo && (
-                <p className="text-ink3 px-4 pb-2.5 text-[12px]">
-                  {dayjs(activeDayInfo.dayDate).locale(locale).format('M월 D일 (ddd)')}
-                </p>
-              )}
+          <button onClick={handleInvite} className="text-[13px] text-[#515966]">
+            {trip.trip_members.length}명 참여 중 · <span className="text-[#1B6FF0] font-medium">메이트 초대</span>
+          </button>
+        </div>
+
+        {/* Quick action 2버튼 */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 border-b border-[#E8EAED] px-4 pb-4">
+          <Link
+            href={`/${locale}/trips/${trip.id}/places`}
+            className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2C7 2 4 4.7 4 8c0 4 6 10 6 10s6-6 6-10c0-3.3-2.7-6-6-6z" stroke="#515966" strokeWidth="1.4" />
+                <circle cx="10" cy="8" r="2" stroke="#515966" strokeWidth="1.4" />
+              </svg>
+            </div>
+            <span className="text-[11px] font-medium text-[#515966]">장소 탐색</span>
+          </Link>
+          <button className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M13 2l4 4-10 10H3v-4L13 2z" stroke="#515966" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-[11px] font-medium text-[#515966]">투표</span>
+          </button>
+        </div>
+
+        {/* 탭 */}
+        <div className="flex border-b border-[#E8EAED] px-4">
+          {(['일정', '장소', '메이트'] as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-3 pr-4 text-[14px] font-medium border-b-2 transition-colors ${
+                activeTab === tab
+                  ? 'border-[#1B6FF0] text-[#1B6FF0] font-semibold'
+                  : 'border-transparent text-[#9099A8]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* 탭 컨텐츠 */}
+        <div className="flex-1 pb-6">
+          {activeTab === '일정' && (
+            <ItineraryTab
+              expectedDays={expectedDays}
+              dayMap={dayMap}
+              removedItemIds={removedItemIds}
+              onRemove={handleRemoveItem}
+              tripId={trip.id}
+              locale={locale}
+              isOwner={isOwner}
+            />
+          )}
+          {activeTab === '장소' && (
+            <PlacesMapTab trip={trip} locale={locale} />
+          )}
+          {activeTab === '메이트' && (
+            <MateTab
+              members={trip.trip_members}
+              profileMap={profileMap}
+              onInvite={handleInvite}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── 일정 탭 ── */
+type ExpectedDay = { dayNumber: number; dayDate: string }
+type DayDB = TripDetail['itinerary_days'][number]
+type ItineraryItemDB = DayDB['itinerary_items'][number]
+
+function ItineraryTab({
+  expectedDays,
+  dayMap,
+  removedItemIds,
+  onRemove,
+  tripId,
+  locale,
+  isOwner,
+}: {
+  expectedDays: ExpectedDay[]
+  dayMap: Map<string, DayDB>
+  removedItemIds: Set<string>
+  onRemove: (id: string) => void
+  tripId: string
+  locale: string
+  isOwner: boolean
+}) {
+  if (expectedDays.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#EBF2FF]">
+          <MapPinIcon size={30} className="text-[#1B6FF0]" />
+        </div>
+        <div>
+          <p className="mb-1 text-[16px] font-semibold text-[#0F1117]">일정이 없어요</p>
+          <p className="text-[13px] leading-relaxed text-[#9099A8]">
+            여행 날짜를 설정하면 일정을 관리할 수 있어요
+          </p>
+        </div>
+        {isOwner && (
+          <Link
+            href={`/${locale}/trips/${tripId}/edit`}
+            className="mt-1 rounded-full bg-[#1B6FF0] px-5 py-2.5 text-[14px] font-semibold text-white"
+          >
+            날짜 설정하기
+          </Link>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {expectedDays.map((day) => {
+        const dayDB = dayMap.get(day.dayDate)
+        const items = (dayDB?.itinerary_items ?? [])
+          .filter((item) => !removedItemIds.has(item.id))
+          .sort((a, b) => a.order_index - b.order_index)
+
+        return (
+          <div key={day.dayNumber} className="px-4 pt-4">
+            {/* Day 헤더 */}
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="rounded-full bg-[#1B6FF0] px-3 py-0.5 text-[11px] font-bold text-white">
+                Day {day.dayNumber}
+              </span>
+              <span className="text-[12px] text-[#9099A8]">
+                {dayjs(day.dayDate).locale(locale).format('M월 D일 dddd')}
+              </span>
             </div>
 
             {/* 아이템 리스트 */}
-            <div className="flex flex-1 flex-col gap-2.5 px-4 py-4">
-              {activeItems.length === 0 ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
-                  <p className="text-ink3 text-[14px]">이 날 일정이 없어요</p>
-                  <Link
-                    href={`/${locale}/trips/${trip.id}/places?day=${activeDay}&date=${activeDayInfo?.dayDate ?? ''}`}
-                    className="border-primary text-primary flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-semibold"
-                  >
-                    <PlusIcon size={14} className="text-primary" />
-                    장소 추가
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {activeItems.map((item, idx) => {
-                    const catLabel = item.places?.place_categories?.name ?? '기타'
-                    const category = getCategoryInfoByLabel(catLabel)
-                    const Icon = category.icon
-                    const placeHref = item.places?.google_place_id
-                      ? `/${locale}/places/${item.places.google_place_id}`
-                      : null
+            <div className="mb-4 flex flex-col gap-2 border-b border-[#E8EAED] pb-4">
+              {items.map((item, idx) => {
+                const catLabel = item.places?.place_categories?.name ?? '기타'
+                const category = getCategoryInfoByLabel(catLabel)
+                const Icon = category.icon
+                const placeHref = item.places?.google_place_id
+                  ? `/${locale}/places/${item.places.google_place_id}`
+                  : null
+                const isLast = idx === items.length - 1
 
-                    return (
-                      <div key={item.id} className="flex items-start gap-3">
-                        {/* 순서 인디케이터 */}
-                        <div className="flex flex-col items-center pt-1">
-                          <div className="bg-primary flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white">
-                            {idx + 1}
-                          </div>
-                          {idx < activeItems.length - 1 && (
-                            <div className="bg-border mt-1 h-full w-px" style={{ minHeight: 32 }} />
-                          )}
-                        </div>
-                        {/* 카드 */}
-                        <div className="border-border bg-bg mb-2 flex flex-1 overflow-hidden rounded-2xl border">
-                          {/* 카테고리 아이콘 썸네일 */}
-                          <div
-                            className={`flex w-16 flex-shrink-0 items-center justify-center ${category.bg}`}
-                          >
-                            <Icon size={24} className={category.color} />
-                          </div>
-                          {/* 본문 */}
-                          <div className="flex-1 px-3 py-3">
-                            {item.visit_time && (
-                              <p className="text-primary mb-0.5 text-[11px] font-semibold">
-                                {item.visit_time.slice(0, 5)}
-                              </p>
-                            )}
-                            <p className="text-ink truncate text-[14px] font-bold">
-                              {item.places?.name ?? '알 수 없는 장소'}
-                            </p>
-                            {item.places?.address && (
-                              <p className="text-ink3 truncate text-[11px]">
-                                {item.places.address}
-                              </p>
-                            )}
-                            {item.memo && (
-                              <p className="text-ink2 mt-1 truncate text-[11px] italic">
-                                &ldquo;{item.memo}&rdquo;
-                              </p>
-                            )}
-                          </div>
-                          {/* 삭제 버튼 */}
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="flex w-10 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8] active:opacity-50"
-                            aria-label="일정에서 제거"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path
-                                d="M3 8h10"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </button>
-                          {placeHref && (
-                            <Link
-                              href={placeHref}
-                              className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                <path
-                                  d="M5.5 3.5l3.5 3.5-3.5 3.5"
-                                  stroke="currentColor"
-                                  strokeWidth="1.4"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </Link>
-                          )}
-                        </div>
+                return (
+                  <div key={item.id} className="flex items-start gap-3">
+                    {/* 시간 */}
+                    <span className="w-10 flex-shrink-0 pt-1 text-[11px] text-[#9099A8]">
+                      {item.visit_time ? item.visit_time.slice(0, 5) : ''}
+                    </span>
+                    {/* Dot + line */}
+                    <div className="flex flex-shrink-0 flex-col items-center">
+                      <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1B6FF0]" />
+                      {!isLast && <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />}
+                    </div>
+                    {/* 카드 */}
+                    <div className="mb-1 flex flex-1 overflow-hidden rounded-[10px] bg-[#F5F7FA]">
+                      <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
+                        <Icon size={20} className={category.color} />
                       </div>
-                    )
-                  })}
+                      <div className="flex-1 px-3 py-2.5">
+                        <p className="text-[13px] font-semibold text-[#0F1117]">
+                          {item.places?.name ?? '알 수 없는 장소'}
+                        </p>
+                        {item.places?.address && (
+                          <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
+                        )}
+                        {catLabel !== '기타' && (
+                          <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
+                            {catLabel}
+                          </span>
+                        )}
+                      </div>
+                      {placeHref && (
+                        <Link
+                          href={placeHref}
+                          className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M5.5 3.5l3.5 3.5-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => onRemove(item.id)}
+                        className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8] active:opacity-50"
+                        aria-label="일정에서 제거"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M2.5 7h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
 
-                  {/* + 장소 추가 버튼 */}
-                  <Link
-                    href={`/${locale}/trips/${trip.id}/places?day=${activeDay}&date=${activeDayInfo?.dayDate ?? ''}`}
-                    className="border-border mt-1 flex items-center justify-center gap-1.5 rounded-2xl border border-dashed py-4 text-[13px] font-medium text-[#9099A8]"
-                  >
-                    <PlusIcon size={16} className="text-[#9099A8]" />
-                    장소 추가
-                  </Link>
-                </>
-              )}
+              {/* + 장소 추가 */}
+              <div className="flex items-start gap-3">
+                <span className="w-10 flex-shrink-0" />
+                <div className="flex flex-shrink-0 flex-col items-center">
+                  <div className="mt-1 h-2.5 w-2.5 rounded-full border-2 border-dashed border-[#E8EAED] bg-white" />
+                </div>
+                <Link
+                  href={`/${locale}/trips/${tripId}/places?day=${day.dayNumber}&date=${day.dayDate}`}
+                  className="mb-1 flex flex-1 items-center rounded-[10px] border border-dashed border-[#E8EAED] bg-transparent px-3 py-2.5"
+                >
+                  <span className="text-[13px] text-[#9099A8]">+ 장소 추가</span>
+                </Link>
+              </div>
             </div>
-          </>
-        )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── 메이트 탭 ── */
+function MateTab({
+  members,
+  profileMap,
+  onInvite,
+}: {
+  members: { user_id: string; role: string }[]
+  profileMap: Map<string, string | null>
+  onInvite: () => void
+}) {
+  return (
+    <div className="px-4 pt-4">
+      <div className="flex flex-col gap-3">
+        {members.map((m, i) => {
+          const name = profileMap.get(m.user_id) ?? '알 수 없음'
+          return (
+            <div key={m.user_id} className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
+                style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+              >
+                {name[0]}
+              </div>
+              <div className="flex-1">
+                <p className="text-[14px] font-semibold text-[#0F1117]">{name}</p>
+                <p className="text-[12px] text-[#9099A8]">{m.role === 'owner' ? '방장' : '메이트'}</p>
+              </div>
+            </div>
+          )
+        })}
+        <button
+          onClick={onInvite}
+          className="mt-1 flex items-center gap-3 rounded-2xl border border-dashed border-[#E8EAED] px-4 py-3"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-[#E8EAED]">
+            <PlusIcon size={16} className="text-[#9099A8]" />
+          </div>
+          <span className="text-[14px] text-[#9099A8]">메이트 초대하기</span>
+        </button>
       </div>
     </div>
   )

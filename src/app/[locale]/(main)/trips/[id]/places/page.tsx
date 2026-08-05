@@ -50,7 +50,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
   const headerTitle = dayDate ? `Day ${dayNumber} 장소 추가` : '장소 추가'
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-dvh flex-col">
       <AppHeader title={headerTitle} onBack="router" />
       <div className="relative flex-1 overflow-hidden">
         <PlaceMapSearch

@@ -6,7 +6,7 @@ import type { Tables } from '@/types/database/database.types'
 
 type ItineraryItem = Tables<'itinerary_items'> & {
   places:
-    | (Pick<Tables<'places'>, 'id' | 'google_place_id' | 'name' | 'address'> & {
+    | (Pick<Tables<'places'>, 'id' | 'google_place_id' | 'name' | 'address' | 'lat' | 'lng'> & {
         place_categories: Pick<Tables<'place_categories'>, 'name'> | null
       })
     | null
@@ -48,7 +48,7 @@ export default async function TripDetailPage({
         id, day_number, day_date,
         itinerary_items(
           id, order_index, visit_time, memo, place_id,
-          places(id, google_place_id, name, address, place_categories(name))
+          places(id, google_place_id, name, address, lat, lng, place_categories(name))
         )
       )`,
     )
