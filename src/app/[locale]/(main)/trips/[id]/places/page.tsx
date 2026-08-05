@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, use } from 'react'
-import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/common/AppHeader'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
 import { addItineraryItem } from '@/app/actions/trip'
@@ -16,7 +15,6 @@ interface Props {
 export default function TripPlacesPage({ params, searchParams }: Props) {
   const { id: tripId } = use(params)
   const { day, date } = use(searchParams)
-  const router = useRouter()
 
   const dayNumber = parseInt(day ?? '1', 10)
   const dayDate = date ?? ''
@@ -49,9 +47,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
     })
   }
 
-  const headerTitle = dayDate
-    ? `Day ${dayNumber} 장소 추가`
-    : '장소 추가'
+  const headerTitle = dayDate ? `Day ${dayNumber} 장소 추가` : '장소 추가'
 
   return (
     <div className="flex h-full flex-col">

@@ -134,8 +134,26 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
                 onCloseClick={() => setSelectedPlace(null)}
                 options={{ pixelOffset: new google.maps.Size(0, -12) }}
               >
-                <div style={{ width: 200, boxSizing: 'border-box', padding: '8px', fontFamily: 'inherit' }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#111', margin: 0, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div
+                  style={{
+                    width: 200,
+                    boxSizing: 'border-box',
+                    padding: '8px',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: '#111',
+                      margin: 0,
+                      lineHeight: 1.4,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {selectedPlace.displayName.text}
                   </p>
                   <p style={{ fontSize: 12, color: '#888', margin: '3px 0 0', lineHeight: 1.4 }}>
@@ -145,7 +163,10 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
                     <p style={{ fontSize: 12, color: '#555', margin: '3px 0 0' }}>
                       ★ {selectedPlace.rating.toFixed(1)}
                       {selectedPlace.userRatingCount ? (
-                        <span style={{ color: '#888' }}> ({selectedPlace.userRatingCount.toLocaleString()})</span>
+                        <span style={{ color: '#888' }}>
+                          {' '}
+                          ({selectedPlace.userRatingCount.toLocaleString()})
+                        </span>
                       ) : null}
                     </p>
                   )}
@@ -154,7 +175,17 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
                   ) : (
                     <Link
                       href={`/${locale}/places/${selectedPlace.id}`}
-                      style={{ display: 'block', marginTop: 10, padding: '7px 0 2px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#1B6FF0', textDecoration: 'none', borderTop: '1px solid #EEE' }}
+                      style={{
+                        display: 'block',
+                        marginTop: 10,
+                        padding: '7px 0 2px',
+                        textAlign: 'center',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#1B6FF0',
+                        textDecoration: 'none',
+                        borderTop: '1px solid #EEE',
+                      }}
                     >
                       {t('viewDetail')}
                     </Link>
@@ -211,14 +242,20 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
       {results.length > 0 && (
         <div
           className="pointer-events-none absolute right-4 z-20 flex flex-col items-end"
-          style={{ bottom: showList ? 'calc(var(--list-height, 240px) + 12px)' : 'calc(env(safe-area-inset-bottom) + 16px)' }}
+          style={{
+            bottom: showList
+              ? 'calc(var(--list-height, 240px) + 12px)'
+              : 'calc(env(safe-area-inset-bottom) + 16px)',
+          }}
         >
           <button
             onClick={() => setShowList((v) => !v)}
             className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2.5 shadow-lg"
           >
             <ListIcon size={16} className={showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'} />
-            <span className={`text-[13px] font-semibold ${showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'}`}>
+            <span
+              className={`text-[13px] font-semibold ${showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'}`}
+            >
               {showList ? t('hideList') : t('showList')}
             </span>
           </button>
@@ -240,19 +277,30 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
                 const category = getCategoryInfo(place.types)
                 const Icon = category.icon
                 return (
-                  <div key={place.id} className="flex items-center gap-0 px-4 py-2.5 active:bg-[#F5F6FA]">
+                  <div
+                    key={place.id}
+                    className="flex items-center gap-0 px-4 py-2.5 active:bg-[#F5F6FA]"
+                  >
                     <button
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       onClick={() => focusPlace(place)}
                     >
-                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}>
+                      <div
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
+                      >
                         <Icon size={18} className={category.color} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-semibold text-[#0F1117]">{place.displayName.text}</p>
-                        <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">{place.formattedAddress}</p>
+                        <p className="truncate text-[14px] font-semibold text-[#0F1117]">
+                          {place.displayName.text}
+                        </p>
+                        <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">
+                          {place.formattedAddress}
+                        </p>
                         {place.rating && (
-                          <p className="mt-0.5 text-[11px] text-[#9099A8]">★ {place.rating.toFixed(1)}</p>
+                          <p className="mt-0.5 text-[11px] text-[#9099A8]">
+                            ★ {place.rating.toFixed(1)}
+                          </p>
                         )}
                       </div>
                     </button>

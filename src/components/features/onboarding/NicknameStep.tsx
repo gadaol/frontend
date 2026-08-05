@@ -12,9 +12,10 @@ interface Props {
   nickname: string
   onChange: (v: string) => void
   onNext: () => void
+  redirectTo?: string | null
 }
 
-export default function NicknameStep({ nickname, onChange, onNext }: Props) {
+export default function NicknameStep({ nickname, onChange, onNext, redirectTo }: Props) {
   const t = useTranslations('onboarding')
   const router = useRouter()
   const locale = useLocale()
@@ -22,7 +23,7 @@ export default function NicknameStep({ nickname, onChange, onNext }: Props) {
 
   const handleSkip = async () => {
     await markOnboardingComplete()
-    router.push(`/${locale}/home`)
+    router.push(redirectTo ?? `/${locale}/home`)
   }
 
   return (

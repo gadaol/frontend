@@ -24,7 +24,11 @@ export type TripDetail = Tables<'trips'> & {
 
 export type MemberProfile = { id: string; name: string | null }
 
-export default async function TripDetailPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
+export default async function TripDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string; locale: string }>
+}) {
   const { id } = await params
   const supabase = await createClient()
   const locale = await getLocale()

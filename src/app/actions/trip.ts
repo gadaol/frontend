@@ -95,6 +95,15 @@ export async function addItineraryItem(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
 
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
   const dayId = await ensureItineraryDay(tripId, dayDate, dayNumber)
   if (!dayId) return { error: 'day_create_failed' }
 
@@ -123,6 +132,25 @@ export async function removeItineraryItem(itemId: string): Promise<{ error?: str
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
 
+  // item → day → trip 소유권 검증
+  const { data: item } = await supabase
+    .from('itinerary_items')
+    .select('itinerary_days(trip_id)')
+    .eq('id', itemId)
+    .maybeSingle()
+
+  const tripId = (item?.itinerary_days as { trip_id: string } | null)?.trip_id
+  if (!tripId) return { error: 'not_found' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
   const { error } = await supabase.from('itinerary_items').delete().eq('id', itemId)
   if (error) return { error: error.message }
   return {}
@@ -138,7 +166,11 @@ export async function updateTrip(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
 
-  const { error } = await supabase.from('trips').update(data).eq('id', tripId).eq('owner_id', user.id)
+  const { error } = await supabase
+    .from('trips')
+    .update(data)
+    .eq('id', tripId)
+    .eq('owner_id', user.id)
   if (error) return { error: error.message }
   return {}
 }

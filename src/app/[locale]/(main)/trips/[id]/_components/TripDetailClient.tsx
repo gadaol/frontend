@@ -7,7 +7,13 @@ import { useLocale } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import { ChevronLeftIcon, MapPinIcon, PlusIcon } from '@/components/icons'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
-import { formatDateRange, daysUntil, isTripOngoing, isTripUpcoming, tripDuration } from '@/utils/date'
+import {
+  formatDateRange,
+  daysUntil,
+  isTripOngoing,
+  isTripUpcoming,
+  tripDuration,
+} from '@/utils/date'
 import { removeItineraryItem } from '@/app/actions/trip'
 import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
@@ -26,18 +32,31 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
   const [copyToast, setCopyToast] = useState(false)
+  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   async function handleInvite() {
     const token = await getOrCreateInviteToken(trip.id)
     if (!token) return
     const inviteUrl = `${window.location.origin}/${locale}/trips/${trip.id}/join?token=${token}`
     if (navigator.share) {
-      await navigator.share({ title: `${trip.title} 여행에 초대합니다`, url: inviteUrl })
+      try {
+        await navigator.share({ title: `${trip.title} 여행에 초대합니다`, url: inviteUrl })
+      } catch (e) {
+        if (e instanceof Error && e.name !== 'AbortError') {
+          await navigator.clipboard.writeText(inviteUrl).catch(() => null)
+          showCopyToast()
+        }
+      }
     } else {
-      await navigator.clipboard.writeText(inviteUrl)
-      setCopyToast(true)
-      setTimeout(() => setCopyToast(false), 2500)
+      await navigator.clipboard.writeText(inviteUrl).catch(() => null)
+      showCopyToast()
     }
+  }
+
+  function showCopyToast() {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setCopyToast(true)
+    toastTimer.current = setTimeout(() => setCopyToast(false), 2500)
   }
 
   const profileMap = new Map(memberProfiles.map((p) => [p.id, p.name]))
@@ -95,11 +114,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
         : '날짜 미정'
 
   const durationLabel =
-    numDays === 1
-      ? '당일치기'
-      : trip.start_date
-        ? `${nights}박 ${numDays}일`
-        : ''
+    numDays === 1 ? '당일치기' : trip.start_date ? `${nights}박 ${numDays}일` : ''
 
   const isOwner = trip.owner_id === currentUserId
 
@@ -118,7 +133,8 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,.1) 60%, transparent 100%)',
+            background:
+              'linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,.1) 60%, transparent 100%)',
           }}
         />
         {/* 상단 버튼 */}
@@ -132,7 +148,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           {isOwner && (
             <Link
               href={`/${locale}/trips/${trip.id}/edit`}
-              className="flex h-9 items-center justify-center rounded-full border border-white/20 bg-black/30 px-3.5 backdrop-blur-sm text-[13px] font-medium text-white"
+              className="flex h-9 items-center justify-center rounded-full border border-white/20 bg-black/30 px-3.5 text-[13px] font-medium text-white backdrop-blur-sm"
             >
               편집
             </Link>
@@ -147,7 +163,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             )}
             <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
           </div>
-          <h1 className="mb-1 text-[22px] font-bold tracking-tight text-white leading-tight">
+          <h1 className="mb-1 text-[22px] leading-tight font-bold tracking-tight text-white">
             {trip.title}
           </h1>
           {trip.destination && (
@@ -185,9 +201,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             )
           })}
         </div>
-        <span className="text-ink2 text-[13px]">
-          {trip.trip_members.length}명
-        </span>
+        <span className="text-ink2 text-[13px]">{trip.trip_members.length}명</span>
         <button
           onClick={handleInvite}
           className="border-border ml-auto flex h-8 items-center gap-1.5 rounded-full border bg-white px-3 text-[12px] font-medium text-[#515966]"
@@ -302,7 +316,9 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
                               {item.places?.name ?? '알 수 없는 장소'}
                             </p>
                             {item.places?.address && (
-                              <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
+                              <p className="text-ink3 truncate text-[11px]">
+                                {item.places.address}
+                              </p>
                             )}
                             {item.memo && (
                               <p className="text-ink2 mt-1 truncate text-[11px] italic">
@@ -317,7 +333,12 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
                             aria-label="일정에서 제거"
                           >
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              <path
+                                d="M3 8h10"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              />
                             </svg>
                           </button>
                           {placeHref && (
@@ -326,7 +347,13 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
                               className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
                             >
                               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                <path d="M5.5 3.5l3.5 3.5-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                <path
+                                  d="M5.5 3.5l3.5 3.5-3.5 3.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.4"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
                               </svg>
                             </Link>
                           )}

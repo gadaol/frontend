@@ -49,7 +49,11 @@ export default function NewTripPage() {
         style={{ background: selectedCover }}
       />
 
-      <form id="new-trip-form" onSubmit={handleSubmit} className="flex flex-col gap-6 px-4 py-5 pb-32">
+      <form
+        id="new-trip-form"
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6 px-4 py-5 pb-32"
+      >
         {/* 커버 선택 */}
         <div>
           <p className="mb-3 text-[13px] font-semibold text-[#0F1117]">커버 선택</p>
@@ -87,7 +91,10 @@ export default function NewTripPage() {
         <div>
           <label className="mb-2 block text-[13px] font-semibold text-[#0F1117]">목적지</label>
           <div className="relative">
-            <MapPinIcon size={16} className="absolute top-1/2 left-4 -translate-y-1/2 text-[#9099A8]" />
+            <MapPinIcon
+              size={16}
+              className="absolute top-1/2 left-4 -translate-y-1/2 text-[#9099A8]"
+            />
             <input
               name="destination"
               type="text"
@@ -110,7 +117,7 @@ export default function NewTripPage() {
                 setStartDate(e.target.value)
                 if (endDate && e.target.value > endDate) setEndDate('')
               }}
-              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:bg-white transition-colors"
+              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] transition-colors outline-none focus:border-[#1B6FF0] focus:bg-white"
             />
             <span className="text-[13px] text-[#C0C6D0]">~</span>
             <input
@@ -119,7 +126,7 @@ export default function NewTripPage() {
               value={endDate}
               min={startDate || undefined}
               onChange={(e) => setEndDate(e.target.value)}
-              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:bg-white transition-colors"
+              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] transition-colors outline-none focus:border-[#1B6FF0] focus:bg-white"
             />
           </div>
           <p className="mt-1.5 text-[12px] text-[#9099A8]">날짜는 나중에 설정할 수 있어요</p>

@@ -26,9 +26,10 @@ interface LinkingState {
 interface Props {
   nickname: string
   onBack: () => void
+  redirectTo?: string | null
 }
 
-export default function PhoneStep({ nickname, onBack }: Props) {
+export default function PhoneStep({ nickname, onBack, redirectTo }: Props) {
   const t = useTranslations('onboarding')
   const tAuth = useTranslations('auth')
   const router = useRouter()
@@ -109,7 +110,7 @@ export default function PhoneStep({ nickname, onBack }: Props) {
         })
         .eq('id', user.id)
     }
-    router.push(`/${locale}/home`)
+    router.push(redirectTo ?? `/${locale}/home`)
   }
 
   return (

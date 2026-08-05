@@ -43,7 +43,11 @@ export default function PlacesSearch() {
             {isSaving ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
             ) : (
-              <BacklogIcon size={20} filled={isSaved} className={isSaved ? 'text-[#1B6FF0]' : 'text-[#C4C8CF]'} />
+              <BacklogIcon
+                size={20}
+                filled={isSaved}
+                className={isSaved ? 'text-[#1B6FF0]' : 'text-[#C4C8CF]'}
+              />
             )}
           </button>
         )

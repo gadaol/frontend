@@ -5,11 +5,10 @@ import { getInviteInfo } from '@/app/actions/invite'
 import JoinClient from './_components/JoinClient'
 
 interface Props {
-  params: Promise<{ id: string; locale: string }>
   searchParams: Promise<{ token?: string }>
 }
 
-export default async function JoinPage({ params, searchParams }: Props) {
+export default async function JoinPage({ searchParams }: Props) {
   const { token } = await searchParams
   const locale = await getLocale()
 

@@ -1,6 +1,14 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+
+function adminClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 export async function getOrCreateInviteToken(tripId: string): Promise<string | null> {
   const supabase = await createClient()
@@ -45,9 +53,9 @@ export type InviteInfo = {
 }
 
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
-  const supabase = await createClient()
+  const admin = adminClient()
 
-  const { data: invite } = await supabase
+  const { data: invite } = await admin
     .from('trip_invites')
     .select('token, expires_at, trip_id')
     .eq('token', token)
@@ -56,7 +64,8 @@ export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
 
   if (!invite) return null
 
-  const { data: trip } = await supabase
+  // trips RLS 우회: 비로그인 사용자도 초대 미리보기 가능해야 함
+  const { data: trip } = await admin
     .from('trips')
     .select('id, title, destination, cover_url, start_date, end_date, owner_id')
     .eq('id', invite.trip_id)

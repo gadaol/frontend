@@ -58,15 +58,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
           return NextResponse.redirect(`${origin}/${locale}/email-verified`)
         }
 
+        const redirectTo = searchParams.get('redirect_to')
+
         if (!profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/${locale}/onboarding`)
+          const onboardingUrl = redirectTo
+            ? `${origin}/${locale}/onboarding?redirect_to=${encodeURIComponent(redirectTo)}`
+            : `${origin}/${locale}/onboarding`
+          return NextResponse.redirect(onboardingUrl)
+        }
+
+        if (redirectTo?.startsWith('/')) {
+          return NextResponse.redirect(`${origin}${redirectTo}`)
         }
       }
 
-      const redirectTo = searchParams.get('redirect_to')
-      if (redirectTo?.startsWith('/')) {
-        return NextResponse.redirect(`${origin}${redirectTo}`)
-      }
       return NextResponse.redirect(`${origin}/${locale}/home`)
     }
   }
