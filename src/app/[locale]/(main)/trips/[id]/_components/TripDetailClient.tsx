@@ -8,8 +8,14 @@ import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
 import PlacesMapTab from './PlacesMapTab'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
-import { formatDateRange, daysUntil, isTripOngoing, isTripUpcoming, tripDuration } from '@/utils/date'
-import { removeItineraryItem } from '@/app/actions/trip'
+import {
+  formatDateRange,
+  daysUntil,
+  isTripOngoing,
+  isTripUpcoming,
+  tripDuration,
+} from '@/utils/date'
+import { removeItineraryItem, updateItineraryItemTime } from '@/app/actions/trip'
 import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
 
@@ -83,6 +89,13 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
     })
   }
 
+  function handleTimeChange(itemId: string, time: string) {
+    startTransition(async () => {
+      await updateItineraryItemTime(itemId, time || null)
+      router.refresh()
+    })
+  }
+
   const ongoing = isTripOngoing(trip.start_date, trip.end_date)
   const upcoming = isTripUpcoming(trip.start_date)
   const numDays = tripDuration(trip.start_date, trip.end_date)
@@ -112,7 +125,10 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
       {/* 커버 */}
       <div
         className="relative h-[220px] flex-shrink-0"
-        style={{ background: trip.cover_url ?? 'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)' }}
+        style={{
+          background:
+            trip.cover_url ?? 'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)',
+        }}
       >
         <div
           className="absolute inset-0"
@@ -124,7 +140,13 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           className="absolute top-[52px] left-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M11 4L6 9l5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M11 4L6 9l5 5"
+              stroke="white"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
         <div className="absolute top-[52px] right-4 flex gap-2">
@@ -142,7 +164,9 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             {ongoing && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
             <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
           </div>
-          <h1 className="mb-1 text-[24px] font-extrabold tracking-tight text-white">{trip.title}</h1>
+          <h1 className="mb-1 text-[24px] font-extrabold tracking-tight text-white">
+            {trip.title}
+          </h1>
           {trip.destination && (
             <div className="mb-0.5 flex items-center gap-1">
               <MapPinIcon size={12} className="text-white/60" />
@@ -188,40 +212,47 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             </button>
           </div>
           <button onClick={handleInvite} className="text-[13px] text-[#515966]">
-            {trip.trip_members.length}명 참여 중 · <span className="text-[#1B6FF0] font-medium">메이트 초대</span>
+            {trip.trip_members.length}명 참여 중 ·{' '}
+            <span className="font-medium text-[#1B6FF0]">메이트 초대</span>
           </button>
         </div>
 
-        {/* Quick action 3버튼 */}
-        <div className="mt-3 grid grid-cols-3 gap-2.5 border-b border-[#E8EAED] px-4 pb-4">
+        {/* Quick action 2버튼 */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 border-b border-[#E8EAED] px-4 pb-4">
           <Link
             href={`/${locale}/trips/${trip.id}/edit`}
             className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="3" width="16" height="14" rx="2" stroke="#515966" strokeWidth="1.4" />
-                <path d="M6 3V1M14 3V1M2 8h16" stroke="#515966" strokeWidth="1.4" strokeLinecap="round" />
+                <rect
+                  x="2"
+                  y="3"
+                  width="16"
+                  height="14"
+                  rx="2"
+                  stroke="#515966"
+                  strokeWidth="1.4"
+                />
+                <path
+                  d="M6 3V1M14 3V1M2 8h16"
+                  stroke="#515966"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
             <span className="text-[11px] font-medium text-[#515966]">일정 편집</span>
           </Link>
-          <Link
-            href={`/${locale}/trips/${trip.id}/places`}
-            className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2C7 2 4 4.7 4 8c0 4 6 10 6 10s6-6 6-10c0-3.3-2.7-6-6-6z" stroke="#515966" strokeWidth="1.4" />
-                <circle cx="10" cy="8" r="2" stroke="#515966" strokeWidth="1.4" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-medium text-[#515966]">장소 탐색</span>
-          </Link>
           <button className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M13 2l4 4-10 10H3v-4L13 2z" stroke="#515966" strokeWidth="1.4" strokeLinejoin="round" />
+                <path
+                  d="M13 2l4 4-10 10H3v-4L13 2z"
+                  stroke="#515966"
+                  strokeWidth="1.4"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <span className="text-[11px] font-medium text-[#515966]">투표</span>
@@ -234,9 +265,9 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-3 pr-4 text-[14px] font-medium border-b-2 transition-colors ${
+              className={`border-b-2 py-3 pr-4 text-[14px] font-medium transition-colors ${
                 activeTab === tab
-                  ? 'border-[#1B6FF0] text-[#1B6FF0] font-semibold'
+                  ? 'border-[#1B6FF0] font-semibold text-[#1B6FF0]'
                   : 'border-transparent text-[#9099A8]'
               }`}
             >
@@ -253,20 +284,15 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
               dayMap={dayMap}
               removedItemIds={removedItemIds}
               onRemove={handleRemoveItem}
+              onTimeChange={handleTimeChange}
               tripId={trip.id}
               locale={locale}
               isOwner={isOwner}
             />
           )}
-          {activeTab === '장소' && (
-            <PlacesMapTab trip={trip} locale={locale} />
-          )}
+          {activeTab === '장소' && <PlacesMapTab trip={trip} locale={locale} />}
           {activeTab === '메이트' && (
-            <MateTab
-              members={trip.trip_members}
-              profileMap={profileMap}
-              onInvite={handleInvite}
-            />
+            <MateTab members={trip.trip_members} profileMap={profileMap} onInvite={handleInvite} />
           )}
         </div>
       </div>
@@ -284,6 +310,7 @@ function ItineraryTab({
   dayMap,
   removedItemIds,
   onRemove,
+  onTimeChange,
   tripId,
   locale,
   isOwner,
@@ -292,6 +319,7 @@ function ItineraryTab({
   dayMap: Map<string, DayDB>
   removedItemIds: Set<string>
   onRemove: (id: string) => void
+  onTimeChange: (itemId: string, time: string) => void
   tripId: string
   locale: string
   isOwner: boolean
@@ -354,17 +382,27 @@ function ItineraryTab({
                 return (
                   <div key={item.id} className="flex items-start gap-3">
                     {/* 시간 */}
-                    <span className="w-10 flex-shrink-0 pt-1 text-[11px] text-[#9099A8]">
-                      {item.visit_time ? item.visit_time.slice(0, 5) : ''}
-                    </span>
+                    <div className="relative w-10 flex-shrink-0 pt-0.5">
+                      <input
+                        type="time"
+                        defaultValue={item.visit_time ? item.visit_time.slice(0, 5) : ''}
+                        onChange={(e) => onTimeChange(item.id, e.target.value)}
+                        className="w-full bg-transparent text-[11px] text-[#1B6FF0] outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+                        style={{ colorScheme: 'light' }}
+                      />
+                    </div>
                     {/* Dot + line */}
                     <div className="flex flex-shrink-0 flex-col items-center">
                       <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#1B6FF0]" />
-                      {!isLast && <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />}
+                      {!isLast && (
+                        <div className="mt-1 w-px flex-1 bg-[#E8EAED]" style={{ minHeight: 28 }} />
+                      )}
                     </div>
                     {/* 카드 */}
                     <div className="mb-1 flex flex-1 overflow-hidden rounded-[10px] bg-[#F5F7FA]">
-                      <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
+                      <div
+                        className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}
+                      >
                         <Icon size={20} className={category.color} />
                       </div>
                       <div className="flex-1 px-3 py-2.5">
@@ -372,7 +410,9 @@ function ItineraryTab({
                           {item.places?.name ?? '알 수 없는 장소'}
                         </p>
                         {item.places?.address && (
-                          <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
+                          <p className="truncate text-[11px] text-[#9099A8]">
+                            {item.places.address}
+                          </p>
                         )}
                         {catLabel !== '기타' && (
                           <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
@@ -386,7 +426,13 @@ function ItineraryTab({
                           className="flex w-8 flex-shrink-0 items-center justify-center self-stretch text-[#9099A8]"
                         >
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M5.5 3.5l3.5 3.5-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                            <path
+                              d="M5.5 3.5l3.5 3.5-3.5 3.5"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         </Link>
                       )}
@@ -396,7 +442,12 @@ function ItineraryTab({
                         aria-label="일정에서 제거"
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M2.5 7h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                          <path
+                            d="M2.5 7h9"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -450,7 +501,9 @@ function MateTab({
               </div>
               <div className="flex-1">
                 <p className="text-[14px] font-semibold text-[#0F1117]">{name}</p>
-                <p className="text-[12px] text-[#9099A8]">{m.role === 'owner' ? '방장' : '메이트'}</p>
+                <p className="text-[12px] text-[#9099A8]">
+                  {m.role === 'owner' ? '방장' : '메이트'}
+                </p>
               </div>
             </div>
           )

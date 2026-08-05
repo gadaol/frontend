@@ -156,6 +156,41 @@ export async function removeItineraryItem(itemId: string): Promise<{ error?: str
   return {}
 }
 
+export async function updateItineraryItemTime(
+  itemId: string,
+  visitTime: string | null,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: item } = await supabase
+    .from('itinerary_items')
+    .select('itinerary_days(trip_id)')
+    .eq('id', itemId)
+    .maybeSingle()
+
+  const tripId = (item?.itinerary_days as { trip_id: string } | null)?.trip_id
+  if (!tripId) return { error: 'not_found' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!member) return { error: 'forbidden' }
+
+  const { error } = await supabase
+    .from('itinerary_items')
+    .update({ visit_time: visitTime || null })
+    .eq('id', itemId)
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function updateTrip(
   tripId: string,
   data: { title?: string; start_date?: string | null; end_date?: string | null },
