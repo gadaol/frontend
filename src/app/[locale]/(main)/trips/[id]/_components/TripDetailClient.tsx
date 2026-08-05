@@ -159,7 +159,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           </button>
         </div>
         {/* 하단 정보 */}
-        <div className="absolute right-0 bottom-4 left-4">
+        <div className="absolute right-4 bottom-4 left-4">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
             {ongoing && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
             <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
