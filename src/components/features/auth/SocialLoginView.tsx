@@ -18,7 +18,7 @@ export default function SocialLoginView({ onEmailClick, errorMessage }: Props) {
       provider: 'kakao',
       options: {
         redirectTo: `${location.origin}/${locale}/auth/callback`,
-        scopes: 'profile_nickname profile_image account_email',
+        scopes: 'profile_nickname profile_image',
       },
     })
   }
