@@ -63,6 +63,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
         }
       }
 
+      const redirectTo = searchParams.get('redirect_to')
+      if (redirectTo?.startsWith('/')) {
+        return NextResponse.redirect(`${origin}${redirectTo}`)
+      }
       return NextResponse.redirect(`${origin}/${locale}/home`)
     }
   }

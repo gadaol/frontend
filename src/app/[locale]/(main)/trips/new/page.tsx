@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import AppHeader from '@/components/common/AppHeader'
 import { createTrip } from '@/app/actions/trip'
-import { searchProfiles, type ProfileSearchResult } from '@/app/actions/profile'
-import { MapPinIcon, SearchIcon, XIcon } from '@/components/icons'
+import { MapPinIcon } from '@/components/icons'
 
 const COVER_PRESETS = [
   'linear-gradient(135deg, #0c1f45 0%, #1B6FF0 100%)',
@@ -28,46 +27,12 @@ export default function NewTripPage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [invitedUsers, setInvitedUsers] = useState<ProfileSearchResult[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<ProfileSearchResult[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([])
-      setIsSearching(false)
-      return
-    }
-    setIsSearching(true)
-    if (searchTimer.current) clearTimeout(searchTimer.current)
-    searchTimer.current = setTimeout(async () => {
-      const results = await searchProfiles(searchQuery)
-      setSearchResults(results.filter((r) => !invitedUsers.some((u) => u.id === r.id)))
-      setIsSearching(false)
-    }, 300)
-    return () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current)
-    }
-  }, [searchQuery, invitedUsers])
-
-  function addUser(user: ProfileSearchResult) {
-    setInvitedUsers((prev) => [...prev, user])
-    setSearchQuery('')
-    setSearchResults([])
-  }
-
-  function removeUser(userId: string) {
-    setInvitedUsers((prev) => prev.filter((u) => u.id !== userId))
-  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErrorMsg(null)
     const fd = new FormData(e.currentTarget)
     fd.set('cover_url', selectedCover)
-    invitedUsers.forEach((u) => fd.append('invited_user_ids', u.id))
     startTransition(async () => {
       const result = await createTrip(fd)
       if (result?.error) setErrorMsg(result.error)
@@ -158,66 +123,6 @@ export default function NewTripPage() {
             />
           </div>
           <p className="mt-1.5 text-[12px] text-[#9099A8]">날짜는 나중에 설정할 수 있어요</p>
-        </div>
-
-        {/* 메이트 초대 */}
-        <div>
-          <label className="mb-2 block text-[13px] font-semibold text-[#0F1117]">메이트 초대</label>
-
-          {invitedUsers.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {invitedUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-1.5 rounded-full bg-[#EFF4FF] px-3 py-1.5"
-                >
-                  <span className="text-[13px] font-medium text-[#1B6FF0]">
-                    {user.name ?? '이름 없음'}
-                  </span>
-                  <button type="button" onClick={() => removeUser(user.id)}>
-                    <XIcon size={13} className="text-[#1B6FF0]" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="relative">
-            <SearchIcon size={16} className="absolute top-1/2 left-4 -translate-y-1/2 text-[#9099A8]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="이름으로 검색"
-              className={`${INPUT_CLASS} pl-10`}
-            />
-          </div>
-
-          {(isSearching || searchResults.length > 0 || (searchQuery.trim() && !isSearching)) && (
-            <div className="mt-1 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white shadow-sm">
-              {isSearching ? (
-                <div className="py-4 text-center text-[13px] text-[#9099A8]">검색 중...</div>
-              ) : searchResults.length > 0 ? (
-                searchResults.map((user) => (
-                  <button
-                    key={user.id}
-                    type="button"
-                    onClick={() => addUser(user)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[#F7F8FA]"
-                  >
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#1B6FF0] text-[12px] font-bold text-white">
-                      {(user.name ?? '?')[0].toUpperCase()}
-                    </div>
-                    <span className="text-[14px] text-[#0F1117]">{user.name ?? '이름 없음'}</span>
-                  </button>
-                ))
-              ) : (
-                <div className="py-4 text-center text-[13px] text-[#9099A8]">검색 결과가 없어요</div>
-              )}
-            </div>
-          )}
-
-          <p className="mt-1.5 text-[12px] text-[#9099A8]">나중에 초대할 수 있어요</p>
         </div>
 
         {errorMsg && <p className="text-center text-[13px] text-red-500">{errorMsg}</p>}

@@ -6,18 +6,24 @@ import { useLocale, useTranslations } from 'next-intl'
 interface Props {
   onEmailClick: () => void
   errorMessage?: string | null
+  redirectTo?: string | null
 }
 
-export default function SocialLoginView({ onEmailClick, errorMessage }: Props) {
+export default function SocialLoginView({ onEmailClick, errorMessage, redirectTo }: Props) {
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
+
+  function callbackUrl() {
+    const base = `${location.origin}/${locale}/auth/callback`
+    return redirectTo ? `${base}?redirect_to=${encodeURIComponent(redirectTo)}` : base
+  }
 
   const signInWithKakao = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `${location.origin}/${locale}/auth/callback`,
+        redirectTo: callbackUrl(),
         scopes: 'profile_nickname profile_image',
       },
     })
@@ -26,7 +32,7 @@ export default function SocialLoginView({ onEmailClick, errorMessage }: Props) {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/${locale}/auth/callback` },
+      options: { redirectTo: callbackUrl() },
     })
   }
 

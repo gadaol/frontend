@@ -65,7 +65,11 @@ export default function AuthPage() {
   return (
     <div className="flex h-dvh flex-col">
       {view === 'social' && (
-        <SocialLoginView onEmailClick={() => setView('email')} errorMessage={socialError} />
+        <SocialLoginView
+          onEmailClick={() => setView('email')}
+          errorMessage={socialError}
+          redirectTo={searchParams.get('redirectTo')}
+        />
       )}
       {view === 'email' && (
         <EmailLoginView

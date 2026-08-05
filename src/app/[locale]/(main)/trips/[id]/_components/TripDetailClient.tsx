@@ -9,6 +9,7 @@ import { ChevronLeftIcon, MapPinIcon, PlusIcon } from '@/components/icons'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { formatDateRange, daysUntil, isTripOngoing, isTripUpcoming, tripDuration } from '@/utils/date'
 import { removeItineraryItem } from '@/app/actions/trip'
+import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
 
 const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
@@ -24,6 +25,20 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
+  const [copyToast, setCopyToast] = useState(false)
+
+  async function handleInvite() {
+    const token = await getOrCreateInviteToken(trip.id)
+    if (!token) return
+    const inviteUrl = `${window.location.origin}/${locale}/trips/${trip.id}/join?token=${token}`
+    if (navigator.share) {
+      await navigator.share({ title: `${trip.title} 여행에 초대합니다`, url: inviteUrl })
+    } else {
+      await navigator.clipboard.writeText(inviteUrl)
+      setCopyToast(true)
+      setTimeout(() => setCopyToast(false), 2500)
+    }
+  }
 
   const profileMap = new Map(memberProfiles.map((p) => [p.id, p.name]))
 
@@ -90,6 +105,11 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
 
   return (
     <div className="bg-bg2 flex min-h-full flex-col">
+      {copyToast && (
+        <div className="fixed top-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#0F1117] px-4 py-2 text-[13px] font-medium text-white shadow-lg">
+          초대 링크가 복사됐어요
+        </div>
+      )}
       {/* 히어로 커버 */}
       <div
         className="relative h-52 flex-shrink-0"
@@ -168,13 +188,13 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
         <span className="text-ink2 text-[13px]">
           {trip.trip_members.length}명
         </span>
-        <Link
-          href={`/${locale}/trips/${trip.id}/invite`}
+        <button
+          onClick={handleInvite}
           className="border-border ml-auto flex h-8 items-center gap-1.5 rounded-full border bg-white px-3 text-[12px] font-medium text-[#515966]"
         >
           <PlusIcon size={14} className="text-[#515966]" />
           메이트 초대
-        </Link>
+        </button>
       </div>
 
       {/* 일정 섹션 */}

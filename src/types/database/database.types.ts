@@ -429,11 +429,34 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_invites: {
+        Row: {
+          id: string
+          trip_id: string
+          token: string
+          created_by: string
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          token?: string
+          created_by: string
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          expires_at?: string
+        }
+        Relationships: []
+      }
       trip_members: {
         Row: {
           created_at: string | null
           id: string
           role: string
+          status: string
           trip_id: string
           user_id: string
         }
@@ -441,6 +464,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: string
+          status?: string
           trip_id: string
           user_id: string
         }
@@ -448,6 +472,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: string
+          status?: string
           trip_id?: string
           user_id?: string
         }
