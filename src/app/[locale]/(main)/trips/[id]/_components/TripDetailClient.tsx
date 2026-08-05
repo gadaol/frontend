@@ -128,16 +128,6 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           </svg>
         </button>
         <div className="absolute top-[52px] right-4 flex gap-2">
-          {isOwner && (
-            <Link
-              href={`/${locale}/trips/${trip.id}/edit`}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="white" strokeWidth="1.4" strokeLinejoin="round" />
-              </svg>
-            </Link>
-          )}
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <circle cx="5" cy="9" r="1.5" fill="white" />
@@ -202,8 +192,20 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           </button>
         </div>
 
-        {/* Quick action 2버튼 */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 border-b border-[#E8EAED] px-4 pb-4">
+        {/* Quick action 3버튼 */}
+        <div className="mt-3 grid grid-cols-3 gap-2.5 border-b border-[#E8EAED] px-4 pb-4">
+          <Link
+            href={`/${locale}/trips/${trip.id}/edit`}
+            className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="2" y="3" width="16" height="14" rx="2" stroke="#515966" strokeWidth="1.4" />
+                <path d="M6 3V1M14 3V1M2 8h16" stroke="#515966" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </div>
+            <span className="text-[11px] font-medium text-[#515966]">일정 편집</span>
+          </Link>
           <Link
             href={`/${locale}/trips/${trip.id}/places`}
             className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
