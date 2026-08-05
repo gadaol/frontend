@@ -16,6 +16,9 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const title = (formData.get('title') as string).trim()
   const startDate = (formData.get('start_date') as string) || null
   const endDate = (formData.get('end_date') as string) || null
+  const destination = (formData.get('destination') as string)?.trim() || null
+  const coverUrl = (formData.get('cover_url') as string) || null
+  const invitedIds = (formData.getAll('invited_user_ids') as string[]).filter(Boolean)
 
   if (!title) return { error: '여행 제목을 입력해주세요' }
 
@@ -23,6 +26,8 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
     .from('trips')
     .insert({
       title,
+      destination,
+      cover_url: coverUrl,
       start_date: startDate,
       end_date: endDate,
       owner_id: user.id,
@@ -35,11 +40,12 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
     return { error: error?.message ?? '여행 생성에 실패했어요' }
   }
 
-  const { error: memberError } = await supabase.from('trip_members').insert({
-    trip_id: trip.id,
-    user_id: user.id,
-    role: 'owner',
-  })
+  const membersToInsert = [
+    { trip_id: trip.id, user_id: user.id, role: 'owner' },
+    ...invitedIds.map((uid) => ({ trip_id: trip.id, user_id: uid, role: 'member' })),
+  ]
+
+  const { error: memberError } = await supabase.from('trip_members').insert(membersToInsert)
 
   if (memberError) {
     console.error('[createTrip] member insert error:', memberError)

@@ -93,7 +93,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
       {/* 히어로 커버 */}
       <div
         className="relative h-52 flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, #0c1f45, #1B6FF0)' }}
+        style={{ background: trip.cover_url ?? 'linear-gradient(135deg, #0c1f45, #1B6FF0)' }}
       >
         <div
           className="absolute inset-0"
@@ -130,6 +130,12 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           <h1 className="mb-1 text-[22px] font-bold tracking-tight text-white leading-tight">
             {trip.title}
           </h1>
+          {trip.destination && (
+            <div className="mb-0.5 flex items-center gap-1">
+              <MapPinIcon size={12} className="text-white/60" />
+              <span className="text-[12px] text-white/70">{trip.destination}</span>
+            </div>
+          )}
           <p className="text-[13px] text-white/70">
             {trip.start_date
               ? `${formatDateRange(trip.start_date, trip.end_date, locale)}${durationLabel ? ` · ${durationLabel}` : ''}`

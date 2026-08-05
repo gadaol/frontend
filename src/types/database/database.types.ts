@@ -529,6 +529,7 @@ export type Database = {
         Row: {
           cover_url: string | null
           created_at: string | null
+          destination: string | null
           end_date: string | null
           id: string
           owner_id: string
@@ -540,6 +541,7 @@ export type Database = {
         Insert: {
           cover_url?: string | null
           created_at?: string | null
+          destination?: string | null
           end_date?: string | null
           id?: string
           owner_id: string
@@ -551,6 +553,7 @@ export type Database = {
         Update: {
           cover_url?: string | null
           created_at?: string | null
+          destination?: string | null
           end_date?: string | null
           id?: string
           owner_id?: string
