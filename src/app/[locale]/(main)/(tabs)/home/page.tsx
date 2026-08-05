@@ -13,6 +13,7 @@ import {
   PlusIcon,
 } from '@/components/icons'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import { isGradient } from '@/utils/uploadCover'
 import type { BacklogItemWithPlace, TripWithMembers } from '@/types/trip'
 
 const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
@@ -152,16 +153,31 @@ export default async function HomePage() {
             <Link
               href={`/${locale}/trips/${upcomingTrip.id}`}
               className="border-border relative block overflow-hidden rounded-3xl border p-5"
-              style={{
-                // 디자인: linear-gradient(135deg, #1B6FF020, #0F235130) → 알파 0x20≈12.5%, 0x30≈18.8%
-                background:
-                  'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12.5%, transparent), color-mix(in srgb, var(--color-hero-bot) 18.8%, transparent))',
-              }}
+              style={
+                upcomingTrip.cover_url && isGradient(upcomingTrip.cover_url)
+                  ? { background: upcomingTrip.cover_url }
+                  : {
+                      background:
+                        'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12.5%, transparent), color-mix(in srgb, var(--color-hero-bot) 18.8%, transparent))',
+                    }
+              }
             >
+              {upcomingTrip.cover_url && !isGradient(upcomingTrip.cover_url) && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={upcomingTrip.cover_url}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-black/40" />
+                </>
+              )}
               <div
                 className="pointer-events-none absolute -top-5 -right-5 h-36 w-36 rounded-full"
                 style={{
                   background: 'linear-gradient(135deg, var(--color-primary-light), transparent)',
+                  opacity: upcomingTrip.cover_url ? 0 : 1,
                 }}
               />
               {/* 트립 배지: 디자인 padding 3px 10px / gap 5px */}
@@ -171,15 +187,26 @@ export default async function HomePage() {
                   ? t('badgeOngoing')
                   : t('badgePlanning')}
               </div>
-              <p className="text-ink mb-1.5 text-[20px] font-bold tracking-tight">
+              <p
+                className="mb-1.5 text-[20px] font-bold tracking-tight"
+                style={{ color: upcomingTrip.cover_url ? '#fff' : 'var(--color-ink)' }}
+              >
                 {upcomingTrip.title}
               </p>
               {/* 트립 날짜: 디자인 margin-bottom 14px */}
-              <p className="text-ink2 mb-3.5 text-[13px]">
+              <p
+                className="mb-3.5 text-[13px]"
+                style={{
+                  color: upcomingTrip.cover_url ? 'rgba(255,255,255,0.8)' : 'var(--color-ink2)',
+                }}
+              >
                 {formatDateRange(upcomingTrip.start_date, upcomingTrip.end_date, locale)}
                 {upcomingTrip.start_date &&
                   !isTripOngoing(upcomingTrip.start_date, upcomingTrip.end_date) && (
-                    <span className="text-primary ml-2">
+                    <span
+                      className="text-primary ml-2"
+                      style={{ color: upcomingTrip.cover_url ? '#fff' : undefined }}
+                    >
                       · D-{daysUntil(upcomingTrip.start_date)}
                     </span>
                   )}

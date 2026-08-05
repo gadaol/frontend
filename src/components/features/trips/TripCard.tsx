@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/utils/cn'
 import { formatDateRange, isTripOngoing, tripDuration } from '@/utils/date'
+import { isGradient } from '@/utils/uploadCover'
 import type { TripWithMembers } from '@/types/trip'
 
 const GRADIENTS = [
@@ -91,7 +92,12 @@ function CoverThumb({
 
   return (
     <div className={cn('relative overflow-hidden', size === 'lg' ? 'w-full' : '', sizeClass)}>
-      {coverUrl ? (
+      {coverUrl && isGradient(coverUrl) ? (
+        <div
+          className={cn('h-full w-full', size === 'sm' ? 'rounded-xl' : '')}
+          style={{ background: coverUrl }}
+        />
+      ) : coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
       ) : (

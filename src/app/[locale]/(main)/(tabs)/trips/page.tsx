@@ -24,6 +24,13 @@ export default async function TripsPage() {
 
   const trips = (data ?? []) as TripWithMembers[]
 
+  // 모든 여행 멤버 id 수집 → 프로필 한 번에 조회
+  const allUserIds = [...new Set(trips.flatMap((t) => t.trip_members.map((m) => m.user_id)))]
+  const { data: profilesData } = allUserIds.length
+    ? await supabase.from('profiles').select('id, name').in('id', allUserIds)
+    : { data: [] }
+  const profileMap = new Map((profilesData ?? []).map((p) => [p.id, p.name ?? '']))
+
   return (
     <div className="bg-bg2 flex min-h-full flex-col">
       <AppHeader
@@ -50,7 +57,7 @@ export default async function TripsPage() {
           </Link>
         </div>
       ) : (
-        <TripTabs trips={trips} />
+        <TripTabs trips={trips} profileMap={profileMap} />
       )}
     </div>
   )

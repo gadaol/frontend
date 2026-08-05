@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -122,6 +123,9 @@ export async function addItineraryItem(
     .insert({ day_id: dayId, place_id: placeId, order_index: nextOrder })
 
   if (error) return { error: error.message }
+
+  const locale = await getLocale()
+  revalidatePath(`/${locale}/trips/${tripId}`)
   return {}
 }
 
@@ -191,9 +195,87 @@ export async function updateItineraryItemTime(
   return {}
 }
 
+export async function reorderItineraryDay(
+  dayId: string,
+  orderedItemIds: string[],
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: day } = await supabase
+    .from('itinerary_days')
+    .select('trip_id')
+    .eq('id', dayId)
+    .maybeSingle()
+
+  if (!day) return { error: 'not_found' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', day.trip_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
+  await Promise.all(
+    orderedItemIds.map((itemId, index) =>
+      supabase
+        .from('itinerary_items')
+        .update({ order_index: index })
+        .eq('id', itemId)
+        .eq('day_id', dayId),
+    ),
+  )
+
+  const locale = await getLocale()
+  revalidatePath(`/${locale}/trips/${day.trip_id}`)
+  return {}
+}
+
+export async function deleteOutOfRangeDays(
+  tripId: string,
+  startDate: string,
+  endDate: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!member) return { error: 'forbidden' }
+
+  // itinerary_items는 FK cascade로 자동 삭제됨
+  const { error } = await supabase
+    .from('itinerary_days')
+    .delete()
+    .eq('trip_id', tripId)
+    .or(`day_date.lt.${startDate},day_date.gt.${endDate}`)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function updateTrip(
   tripId: string,
-  data: { title?: string; start_date?: string | null; end_date?: string | null },
+  data: {
+    title?: string
+    destination?: string | null
+    start_date?: string | null
+    end_date?: string | null
+    cover_url?: string | null
+  },
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const {
@@ -207,5 +289,7 @@ export async function updateTrip(
     .eq('id', tripId)
     .eq('owner_id', user.id)
   if (error) return { error: error.message }
+
+  revalidatePath('/', 'layout')
   return {}
 }

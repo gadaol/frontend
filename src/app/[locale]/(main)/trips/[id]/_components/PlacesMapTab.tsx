@@ -15,10 +15,7 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 }
 
 // Day별 색상 (최대 7일)
-const DAY_COLORS = [
-  '#1B6FF0', '#7C3AED', '#059669', '#DC2626',
-  '#D97706', '#0891B2', '#DB2777',
-]
+const DAY_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2', '#DB2777']
 
 type PlacePin = {
   id: string
@@ -34,10 +31,9 @@ type PlacePin = {
 
 interface Props {
   trip: TripDetail
-  locale: string
 }
 
-export default function PlacesMapTab({ trip, locale }: Props) {
+export default function PlacesMapTab({ trip }: Props) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
   })
@@ -67,9 +63,7 @@ export default function PlacesMapTab({ trip, locale }: Props) {
     )
 
   const center =
-    pins.length > 0
-      ? { lat: pins[0].lat, lng: pins[0].lng }
-      : { lat: 37.5665, lng: 126.978 }
+    pins.length > 0 ? { lat: pins[0].lat, lng: pins[0].lng } : { lat: 37.5665, lng: 126.978 }
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map
@@ -93,7 +87,11 @@ export default function PlacesMapTab({ trip, locale }: Props) {
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#EBF2FF]">
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z" stroke="#1B6FF0" strokeWidth="2" />
+            <path
+              d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z"
+              stroke="#1B6FF0"
+              strokeWidth="2"
+            />
             <circle cx="15" cy="12" r="3" stroke="#1B6FF0" strokeWidth="2" />
           </svg>
         </div>
@@ -149,7 +147,9 @@ export default function PlacesMapTab({ trip, locale }: Props) {
                 {selectedPin.address && (
                   <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
                 )}
-                <p style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}>
+                <p
+                  style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}
+                >
                   Day {selectedPin.dayNumber}
                 </p>
               </div>

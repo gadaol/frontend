@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, use } from 'react'
+import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/common/AppHeader'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
 import { addItineraryItem } from '@/app/actions/trip'
 import { getOrCreatePlace } from '@/app/actions/backlog'
+import { addCandidatePlace } from '@/app/actions/candidate'
+import { getDbCategory } from '@/utils/placeCategory'
 import type { GooglePlace } from '@/types/place'
 
 interface Props {
@@ -15,7 +18,9 @@ interface Props {
 export default function TripPlacesPage({ params, searchParams }: Props) {
   const { id: tripId } = use(params)
   const { day, date } = use(searchParams)
+  const router = useRouter()
 
+  const isCandidate = !day
   const dayNumber = parseInt(day ?? '1', 10)
   const dayDate = date ?? ''
 
@@ -28,16 +33,33 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
 
     setAddingIds((prev) => new Set(prev).add(place.id))
 
-    const placeId = await getOrCreatePlace({
-      googlePlaceId: place.id,
-      name: place.displayName.text,
-      address: place.formattedAddress,
-      categoryName: place.types[0] ?? null,
-    })
-
-    if (placeId) {
-      await addItineraryItem(tripId, dayDate, dayNumber, placeId)
-      setAddedIds((prev) => new Set(prev).add(place.id))
+    if (isCandidate) {
+      const result = await addCandidatePlace(
+        tripId,
+        place.id,
+        place.displayName.text,
+        place.formattedAddress,
+        getDbCategory(place.types ?? []),
+      )
+      if (!result.error) {
+        setAddedIds((prev) => new Set(prev).add(place.id))
+        setTimeout(() => router.back(), 600)
+      }
+    } else {
+      const placeId = await getOrCreatePlace({
+        googlePlaceId: place.id,
+        name: place.displayName.text,
+        address: place.formattedAddress,
+        categoryName: getDbCategory(place.types ?? []),
+      })
+      if (placeId) {
+        const result = await addItineraryItem(tripId, dayDate, dayNumber, placeId)
+        if (!result.error) {
+          router.back()
+          return
+        }
+        setAddedIds((prev) => new Set(prev).add(place.id))
+      }
     }
 
     setAddingIds((prev) => {
@@ -47,7 +69,10 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
     })
   }
 
-  const headerTitle = dayDate ? `Day ${dayNumber} 장소 추가` : '장소 추가'
+  const headerTitle = isCandidate ? '후보 장소 추가' : `Day ${dayNumber} 장소 추가`
+  const addLabel = isCandidate ? '후보 추가' : '추가'
+  const addedLabel = isCandidate ? '추가됨' : '추가됨'
+  const infoCta = isCandidate ? '후보에 추가' : '일정에 추가'
 
   return (
     <div className="flex h-dvh flex-col">
@@ -70,9 +95,9 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                 {isAdding ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : isAdded ? (
-                  '추가됨'
+                  addedLabel
                 ) : (
-                  '추가'
+                  addLabel
                 )}
               </button>
             )
@@ -99,7 +124,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                   cursor: isAdded ? 'default' : 'pointer',
                 }}
               >
-                {isAdding ? '추가 중...' : isAdded ? '추가됨 ✓' : '일정에 추가'}
+                {isAdding ? '추가 중...' : isAdded ? '추가됨 ✓' : infoCta}
               </button>
             )
           }}

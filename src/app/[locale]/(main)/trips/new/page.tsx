@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import AppHeader from '@/components/common/AppHeader'
 import { createTrip } from '@/app/actions/trip'
 import { MapPinIcon } from '@/components/icons'
+import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
+import { createClient } from '@/lib/supabase/client'
 
 const COVER_PRESETS = [
   'linear-gradient(135deg, #0c1f45 0%, #1B6FF0 100%)',
@@ -27,6 +29,26 @@ export default function NewTripPage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setUploading(false)
+      return
+    }
+    const url = await uploadCoverImage(file, user.id)
+    if (url) setSelectedCover(url)
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -44,10 +66,14 @@ export default function NewTripPage() {
       <AppHeader title="새 여행" onBack="router" />
 
       {/* 커버 미리보기 */}
-      <div
-        className="h-32 flex-shrink-0 transition-all duration-500"
-        style={{ background: selectedCover }}
-      />
+      <div className="relative h-32 flex-shrink-0 overflow-hidden transition-all duration-500">
+        {isGradient(selectedCover) ? (
+          <div className="h-full w-full" style={{ background: selectedCover }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={selectedCover} alt="커버" className="h-full w-full object-cover" />
+        )}
+      </div>
 
       <form
         id="new-trip-form"
@@ -58,6 +84,36 @@ export default function NewTripPage() {
         <div>
           <p className="mb-3 text-[13px] font-semibold text-[#0F1117]">커버 선택</p>
           <div className="grid grid-cols-5 gap-2">
+            {/* 이미지 업로드 버튼 */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed border-[#C0C6D0] bg-[#F7F8FA] disabled:opacity-50"
+            >
+              {uploading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M9 4v10M4 9h10"
+                    stroke="#9099A8"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
+              {!isGradient(selectedCover) && (
+                <span className="absolute inset-0 rounded-xl ring-2 ring-[#1B6FF0] ring-offset-2" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              className="sr-only"
+              onChange={handleImageSelect}
+            />
             {COVER_PRESETS.map((gradient) => (
               <button
                 key={gradient}

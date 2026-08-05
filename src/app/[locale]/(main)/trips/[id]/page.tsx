@@ -24,6 +24,9 @@ export type TripDetail = Tables<'trips'> & {
 
 export type MemberProfile = { id: string; name: string | null }
 
+export type VoteEntry = { likes: number; dislikes: number; myVote: 'like' | 'dislike' | null }
+export type VoteRecord = Record<string, VoteEntry>
+
 export default async function TripDetailPage({
   params,
 }: {
@@ -38,32 +41,32 @@ export default async function TripDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: trip } = await supabase
-    .from('trips')
-    .select(
-      `*,
-      trip_members(user_id, role),
-      trip_tags(tag),
-      itinerary_days(
-        id, day_number, day_date,
-        itinerary_items(
-          id, order_index, visit_time, memo, place_id,
-          places(id, google_place_id, name, address, lat, lng, place_categories(name))
-        )
-      )`,
-    )
-    .eq('id', id)
-    .single()
+  const [{ data: trip }, { data: profileRows }] = await Promise.all([
+    supabase
+      .from('trips')
+      .select(
+        `*,
+        trip_members(user_id, role),
+        trip_tags(tag),
+        itinerary_days(
+          id, day_number, day_date,
+          itinerary_items(
+            id, order_index, visit_time, memo, place_id,
+            places(id, google_place_id, name, address, lat, lng, place_categories(name))
+          )
+        )`,
+      )
+      .eq('id', id)
+      .single(),
+    supabase.from('profiles').select('id, name'),
+  ])
 
   if (!trip) notFound()
 
   const memberIds = trip.trip_members.map((m) => m.user_id)
-  const { data: profileRows } = await supabase
-    .from('profiles')
-    .select('id, name')
-    .in('id', memberIds)
-
-  const memberProfiles: MemberProfile[] = profileRows ?? []
+  const memberProfiles: MemberProfile[] = (profileRows ?? []).filter((p) =>
+    memberIds.includes(p.id),
+  )
 
   return (
     <TripDetailClient

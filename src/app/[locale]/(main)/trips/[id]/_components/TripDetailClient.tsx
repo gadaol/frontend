@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState, useMemo, useTransition, useRef } from 'react'
+import React, { useState, useMemo, useTransition, useRef, useEffect, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
+import BottomNav from '@/components/common/BottomNav'
 import PlacesMapTab from './PlacesMapTab'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import {
@@ -15,7 +16,11 @@ import {
   isTripUpcoming,
   tripDuration,
 } from '@/utils/date'
-import { removeItineraryItem, updateItineraryItemTime } from '@/app/actions/trip'
+import {
+  removeItineraryItem,
+  updateItineraryItemTime,
+  reorderItineraryDay,
+} from '@/app/actions/trip'
 import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
 
@@ -96,6 +101,12 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
     })
   }
 
+  function handleReorder(dayId: string, orderedIds: string[]) {
+    startTransition(async () => {
+      await reorderItineraryDay(dayId, orderedIds)
+    })
+  }
+
   const ongoing = isTripOngoing(trip.start_date, trip.end_date)
   const upcoming = isTripUpcoming(trip.start_date)
   const numDays = tripDuration(trip.start_date, trip.end_date)
@@ -149,15 +160,6 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             />
           </svg>
         </button>
-        <div className="absolute top-[52px] right-4 flex gap-2">
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="5" cy="9" r="1.5" fill="white" />
-              <circle cx="9" cy="9" r="1.5" fill="white" />
-              <circle cx="13" cy="9" r="1.5" fill="white" />
-            </svg>
-          </button>
-        </div>
         {/* 하단 정보 */}
         <div className="absolute right-4 bottom-4 left-4">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
@@ -244,11 +246,14 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
             </div>
             <span className="text-[11px] font-medium text-[#515966]">일정 편집</span>
           </Link>
-          <button className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3">
+          <Link
+            href={`/${locale}/trips/${trip.id}/vote`}
+            className="flex flex-col items-center gap-1.5 rounded-xl bg-[#F5F7FA] py-3"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#E8EAED] bg-white">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
-                  d="M13 2l4 4-10 10H3v-4L13 2z"
+                  d="M10 3.5l1.8 3.7 4 .6-2.9 2.8.7 4L10 12.4l-3.6 1.9.7-4L4.2 7.8l4-.6L10 3.5z"
                   stroke="#515966"
                   strokeWidth="1.4"
                   strokeLinejoin="round"
@@ -256,7 +261,7 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
               </svg>
             </div>
             <span className="text-[11px] font-medium text-[#515966]">투표</span>
-          </button>
+          </Link>
         </div>
 
         {/* 탭 */}
@@ -285,17 +290,19 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
               removedItemIds={removedItemIds}
               onRemove={handleRemoveItem}
               onTimeChange={handleTimeChange}
+              onReorder={handleReorder}
               tripId={trip.id}
               locale={locale}
               isOwner={isOwner}
             />
           )}
-          {activeTab === '장소' && <PlacesMapTab trip={trip} locale={locale} />}
+          {activeTab === '장소' && <PlacesMapTab trip={trip} />}
           {activeTab === '메이트' && (
             <MateTab members={trip.trip_members} profileMap={profileMap} onInvite={handleInvite} />
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   )
 }
@@ -311,6 +318,7 @@ function ItineraryTab({
   removedItemIds,
   onRemove,
   onTimeChange,
+  onReorder,
   tripId,
   locale,
   isOwner,
@@ -320,6 +328,7 @@ function ItineraryTab({
   removedItemIds: Set<string>
   onRemove: (id: string) => void
   onTimeChange: (itemId: string, time: string) => void
+  onReorder: (dayId: string, orderedIds: string[]) => void
   tripId: string
   locale: string
   isOwner: boolean
@@ -352,9 +361,6 @@ function ItineraryTab({
     <div>
       {expectedDays.map((day) => {
         const dayDB = dayMap.get(day.dayDate)
-        const items = (dayDB?.itinerary_items ?? [])
-          .filter((item) => !removedItemIds.has(item.id))
-          .sort((a, b) => a.order_index - b.order_index)
 
         return (
           <div key={day.dayNumber} className="px-4 pt-4">
@@ -369,17 +375,18 @@ function ItineraryTab({
             </div>
 
             {/* 아이템 리스트 */}
-            <div className="mb-4 flex flex-col gap-2 border-b border-[#E8EAED] pb-4">
-              {items.map((item, idx) => (
-                <ItineraryItemRow
-                  key={item.id}
-                  item={item}
-                  isLast={idx === items.length - 1}
+            <div className="mb-4 border-b border-[#E8EAED] pb-4">
+              {dayDB?.id && (
+                <DraggableItemList
+                  items={dayDB.itinerary_items}
+                  removedItemIds={removedItemIds}
                   locale={locale}
                   onRemove={onRemove}
                   onTimeChange={onTimeChange}
+                  dayId={dayDB.id}
+                  onReorder={onReorder}
                 />
-              ))}
+              )}
 
               {/* + 장소 추가 */}
               <div className="flex items-start gap-3">
@@ -448,6 +455,138 @@ function MateTab({
   )
 }
 
+/* ── 드래그 순서변경 리스트 ── */
+function DraggableItemList({
+  items,
+  removedItemIds,
+  locale,
+  onRemove,
+  onTimeChange,
+  dayId,
+  onReorder,
+}: {
+  items: ItineraryItemDB[]
+  removedItemIds: Set<string>
+  locale: string
+  onRemove: (id: string) => void
+  onTimeChange: (id: string, time: string) => void
+  dayId: string
+  onReorder: (dayId: string, orderedIds: string[]) => void
+}) {
+  const itemsKey = items.map((i) => i.id + i.order_index).join(',')
+  const visibleItems = useMemo(
+    () =>
+      items.filter((i) => !removedItemIds.has(i.id)).sort((a, b) => a.order_index - b.order_index),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemsKey, removedItemIds],
+  )
+
+  const [localItems, setLocalItems] = useState<ItineraryItemDB[]>(visibleItems)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
+
+  const listRef = useRef<HTMLDivElement>(null)
+  const dragFromIndex = useRef(0)
+  const displayItemsRef = useRef<ItineraryItemDB[]>(localItems)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!draggingId) setLocalItems(visibleItems)
+  }, [visibleItems, draggingId])
+
+  const displayItems = useMemo(() => {
+    if (draggingId === null || overIndex === null) return localItems
+    const from = localItems.findIndex((i) => i.id === draggingId)
+    if (from === -1 || from === overIndex) return localItems
+    const reordered = [...localItems]
+    const [dragged] = reordered.splice(from, 1)
+    reordered.splice(overIndex, 0, dragged)
+    return reordered
+  }, [localItems, draggingId, overIndex])
+
+  useLayoutEffect(() => {
+    displayItemsRef.current = displayItems
+  })
+
+  useEffect(() => {
+    if (!draggingId) return
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault()
+      const y = e.touches[0].clientY
+      const list = listRef.current
+      if (!list) return
+      const children = Array.from(list.children) as HTMLElement[]
+      let newOver = children.length - 1
+      for (let i = 0; i < children.length; i++) {
+        const rect = children[i].getBoundingClientRect()
+        if (y < rect.top + rect.height / 2) {
+          newOver = i
+          break
+        }
+      }
+      setOverIndex(newOver)
+    }
+
+    function onTouchEnd() {
+      const final = displayItemsRef.current
+      setLocalItems(final)
+      setDraggingId(null)
+      setOverIndex(null)
+      onReorder(
+        dayId,
+        final.map((i) => i.id),
+      )
+    }
+
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd)
+    return () => {
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [draggingId, dayId, onReorder])
+
+  function startDrag(e: React.TouchEvent, id: string, index: number) {
+    e.stopPropagation()
+    dragFromIndex.current = index
+    setLocalItems([...visibleItems])
+    setDraggingId(id)
+    setOverIndex(index)
+  }
+
+  return (
+    <div ref={listRef} className="mb-2 flex flex-col gap-2">
+      {displayItems.map((item, idx) => {
+        const isDragging = item.id === draggingId
+        return (
+          <div
+            key={item.id}
+            style={{
+              position: 'relative',
+              zIndex: isDragging ? 10 : 1,
+              borderRadius: 10,
+              boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.12)' : undefined,
+              background: isDragging ? '#fff' : undefined,
+              transition: isDragging ? 'none' : 'box-shadow 0.15s',
+            }}
+          >
+            <ItineraryItemRow
+              item={item}
+              isLast={idx === displayItems.length - 1}
+              locale={locale}
+              onRemove={onRemove}
+              onTimeChange={onTimeChange}
+              isDragging={isDragging}
+              onDragHandleTouchStart={(e) => startDrag(e, item.id, idx)}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /* ── 일정 아이템 row ── */
 const SWIPE_DELETE_WIDTH = 68
 
@@ -457,16 +596,25 @@ function ItineraryItemRow({
   locale,
   onRemove,
   onTimeChange,
+  isDragging = false,
+  onDragHandleTouchStart,
 }: {
   item: ItineraryItemDB
   isLast: boolean
   locale: string
   onRemove: (id: string) => void
   onTimeChange: (itemId: string, time: string) => void
+  isDragging?: boolean
+  onDragHandleTouchStart?: (e: React.TouchEvent) => void
 }) {
   const timeRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef(0)
   const [swiped, setSwiped] = useState(false)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isDragging) setSwiped(false)
+  }, [isDragging])
 
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
@@ -486,6 +634,7 @@ function ItineraryItemRow({
   }
 
   function onTouchStart(e: React.TouchEvent) {
+    if (isDragging) return
     touchStartX.current = e.touches[0].clientX
   }
 
@@ -538,7 +687,7 @@ function ItineraryItemRow({
 
         {/* 슬라이드 카드 */}
         <div
-          className="flex overflow-hidden rounded-[10px] bg-[#F5F7FA]"
+          className="flex bg-[#F5F7FA]"
           style={{
             transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
             transition: 'transform 0.2s ease',
@@ -550,17 +699,19 @@ function ItineraryItemRow({
           <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
             <Icon size={20} className={category.color} />
           </div>
-          <div className="flex-1 px-3 py-2.5">
-            <p className="text-[13px] font-semibold text-[#0F1117]">
+          <div className="min-w-0 flex-1 px-3 py-2.5">
+            <p className="text-[13px] leading-snug font-semibold text-[#0F1117]">
               {item.places?.name ?? '알 수 없는 장소'}
             </p>
             {item.places?.address && (
               <p className="truncate text-[11px] text-[#9099A8]">{item.places.address}</p>
             )}
-            {catLabel !== '기타' && (
-              <span className="mt-1.5 inline-block rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
-                {catLabel}
-              </span>
+            {category.label !== '장소' && (
+              <div className="mt-1.5">
+                <span className="rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[10px] font-semibold text-[#1B6FF0]">
+                  {category.label}
+                </span>
+              </div>
             )}
           </div>
           {placeHref && (
@@ -581,6 +732,18 @@ function ItineraryItemRow({
           )}
         </div>
       </div>
+
+      {/* 드래그 핸들 */}
+      <button
+        className="mb-1 flex flex-shrink-0 touch-none items-center self-stretch px-1 select-none"
+        onTouchStart={onDragHandleTouchStart}
+        aria-label="순서 변경"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="2" y="4" width="10" height="1.5" rx="0.75" fill="#C0C6D0" />
+          <rect x="2" y="8.5" width="10" height="1.5" rx="0.75" fill="#C0C6D0" />
+        </svg>
+      </button>
     </div>
   )
 }
