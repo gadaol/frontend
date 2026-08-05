@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
-import { getCategoryInfo } from '@/utils/placeCategory'
+import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 
 type BacklogCardProps = {
   id: string
@@ -23,7 +23,7 @@ export default function BacklogCard({
   memo,
 }: BacklogCardProps) {
   const locale = useLocale()
-  const category = getCategoryInfo(categoryName ? [categoryName] : [])
+  const category = getCategoryInfoByLabel(categoryName ?? '')
   const Icon = category.icon
 
   const inner = (

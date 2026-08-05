@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { BacklogIcon } from '@/components/icons'
 import { addToBacklog } from '@/app/actions/backlog'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
+import { getDbCategory } from '@/utils/placeCategory'
 import type { GooglePlace } from '@/types/place'
 
 export default function PlacesSearch() {
@@ -19,7 +20,7 @@ export default function PlacesSearch() {
       googlePlaceId: place.id,
       name: place.displayName.text,
       address: place.formattedAddress,
-      categoryName: place.types[0] ?? null,
+      categoryName: getDbCategory(place.types ?? []),
     })
     setSavedIds((prev) => new Set(prev).add(place.id))
     setSavingIds((prev) => {

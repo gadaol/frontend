@@ -11,44 +11,12 @@ export type AddToBacklogInput = {
   categoryName: string | null
 }
 
-const GOOGLE_TYPE_TO_CATEGORY: Record<string, string> = {
-  restaurant: '식당',
-  food: '식당',
-  meal_takeaway: '식당',
-  meal_delivery: '식당',
-  cafe: '카페',
-  bakery: '카페',
-  coffee: '카페',
-  lodging: '숙소',
-  hotel: '숙소',
-  motel: '숙소',
-  tourist_attraction: '관광지',
-  museum: '관광지',
-  art_gallery: '관광지',
-  amusement_park: '관광지',
-  shopping_mall: '쇼핑',
-  store: '쇼핑',
-  clothing_store: '쇼핑',
-  department_store: '쇼핑',
-  park: '자연',
-  natural_feature: '자연',
-  campground: '자연',
-}
-
 /** places 테이블에서 조회하거나 없으면 생성 후 place ID 반환 */
 export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string | null> {
   const supabase = await createClient()
 
-  const { data: existing } = await supabase
-    .from('places')
-    .select('id')
-    .eq('google_place_id', input.googlePlaceId)
-    .single()
-
-  if (existing) return existing.id
-
   let categoryId: string | null = null
-  const koName = input.categoryName ? GOOGLE_TYPE_TO_CATEGORY[input.categoryName] : null
+  const koName = input.categoryName && input.categoryName !== '기타' ? input.categoryName : null
   if (koName) {
     const { data: cat } = await supabase
       .from('place_categories')
@@ -56,6 +24,19 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
       .eq('name', koName)
       .single()
     categoryId = cat?.id ?? null
+  }
+
+  const { data: existing } = await supabase
+    .from('places')
+    .select('id, category_id')
+    .eq('google_place_id', input.googlePlaceId)
+    .single()
+
+  if (existing) {
+    if (!existing.category_id && categoryId) {
+      await supabase.from('places').update({ category_id: categoryId }).eq('id', existing.id)
+    }
+    return existing.id
   }
 
   const { data: newPlace } = await supabase
