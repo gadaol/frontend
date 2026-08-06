@@ -155,9 +155,6 @@ export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds
                     <p className="text-[14px] font-semibold text-[#0F1117] truncate">
                       {user.name ?? '이름 없음'}
                     </p>
-                    {user.maskedPhone && (
-                      <p className="text-[12px] text-[#9099A8]">{user.maskedPhone}</p>
-                    )}
                   </div>
                   {isMember ? (
                     <span className="rounded-full bg-[#F0F4FF] px-3 py-1.5 text-[12px] font-medium text-[#1B6FF0]">
