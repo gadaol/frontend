@@ -66,9 +66,6 @@ export default function BottomNav() {
             >
               <span className="relative inline-flex">
                 {tab.icon(active)}
-                {tab.key === 'mypage' && unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-[7px] w-[7px] items-center justify-center rounded-full bg-red-500" />
-                )}
               </span>
               <span
                 className={`text-[10px] leading-none font-medium ${active ? 'text-primary' : 'text-ink3'}`}

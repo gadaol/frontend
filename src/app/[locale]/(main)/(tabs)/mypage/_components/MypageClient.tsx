@@ -1,9 +1,14 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { updateName, logout, deleteAccount } from '@/app/actions/mypage'
+import { useUnreadCount } from '@/hooks/useUnreadCount'
+import AppHeader from '@/components/common/AppHeader'
+import { BellIcon } from '@/components/icons'
 
 export type Plan = 'free' | 'pro' | 'team'
 
@@ -37,6 +42,8 @@ export default function MypageClient({
   placeCount,
 }: Props) {
   const router = useRouter()
+  const locale = useLocale()
+  const unreadCount = useUnreadCount()
   const [isPending, startTransition] = useTransition()
 
   const [nameValue, setNameValue] = useState(displayName)
@@ -77,19 +84,24 @@ export default function MypageClient({
   }
 
   return (
-    <div className="min-h-dvh bg-[#F5F6F8] pb-10">
-      {/* 헤더 */}
-      <div className="flex h-[54px] items-center justify-between bg-white px-5">
-        <h1 className="text-[22px] font-bold tracking-[-0.4px] text-[#0F1117]">마이페이지</h1>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <circle cx="11" cy="11" r="2" fill="#9099A8" />
-          <circle cx="4" cy="11" r="2" fill="#9099A8" />
-          <circle cx="18" cy="11" r="2" fill="#9099A8" />
-        </svg>
-      </div>
+    <div className="bg-bg2 min-h-dvh pb-10">
+      <AppHeader
+        title="마이페이지"
+        border
+        right={
+          <Link href={`/${locale}/notifications`} className="relative flex h-10 w-10 items-center justify-center">
+            <BellIcon size={22} className="text-ink2" />
+            {unreadCount > 0 && (
+              <span className="bg-error absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+        }
+      />
 
       {/* 프로필 카드 */}
-      <div className="mx-4 mt-3.5 overflow-hidden rounded-[20px] border border-[#E8EAED] bg-white">
+      <div className="border-border mx-4 mt-3.5 overflow-hidden rounded-[20px] border bg-white">
         {/* 배너 */}
         <div
           className="relative h-[72px]"
@@ -130,7 +142,7 @@ export default function MypageClient({
         </div>
 
         {/* 스탯 */}
-        <div className="grid grid-cols-3 border-t border-[#E8EAED]">
+        <div className="border-border grid grid-cols-3 border-t">
           {[
             { num: tripCount, label: '참여 여행' },
             { num: placeCount, label: '저장 장소' },
@@ -138,7 +150,7 @@ export default function MypageClient({
           ].map((s, i) => (
             <div
               key={s.label}
-              className={`flex flex-col items-center py-3.5 ${i < 2 ? 'border-r border-[#E8EAED]' : ''}`}
+              className={`flex flex-col items-center py-3.5 ${i < 2 ? 'border-border border-r' : ''}`}
             >
               <span className="text-[20px] font-black tracking-[-0.5px] text-[#0F1117]">
                 {s.num}
@@ -205,7 +217,7 @@ export default function MypageClient({
             </svg>
           }
           label="알림 설정"
-          onPress={() => router.push('/ko/notifications/settings')}
+          onPress={() => router.push(`/${locale}/notifications/settings`)}
           right={<ChevronRight />}
         />
         <MenuItem
@@ -394,7 +406,7 @@ export default function MypageClient({
           onClick={() => setShowPlanSheet(false)}
         >
           <div
-            className="w-full rounded-t-3xl bg-white px-5 pt-5 pb-10"
+            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pt-5 pb-10"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#E8EAED]" />
