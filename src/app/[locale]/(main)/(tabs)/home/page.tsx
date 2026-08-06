@@ -69,17 +69,19 @@ export default async function HomePage() {
     allTrips.find((trip) => isTripOngoing(trip.start_date, trip.end_date)) ??
     null
 
-  let memberInitials: string[] = []
+  type MemberAvatar = { initial: string; avatarUrl: string | null }
+  let memberAvatars: MemberAvatar[] = []
   if (upcomingTrip && upcomingTrip.trip_members.length > 0) {
     const memberIds = upcomingTrip.trip_members.slice(0, 4).map((m) => m.user_id)
     const { data: memberProfiles } = await supabase
       .from('profiles')
-      .select('id, name')
+      .select('id, name, avatar_url')
       .in('id', memberIds)
-    const profileMap = new Map(memberProfiles?.map((p) => [p.id, p.name]) ?? [])
-    memberInitials = upcomingTrip.trip_members
-      .slice(0, 4)
-      .map((m) => profileMap.get(m.user_id)?.[0] ?? '?')
+    const profileMap = new Map(memberProfiles?.map((p) => [p.id, p]) ?? [])
+    memberAvatars = upcomingTrip.trip_members.slice(0, 4).map((m) => {
+      const p = profileMap.get(m.user_id)
+      return { initial: p?.name?.[0] ?? '?', avatarUrl: p?.avatar_url ?? null }
+    })
   }
 
   const quickMenus = [
@@ -213,16 +215,23 @@ export default async function HomePage() {
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex">
-                  {memberInitials.map((initial, i) => (
+                  {memberAvatars.map((m, i) => (
                     <div
                       key={i}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white"
-                      style={{
-                        backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                        marginLeft: i > 0 ? -8 : 0,
-                      }}
+                      className="h-7 w-7 overflow-hidden rounded-full border-2 border-white"
+                      style={{ marginLeft: i > 0 ? -8 : 0 }}
                     >
-                      {initial}
+                      {m.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div
+                          className="flex h-full w-full items-center justify-center text-[10px] font-bold text-white"
+                          style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                        >
+                          {m.initial}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
