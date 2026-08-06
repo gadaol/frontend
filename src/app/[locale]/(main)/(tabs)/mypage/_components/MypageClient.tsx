@@ -359,24 +359,23 @@ export default function MypageClient({
           }}
         >
           <div
-            className="w-full rounded-t-3xl bg-white px-5 pt-5 pb-10"
+            className="w-full rounded-t-3xl bg-white px-5 pb-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#E8EAED]" />
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-[18px] font-bold text-[#0F1117]">프로필 설정</h2>
+            <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] -mx-5 px-4 mb-5">
               <button
                 onClick={() => {
                   setShowProfileSheet(false)
                   setNameValue(displayName)
                   setNameError('')
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F6F8]"
+                className="flex h-9 w-9 items-center justify-center rounded-full"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 2l10 10M12 2L2 12" stroke="#515966" strokeWidth="1.8" strokeLinecap="round" />
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M12.5 5l-5 5 5 5" stroke="#0F1117" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
+              <h2 className="text-[17px] font-bold text-[#0F1117]">프로필 설정</h2>
             </div>
 
             {/* 아바타 업로드 */}
