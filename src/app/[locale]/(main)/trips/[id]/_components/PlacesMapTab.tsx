@@ -98,6 +98,9 @@ export default function PlacesMapTab({ trip }: Props) {
     mapRef.current?.panTo({ lat: pin.lat, lng: pin.lng })
   }
 
+  // 일정에 장소 자체가 없는 경우에만 빈 상태 표시
+  const hasAnyItems = trip.itinerary_days.some((d) => d.itinerary_items.length > 0)
+
   if (!isLoaded) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -106,7 +109,7 @@ export default function PlacesMapTab({ trip }: Props) {
     )
   }
 
-  if (pins.length === 0) {
+  if (!hasAnyItems) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#EBF2FF]">
@@ -230,6 +233,11 @@ export default function PlacesMapTab({ trip }: Props) {
           style={{ maxHeight: listOpen ? 2000 : 0 }}
         >
           <div className="px-4 pt-3 pb-6">
+            {pins.length === 0 && (
+              <p className="py-4 text-center text-[13px] text-[#9099A8]">
+                장소 좌표가 없어 지도에 표시할 수 없어요
+              </p>
+            )}
             {dayGroups.map(([dayNum, dayPins]) => (
               <div key={dayNum} className="mb-4">
                 {/* Day 헤더 */}
