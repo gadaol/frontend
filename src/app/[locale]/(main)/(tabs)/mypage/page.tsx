@@ -27,7 +27,7 @@ export default async function Page() {
     { count: tripCount },
     { count: placeCount },
   ] = await Promise.all([
-    supabase.from('profiles').select('name, phone').eq('id', user.id).single(),
+    supabase.from('profiles').select('name, phone, avatar_url').eq('id', user.id).single(),
     supabase
       .from('subscriptions')
       .select('plan, status, expires_at')
@@ -53,12 +53,14 @@ export default async function Page() {
   const displayName = profile?.name ?? user.email?.split('@')[0] ?? ''
   const email = user.email ?? ''
   const initials = displayName.trim() ? displayName.trim()[0].toUpperCase() : '?'
+  const avatarUrl = profile?.avatar_url ?? null
 
   return (
     <MypageClient
       displayName={displayName}
       email={email}
       initials={initials}
+      avatarUrl={avatarUrl}
       linkedProviders={[...linkedSet]}
       currentProvider={provider}
       subscription={

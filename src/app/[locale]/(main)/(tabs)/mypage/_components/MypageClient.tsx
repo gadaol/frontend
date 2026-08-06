@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { updateName, logout, deleteAccount } from '@/app/actions/mypage'
+import { updateName, logout, deleteAccount, uploadAvatar } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
 import { BellIcon } from '@/components/icons'
@@ -24,6 +24,7 @@ interface Props {
   displayName: string
   email: string
   initials: string
+  avatarUrl: string | null
   linkedProviders: string[]
   currentProvider: string
   subscription: Subscription | null
@@ -35,6 +36,7 @@ export default function MypageClient({
   displayName,
   email,
   initials,
+  avatarUrl,
   linkedProviders,
   currentProvider,
   subscription,
@@ -48,6 +50,8 @@ export default function MypageClient({
 
   const [nameValue, setNameValue] = useState(displayName)
   const [nameError, setNameError] = useState('')
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -74,13 +78,22 @@ export default function MypageClient({
     })
   }
 
-  async function handleLinkProvider(provider: string) {
+  async function handleLinkProvider(provider: 'kakao' | 'google') {
     const supabase = createClient()
-    const redirectTo = `${window.location.origin}/ko/auth/callback`
-    if (provider === 'kakao')
-      await supabase.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo } })
-    else if (provider === 'google')
-      await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+    const redirectTo = `${window.location.origin}/${locale}/auth/callback?redirect_to=/${locale}/mypage`
+    await supabase.auth.linkIdentity({ provider, options: { redirectTo } })
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await uploadAvatar(fd)
+    if (res.avatarUrl) setCurrentAvatarUrl(res.avatarUrl)
+    setAvatarUploading(false)
+    e.target.value = ''
   }
 
   return (
@@ -109,11 +122,18 @@ export default function MypageClient({
         >
           {/* 아바타 — 배너 아래로 오버랩 */}
           <div className="absolute -bottom-7 left-5">
-            <div
-              className="flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-white text-[22px] font-black text-white"
-              style={{ background: '#1B6FF0' }}
-            >
-              {initials}
+            <div className="h-14 w-14 overflow-hidden rounded-full border-[3px] border-white">
+              {currentAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentAvatarUrl} alt="avatar" className="h-full w-full object-cover" />
+              ) : (
+                <div
+                  className="flex h-full w-full items-center justify-center text-[22px] font-black text-white"
+                  style={{ background: '#1B6FF0' }}
+                >
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
 
@@ -337,6 +357,42 @@ export default function MypageClient({
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#E8EAED]" />
             <h2 className="mb-5 text-[18px] font-bold text-[#0F1117]">프로필 설정</h2>
+
+            {/* 아바타 업로드 */}
+            <div className="mb-6 flex flex-col items-center gap-2">
+              <label className="relative cursor-pointer">
+                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#E8EAED]">
+                  {currentAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={currentAvatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center text-[28px] font-black text-white"
+                      style={{ background: '#1B6FF0' }}
+                    >
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                <div className="absolute right-0 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#1B6FF0]">
+                  {avatarUploading ? (
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M6 2v8M2 6h8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                  disabled={avatarUploading}
+                />
+              </label>
+              <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
+            </div>
 
             {/* 이름 편집 */}
             <div className="mb-4">
