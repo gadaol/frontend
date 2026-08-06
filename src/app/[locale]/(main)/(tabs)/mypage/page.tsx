@@ -15,7 +15,18 @@ export default async function Page() {
 
   const provider = (user.app_metadata?.provider ?? 'email') as string
 
-  const [{ data: profile }, { data: subscriptionRow }, { data: links }] = await Promise.all([
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
+  const [
+    { data: profile },
+    { data: subscriptionRow },
+    { data: links },
+    { count: tripCount },
+    { count: placeCount },
+  ] = await Promise.all([
     supabase.from('profiles').select('name, phone').eq('id', user.id).single(),
     supabase
       .from('subscriptions')
@@ -25,10 +36,15 @@ export default async function Page() {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-      .from('account_links')
-      .select('linked_provider')
-      .eq('primary_user_id', user.id),
+    adminClient.from('account_links').select('linked_provider').eq('primary_user_id', user.id),
+    supabase
+      .from('trip_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id),
+    supabase
+      .from('backlog_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id),
   ])
 
   const linkedSet = new Set<string>((links ?? []).map((l) => l.linked_provider as string))
@@ -36,14 +52,12 @@ export default async function Page() {
 
   const displayName = profile?.name ?? user.email?.split('@')[0] ?? ''
   const email = user.email ?? ''
-  const phone = profile?.phone ?? ''
   const initials = displayName.trim() ? displayName.trim()[0].toUpperCase() : '?'
 
   return (
     <MypageClient
       displayName={displayName}
       email={email}
-      phone={phone}
       initials={initials}
       linkedProviders={[...linkedSet]}
       currentProvider={provider}
@@ -52,6 +66,8 @@ export default async function Page() {
           ? { ...subscriptionRow, plan: subscriptionRow.plan as 'free' | 'pro' | 'team' }
           : null
       }
+      tripCount={tripCount ?? 0}
+      placeCount={placeCount ?? 0}
     />
   )
 }
