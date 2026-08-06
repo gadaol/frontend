@@ -205,7 +205,7 @@ export default function MypageClient({
             </svg>
           }
           label="알림 설정"
-          onPress={() => router.push('/ko/notifications')}
+          onPress={() => router.push('/ko/notifications/settings')}
           right={<ChevronRight />}
         />
         <MenuItem

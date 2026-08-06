@@ -632,6 +632,7 @@ export type Database = {
         Row: {
           category_weights: Json | null
           id: string
+          notification_prefs: Json
           travel_style: Json | null
           updated_at: string | null
           user_id: string
@@ -639,6 +640,7 @@ export type Database = {
         Insert: {
           category_weights?: Json | null
           id?: string
+          notification_prefs?: Json
           travel_style?: Json | null
           updated_at?: string | null
           user_id: string
@@ -646,6 +648,7 @@ export type Database = {
         Update: {
           category_weights?: Json | null
           id?: string
+          notification_prefs?: Json
           travel_style?: Json | null
           updated_at?: string | null
           user_id?: string
