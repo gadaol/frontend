@@ -294,97 +294,82 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
         </div>
       )}
 
-      {/* 리스트 토글 버튼 */}
-      {results.length > 0 && (
-        <div
-          className="pointer-events-none absolute right-4 z-20 flex flex-col items-end"
-          style={{
-            bottom: showList
-              ? 'calc(var(--list-height, 240px) + 12px)'
-              : 'calc(env(safe-area-inset-bottom) + 72px)',
-          }}
-        >
-          <button
-            onClick={() => setShowList((v) => !v)}
-            className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2.5 shadow-lg"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className={`transition-transform duration-200 ${showList ? 'rotate-180' : ''}`}
-            >
-              <path
-                d="M3.5 10L8 5.5l4.5 4.5"
-                stroke={showList ? '#1B6FF0' : '#9099A8'}
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span
-              className={`text-[13px] font-semibold ${showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'}`}
-            >
-              {showList ? t('hideList') : t('showList')}
-            </span>
-          </button>
-        </div>
-      )}
-
       {/* 결과 리스트 하단 시트 */}
-      {showList && results.length > 0 && (
+      {results.length > 0 && (
         <div className="relative z-10 mt-auto">
           <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
-            <div className="flex items-center justify-between px-5 py-3">
+            {/* 토글 헤더 — PlacesMapTab과 동일 패턴 */}
+            <button
+              onClick={() => setShowList((v) => !v)}
+              className="flex w-full items-center justify-between border-b border-[#F0F1F3] px-5 py-3"
+            >
               <span className="text-[14px] font-semibold text-[#0F1117]">
                 {t('results', { count: results.length })}
               </span>
-              <div className="h-1 w-8 rounded-full bg-[#E8EAED]" />
-            </div>
-            <div className="max-h-56 overflow-y-auto" style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}>
-              {results.map((place) => {
-                const category = getCategoryInfo(place.types)
-                const Icon = category.icon
-                return (
-                  <div
-                    key={place.id}
-                    className="flex items-center gap-0 px-4 py-2.5 active:bg-[#F5F6FA]"
-                  >
-                    <button
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      onClick={() => focusPlace(place)}
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                className={`transition-transform duration-300 ${showList ? 'rotate-180' : ''}`}
+              >
+                <path
+                  d="M4.5 11L9 6.5l4.5 4.5"
+                  stroke="#9099A8"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <div
+              className="overflow-hidden transition-all duration-300 ease-in-out"
+              style={{ maxHeight: showList ? 800 : 0 }}
+            >
+              <div className="overflow-y-auto" style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}>
+                {results.map((place) => {
+                  const category = getCategoryInfo(place.types)
+                  const Icon = category.icon
+                  return (
+                    <div
+                      key={place.id}
+                      className="flex items-center gap-0 px-4 py-2.5 active:bg-[#F5F6FA]"
                     >
-                      <div
-                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
+                      <button
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        onClick={() => focusPlace(place)}
                       >
-                        <Icon size={18} className={category.color} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-semibold text-[#0F1117]">
-                          {place.displayName.text}
-                        </p>
-                        <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">
-                          {place.formattedAddress}
-                        </p>
-                        {place.rating && (
-                          <p className="mt-0.5 text-[11px] text-[#9099A8]">
-                            ★ {place.rating.toFixed(1)}
+                        <div
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
+                        >
+                          <Icon size={18} className={category.color} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[14px] font-semibold text-[#0F1117]">
+                            {place.displayName.text}
                           </p>
-                        )}
-                      </div>
-                    </button>
-                    {renderListAction(place)}
-                    <Link
-                      href={`/${locale}/places/${place.id}`}
-                      className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-                      aria-label={t('viewDetail')}
-                    >
-                      <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
-                    </Link>
-                  </div>
-                )
-              })}
+                          <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">
+                            {place.formattedAddress}
+                          </p>
+                          {place.rating && (
+                            <p className="mt-0.5 text-[11px] text-[#9099A8]">
+                              ★ {place.rating.toFixed(1)}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                      {renderListAction(place)}
+                      <Link
+                        href={`/${locale}/places/${place.id}`}
+                        className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
+                        aria-label={t('viewDetail')}
+                      >
+                        <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>

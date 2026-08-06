@@ -93,23 +93,27 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                   e.stopPropagation()
                   toggleSelect(place)
                 }}
-                className={`ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                  isSelected
-                    ? 'border-[#1B6FF0] bg-[#1B6FF0]'
-                    : 'border-[#D8DADF] bg-white'
-                }`}
+                className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center"
               >
-                {isSelected && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="10"
+                    fill={isSelected ? '#1B6FF0' : 'none'}
+                    stroke={isSelected ? '#1B6FF0' : '#D0D3D9'}
+                    strokeWidth="1.5"
+                  />
+                  {isSelected && (
                     <path
-                      d="M2.5 7l3 3 6-6"
+                      d="M6.5 11l3 3 6-6"
                       stroke="white"
                       strokeWidth="1.8"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                  </svg>
-                )}
+                  )}
+                </svg>
               </button>
             )
           }}
