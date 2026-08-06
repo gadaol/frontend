@@ -60,13 +60,18 @@ export default function MypageClient({
   const [currentSubscription, setCurrentSubscription] = useState(subscription)
   const [subscribedToast, setSubscribedToast] = useState(false)
 
+  // 마운트 시 1회만 체크 — router.replace로 searchParams 바뀌어도 재실행 안 됨
   useEffect(() => {
     if (searchParams.get('subscribed') !== '1') return
     startTransition(() => setSubscribedToast(true))
     router.replace(`/${locale}/mypage`, { scroll: false })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!subscribedToast) return
     const t = setTimeout(() => setSubscribedToast(false), 3500)
     return () => clearTimeout(t)
-  }, [searchParams, router, locale])
+  }, [subscribedToast])
 
   const plan: Plan =
     currentSubscription?.plan === 'pro' || currentSubscription?.plan === 'plus'
@@ -78,22 +83,25 @@ export default function MypageClient({
     <div className="bg-bg2 min-h-dvh pb-10">
       {/* 결제 완료 토스트 */}
       {subscribedToast && (
-        <div className="fixed top-5 left-1/2 z-[100] -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-3 rounded-2xl bg-[#0F1117] px-4 py-3.5 shadow-2xl">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#1B6FF0]">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <div className="fixed top-4 left-4 right-4 z-[100] animate-in fade-in slide-in-from-top-3 duration-300">
+          <div
+            className="flex items-center gap-4 rounded-2xl px-5 py-4 shadow-2xl"
+            style={{ background: 'linear-gradient(135deg,#070E1A,#1B3A7A)' }}
+          >
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#1B6FF0]">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <path
-                  d="M4 9l4 4 6-7"
+                  d="M5 11l5 5 7-9"
                   stroke="white"
-                  strokeWidth="2"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
             </div>
-            <div>
-              <p className="text-[14px] font-bold text-white">구독이 시작됐어요!</p>
-              <p className="text-[12px] text-white/60">Pro 혜택을 마음껏 누려보세요</p>
+            <div className="flex-1">
+              <p className="text-[15px] font-bold text-white">구독이 시작됐어요! 🎉</p>
+              <p className="mt-0.5 text-[13px] text-white/60">Pro 혜택을 마음껏 누려보세요</p>
             </div>
           </div>
         </div>
