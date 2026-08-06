@@ -60,12 +60,10 @@ function InfoIcon() {
 }
 
 const TYPE_CONFIG: Record<string, IconConfig> = {
-  trip_invite: { color: '#1B6FF0', bg: '#EBF2FF', icon: <TripInviteIcon /> },
-  vote_created: { color: '#F79009', bg: '#FEF3C7', icon: <VoteIcon /> },
-  vote_result: { color: '#12B76A', bg: '#D1FAE5', icon: <CheckIcon /> },
-  member_joined: { color: '#1B6FF0', bg: '#EBF2FF', icon: <TripInviteIcon /> },
-  place_added: { color: '#12B76A', bg: '#D1FAE5', icon: <CheckIcon /> },
-  trip_updated: { color: '#12B76A', bg: '#D1FAE5', icon: <CheckIcon /> },
+  invite: { color: '#1B6FF0', bg: '#EBF2FF', icon: <TripInviteIcon /> },
+  vote: { color: '#F79009', bg: '#FEF3C7', icon: <VoteIcon /> },
+  edit: { color: '#12B76A', bg: '#D1FAE5', icon: <CheckIcon /> },
+  system: { color: '#9099A8', bg: '#F5F7FA', icon: <InfoIcon /> },
 }
 
 function getConfig(type: string): IconConfig {
@@ -73,19 +71,18 @@ function getConfig(type: string): IconConfig {
 }
 
 function getTitle(type: string, payload: Record<string, unknown>): string {
+  const daysUntil = payload.days_until as number | undefined
   switch (type) {
-    case 'trip_invite':
+    case 'invite':
       return '여행 초대가 도착했어요'
-    case 'vote_created':
-      return '새 장소 투표가 시작됐어요'
-    case 'vote_result':
-      return '투표 결과가 나왔어요'
-    case 'member_joined':
-      return '새 멤버가 참여했어요'
-    case 'place_added':
-      return '새 장소가 추가됐어요'
-    case 'trip_updated':
-      return '일정이 수정됐어요'
+    case 'vote':
+      return '새 후보 장소가 추가됐어요'
+    case 'edit':
+      return '일정에 장소가 추가됐어요'
+    case 'system':
+      if (daysUntil === 1) return '내일 여행이 시작돼요!'
+      if (daysUntil === 3) return '3일 후 여행이 시작돼요'
+      return '여행 알림'
     default:
       return (payload.message as string) ?? '새 알림이 있어요'
   }
@@ -94,19 +91,16 @@ function getTitle(type: string, payload: Record<string, unknown>): string {
 function getDesc(type: string, payload: Record<string, unknown>): string {
   const tripName = (payload.trip_name as string) ?? '여행'
   const actorName = (payload.actor_name as string) ?? '누군가'
+  const placeName = (payload.place_name as string) ?? ''
   switch (type) {
-    case 'trip_invite':
+    case 'invite':
       return `${actorName}님이 ${tripName}에 초대했어요`
-    case 'vote_created':
-      return `${tripName} 여행에서 방문 장소 투표가 시작됐어요`
-    case 'vote_result':
-      return `${tripName} 투표 결과를 확인해보세요`
-    case 'member_joined':
-      return `${actorName}님이 ${tripName}에 참여했어요`
-    case 'place_added':
-      return `${tripName}에 새 장소가 추가됐어요`
-    case 'trip_updated':
-      return `${actorName}님이 ${tripName} 일정을 수정했어요`
+    case 'vote':
+      return `${actorName}님이 ${tripName}에 ${placeName}을(를) 추가했어요`
+    case 'edit':
+      return `${tripName}에 ${placeName}이(가) 일정에 추가됐어요`
+    case 'system':
+      return `${tripName} 준비됐나요? 지금 일정을 확인해보세요`
     default:
       return ''
   }
@@ -264,7 +258,7 @@ function NotifItem({
           <p className="mt-1.5 text-[11px] text-[#9099A8]">{timeAgo(n.created_at)}</p>
 
           {/* 여행 초대 — 수락/거절 버튼 */}
-          {n.type === 'trip_invite' && (
+          {n.type === 'invite' && (
             <div className="mt-2.5 flex gap-1.5">
               <button className="flex-1 rounded-[8px] bg-[#1B6FF0] py-2 text-[12px] font-semibold text-white">
                 수락
