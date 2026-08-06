@@ -140,6 +140,7 @@ export async function sendDirectInvite(
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
+  if (targetUserId === user.id) return { error: 'cannot_invite_self' }
 
   const admin = adminClient()
 
