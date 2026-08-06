@@ -32,15 +32,11 @@ export default async function InvitePage({
   const isMember = trip.trip_members.some((m) => m.user_id === user.id)
   if (!isMember) redirect(`/${locale}/trips/${id}`)
 
-  const inviteUrl = token
-    ? `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/${locale}/trips/${id}/join?token=${token}`
-    : null
-
   return (
     <InviteClient
       tripId={id}
       tripTitle={trip.title}
-      inviteUrl={inviteUrl}
+      inviteToken={token}
       memberIds={trip.trip_members.map((m) => m.user_id)}
     />
   )

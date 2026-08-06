@@ -10,11 +10,11 @@ const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#
 interface Props {
   tripId: string
   tripTitle: string
-  inviteUrl: string | null
+  inviteToken: string | null
   memberIds: string[]
 }
 
-export default function InviteClient({ tripId, tripTitle, inviteUrl, memberIds }: Props) {
+export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<UserSearchResult[]>([])
@@ -23,6 +23,11 @@ export default function InviteClient({ tripId, tripTitle, inviteUrl, memberIds }
   const [, startTransition] = useTransition()
   const [copyToast, setCopyToast] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inviteUrl = inviteToken
+    ? typeof window !== 'undefined'
+      ? `${window.location.origin}${window.location.pathname.split('/trips')[0]}/trips/${tripId}/join?token=${inviteToken}`
+      : null
+    : null
 
   function handleQueryChange(value: string) {
     setQuery(value)
