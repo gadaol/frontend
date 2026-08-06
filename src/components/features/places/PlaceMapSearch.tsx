@@ -13,7 +13,7 @@ export type { GooglePlace }
 const MAP_DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 }
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
-  zoomControl: true,
+  zoomControl: false,
   clickableIcons: false,
   styles: [
     { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },

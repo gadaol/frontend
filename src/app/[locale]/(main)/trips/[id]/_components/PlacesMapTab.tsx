@@ -7,7 +7,7 @@ import type { TripDetail } from '../page'
 
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
-  zoomControl: true,
+  zoomControl: false,
   clickableIcons: true,
   styles: [
     { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'simplified' }] },
