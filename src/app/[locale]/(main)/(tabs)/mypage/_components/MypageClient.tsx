@@ -359,10 +359,11 @@ export default function MypageClient({
           }}
         >
           <div
-            className="w-full rounded-t-3xl bg-white px-5 pb-10"
+            className="w-full overflow-hidden rounded-t-3xl bg-white pb-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] -mx-5 px-4 mb-5">
+            {/* 헤더 */}
+            <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] px-4">
               <button
                 onClick={() => {
                   setShowProfileSheet(false)
@@ -377,6 +378,8 @@ export default function MypageClient({
               </button>
               <h2 className="text-[17px] font-bold text-[#0F1117]">프로필 설정</h2>
             </div>
+            {/* 콘텐츠 */}
+            <div className="px-5 pt-5">
 
             {/* 아바타 업로드 */}
             <div className="mb-6 flex flex-col items-center gap-2">
@@ -483,6 +486,7 @@ export default function MypageClient({
             >
               {isPending ? '저장 중...' : '저장'}
             </button>
+            </div>{/* /콘텐츠 */}
           </div>
         </div>
       )}
