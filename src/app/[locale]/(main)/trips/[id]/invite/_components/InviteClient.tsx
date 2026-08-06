@@ -123,7 +123,7 @@ export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds
             type="text"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="이름으로 검색"
+            placeholder="이름 또는 전화번호로 검색"
             className="w-full rounded-xl border border-[#E8EAED] bg-[#F5F7FA] py-3 pl-9 pr-4 text-[14px] text-[#0F1117] placeholder:text-[#9099A8] focus:border-[#1B6FF0] focus:outline-none"
           />
           {searching && (

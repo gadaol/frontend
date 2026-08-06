@@ -103,8 +103,8 @@ export async function searchUsers(
   const [{ data: profiles }, { data: members }, { data: pendingNotifs }] = await Promise.all([
     admin
       .from('profiles')
-      .select('id, name, avatar_url')
-      .ilike('name', `%${query}%`)
+      .select('id, name, avatar_url, phone')
+      .or(`name.ilike.%${query}%,phone.ilike.%${query}%`)
       .neq('id', user.id)
       .limit(20),
     admin.from('trip_members').select('user_id').eq('trip_id', tripId),
