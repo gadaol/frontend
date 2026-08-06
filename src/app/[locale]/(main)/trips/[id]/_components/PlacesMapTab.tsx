@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
+import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import type { TripDetail } from '../page'
 
 const MAP_OPTIONS: google.maps.MapOptions = {
@@ -14,7 +15,6 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   ],
 }
 
-// Day별 색상 (최대 7일)
 const DAY_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2', '#DB2777']
 
 type PlacePin = {
@@ -27,6 +27,7 @@ type PlacePin = {
   dayDate: string
   color: string
   orderIndex: number
+  categoryName: string | null
 }
 
 interface Props {
@@ -40,39 +41,63 @@ export default function PlacesMapTab({ trip }: Props) {
 
   const mapRef = useRef<google.maps.Map | null>(null)
   const [selectedPin, setSelectedPin] = useState<PlacePin | null>(null)
+  const [listOpen, setListOpen] = useState(true)
 
-  // 모든 날짜의 장소를 핀 배열로 변환
-  const pins: PlacePin[] = trip.itinerary_days
-    .slice()
-    .sort((a, b) => a.day_number - b.day_number)
-    .flatMap((day) =>
-      day.itinerary_items
-        .filter((item) => item.places?.lat != null && item.places?.lng != null)
-        .sort((a, b) => a.order_index - b.order_index)
-        .map((item) => ({
-          id: item.id,
-          name: item.places!.name,
-          address: item.places!.address,
-          lat: item.places!.lat as number,
-          lng: item.places!.lng as number,
-          dayNumber: day.day_number,
-          dayDate: day.day_date,
-          color: DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length],
-          orderIndex: item.order_index,
-        })),
-    )
+  const pins: PlacePin[] = useMemo(
+    () =>
+      trip.itinerary_days
+        .slice()
+        .sort((a, b) => a.day_number - b.day_number)
+        .flatMap((day) =>
+          day.itinerary_items
+            .filter((item) => item.places?.lat != null && item.places?.lng != null)
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((item) => ({
+              id: item.id,
+              name: item.places!.name,
+              address: item.places!.address,
+              lat: item.places!.lat as number,
+              lng: item.places!.lng as number,
+              dayNumber: day.day_number,
+              dayDate: day.day_date,
+              color: DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length],
+              orderIndex: item.order_index,
+              categoryName: item.places!.place_categories?.name ?? null,
+            })),
+        ),
+    [trip.itinerary_days],
+  )
+
+  // Day별 그룹핑
+  const dayGroups = useMemo(() => {
+    const groups = new Map<number, PlacePin[]>()
+    for (const pin of pins) {
+      if (!groups.has(pin.dayNumber)) groups.set(pin.dayNumber, [])
+      groups.get(pin.dayNumber)!.push(pin)
+    }
+    return [...groups.entries()].sort((a, b) => a[0] - b[0])
+  }, [pins])
 
   const center =
     pins.length > 0 ? { lat: pins[0].lat, lng: pins[0].lng } : { lat: 37.5665, lng: 126.978 }
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map
-    if (pins.length > 1) {
-      const bounds = new window.google.maps.LatLngBounds()
-      pins.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }))
-      map.fitBounds(bounds, 60)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map
+      if (pins.length > 1) {
+        const bounds = new window.google.maps.LatLngBounds()
+        pins.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }))
+        map.fitBounds(bounds, 80)
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  function handlePinClick(pin: PlacePin) {
+    setSelectedPin(pin)
+    mapRef.current?.panTo({ lat: pin.lat, lng: pin.lng })
+  }
 
   if (!isLoaded) {
     return (
@@ -104,109 +129,198 @@ export default function PlacesMapTab({ trip }: Props) {
   }
 
   return (
-    <div className="flex flex-col">
-      {/* 지도 */}
-      <div className="h-72 w-full">
-        <GoogleMap
-          mapContainerStyle={{ width: '100%', height: '100%' }}
-          center={center}
-          zoom={13}
-          options={MAP_OPTIONS}
-          onLoad={onLoad}
+    <div
+      className="relative overflow-hidden"
+      style={{ height: 'calc(100dvh - 392px)', minHeight: 300 }}
+    >
+      {/* 지도 (전체 채움) */}
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={center}
+        zoom={13}
+        options={MAP_OPTIONS}
+        onLoad={onLoad}
+      >
+        {pins.map((pin) => (
+          <Marker
+            key={pin.id}
+            position={{ lat: pin.lat, lng: pin.lng }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: selectedPin?.id === pin.id ? 13 : 10,
+              fillColor: pin.color,
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            }}
+            label={{
+              text: String(pin.orderIndex + 1),
+              color: '#fff',
+              fontSize: '10px',
+              fontWeight: '700',
+            }}
+            onClick={() => handlePinClick(pin)}
+          />
+        ))}
+        {selectedPin && (
+          <InfoWindow
+            position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
+            onCloseClick={() => setSelectedPin(null)}
+          >
+            <div style={{ maxWidth: 160 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 2 }}>
+                {selectedPin.name}
+              </p>
+              {selectedPin.address && (
+                <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
+              )}
+              <p style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}>
+                Day {selectedPin.dayNumber} · {selectedPin.orderIndex + 1}번째
+              </p>
+            </div>
+          </InfoWindow>
+        )}
+      </GoogleMap>
+
+      {/* 하단 장소 목록 패널 */}
+      <div
+        className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out"
+        style={{
+          transform: listOpen ? 'translateY(0)' : 'translateY(calc(100% - 48px))',
+          maxHeight: '65%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* 토글 핸들 */}
+        <button
+          onClick={() => setListOpen((v) => !v)}
+          className="flex w-full flex-shrink-0 items-center justify-between px-4 py-3"
         >
-          {pins.map((pin) => (
-            <Marker
-              key={pin.id}
-              position={{ lat: pin.lat, lng: pin.lng }}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: pin.color,
-                fillOpacity: 1,
-                strokeColor: '#fff',
-                strokeWeight: 2,
-              }}
-              label={{
-                text: String(pin.orderIndex + 1),
-                color: '#fff',
-                fontSize: '10px',
-                fontWeight: '700',
-              }}
-              onClick={() => setSelectedPin(pin)}
-            />
-          ))}
-          {selectedPin && (
-            <InfoWindow
-              position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
-              onCloseClick={() => setSelectedPin(null)}
+          <div className="flex items-center gap-2">
+            <span className="text-[14px] font-semibold text-[#0F1117]">
+              장소 목록
+            </span>
+            <span className="rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[11px] font-bold text-[#1B6FF0]">
+              {pins.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Day 색상 범례 */}
+            <div className="flex items-center gap-1.5">
+              {dayGroups.map(([dayNum, dayPins]) => (
+                <div key={dayNum} className="flex items-center gap-0.5">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: dayPins[0].color }}
+                  />
+                  <span className="text-[10px] text-[#9099A8]">D{dayNum}</span>
+                </div>
+              ))}
+            </div>
+            {/* 화살표 */}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              className={`transition-transform duration-300 ${listOpen ? '' : 'rotate-180'}`}
             >
-              <div style={{ maxWidth: 160 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 2 }}>
-                  {selectedPin.name}
-                </p>
-                {selectedPin.address && (
-                  <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
-                )}
-                <p
-                  style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}
-                >
-                  Day {selectedPin.dayNumber}
-                </p>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
-      </div>
+              <path
+                d="M4.5 11L9 6.5l4.5 4.5"
+                stroke="#9099A8"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </button>
 
-      {/* Day별 범례 + 장소 리스트 */}
-      <div className="px-4 pt-4 pb-6">
-        {/* Day 범례 */}
-        <div className="mb-3 flex flex-wrap gap-2">
-          {trip.itinerary_days
-            .slice()
-            .sort((a, b) => a.day_number - b.day_number)
-            .filter((day) => day.itinerary_items.some((i) => i.places?.lat != null))
-            .map((day) => (
-              <div key={day.day_number} className="flex items-center gap-1.5">
+        {/* 구분선 */}
+        <div className="mx-4 h-px flex-shrink-0 bg-[#F0F1F3]" />
+
+        {/* 스크롤 리스트 */}
+        <div className="overflow-y-auto px-4 pt-3 pb-6">
+          {dayGroups.map(([dayNum, dayPins]) => (
+            <div key={dayNum} className="mb-4">
+              {/* Day 헤더 */}
+              <div className="mb-2 flex items-center gap-2">
                 <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length] }}
-                />
-                <span className="text-[12px] text-[#515966]">Day {day.day_number}</span>
+                  className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
+                  style={{ backgroundColor: dayPins[0].color }}
+                >
+                  Day {dayNum}
+                </span>
+                <span className="text-[11px] text-[#9099A8]">{dayPins[0].dayDate}</span>
               </div>
-            ))}
-        </div>
 
-        {/* 장소 리스트 */}
-        <div className="flex flex-col gap-2">
-          {pins.map((pin) => (
-            <button
-              key={pin.id}
-              onClick={() => {
-                setSelectedPin(pin)
-                mapRef.current?.panTo({ lat: pin.lat, lng: pin.lng })
-              }}
-              className="flex items-center gap-3 rounded-xl border border-[#E8EAED] bg-white px-3 py-3 text-left"
-            >
-              <div
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                style={{ backgroundColor: pin.color }}
-              >
-                {pin.orderIndex + 1}
+              {/* 장소 카드 리스트 */}
+              <div className="flex flex-col gap-2">
+                {dayPins.map((pin) => {
+                  const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
+                  const Icon = catInfo.icon
+                  const isSelected = selectedPin?.id === pin.id
+
+                  return (
+                    <button
+                      key={pin.id}
+                      onClick={() => handlePinClick(pin)}
+                      className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
+                        isSelected
+                          ? 'border-[#1B6FF0] bg-[#EBF2FF]'
+                          : 'border-[#E8EAED] bg-white'
+                      }`}
+                    >
+                      {/* 순서 번호 */}
+                      <div
+                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                        style={{ backgroundColor: pin.color }}
+                      >
+                        {pin.orderIndex + 1}
+                      </div>
+
+                      {/* 카테고리 아이콘 */}
+                      <div
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}
+                      >
+                        <Icon size={18} className={catInfo.color} />
+                      </div>
+
+                      {/* 장소 정보 */}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`truncate text-[13px] font-semibold ${isSelected ? 'text-[#1B6FF0]' : 'text-[#0F1117]'}`}
+                        >
+                          {pin.name}
+                        </p>
+                        {pin.address && (
+                          <p className="mt-0.5 truncate text-[11px] text-[#9099A8]">
+                            {pin.address}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 핀 아이콘 */}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        className="flex-shrink-0 text-[#9099A8]"
+                      >
+                        <path
+                          d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                        />
+                        <circle cx="7" cy="5.5" r="1.3" stroke="currentColor" strokeWidth="1.3" />
+                      </svg>
+                    </button>
+                  )
+                })}
               </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="truncate text-[13px] font-semibold text-[#0F1117]">{pin.name}</p>
-                {pin.address && (
-                  <p className="truncate text-[11px] text-[#9099A8]">{pin.address}</p>
-                )}
-              </div>
-              <span
-                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-                style={{ backgroundColor: pin.color }}
-              >
-                Day {pin.dayNumber}
-              </span>
-            </button>
+            </div>
           ))}
         </div>
       </div>
