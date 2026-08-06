@@ -122,7 +122,7 @@ export async function searchUsers(
   )
 
   return (profiles ?? [])
-    .filter((p) => !memberIds.has(p.id))
+    .filter((p) => !memberIds.has(p.id) && p.id !== user.id)
     .map((p) => ({
       id: p.id,
       name: p.name,
