@@ -84,7 +84,16 @@ export type UserSearchResult = {
   id: string
   name: string | null
   avatar_url: string | null
+  maskedPhone: string | null
   alreadyInvited: boolean
+}
+
+function maskPhone(phone: string | null): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length === 11) return `${digits.slice(0, 3)}-****-${digits.slice(7)}`
+  if (digits.length === 10) return `${digits.slice(0, 3)}-***-${digits.slice(6)}`
+  return phone.slice(0, 3) + '****'
 }
 
 export async function searchUsers(
@@ -127,6 +136,7 @@ export async function searchUsers(
       id: p.id,
       name: p.name,
       avatar_url: p.avatar_url,
+      maskedPhone: maskPhone(p.phone),
       alreadyInvited: pendingIds.has(p.id),
     }))
 }
