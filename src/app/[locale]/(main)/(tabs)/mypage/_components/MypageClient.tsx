@@ -474,9 +474,9 @@ const PLAN_BADGE_STYLE: Record<Plan, { backgroundColor: string; color: string }>
 const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', plus: 'Plus' }
 
 const PLAN_BENEFITS: Record<Plan, string[]> = {
-  free: ['여행 최대 3개', '메이트 최대 2명', '백로그 무제한 저장'],
-  pro: ['여행 무제한', '메이트 최대 10명', 'AI 추천 월 20회', '광고 없음'],
-  plus: ['여행 무제한', '메이트 무제한', 'AI 추천 무제한', '공유 백로그'],
+  free: ['여행 최대 3개', '메이트 최대 2명', 'AI 추천 3회/월', '백로그 무제한 저장'],
+  pro: ['여행 무제한', '메이트 최대 10명', 'AI 추천 월 20회', '백로그 폴더/태그 정리', '팀 권한 관리', '광고 없음'],
+  plus: ['여행 무제한', '메이트 무제한', 'AI 추천 무제한', '백로그 폴더/태그 정리', '팀 권한 관리', '공유 백로그', '광고 없음'],
 }
 
 const PLANS: { key: Plan; price: string; period?: string; features: string[] }[] = [
