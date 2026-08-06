@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { searchUsers, sendDirectInvite, type UserSearchResult } from '@/app/actions/invite'
@@ -22,12 +22,14 @@ export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set())
   const [, startTransition] = useTransition()
   const [copyToast, setCopyToast] = useState(false)
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inviteUrl = inviteToken
-    ? typeof window !== 'undefined'
-      ? `${window.location.origin}${window.location.pathname.split('/trips')[0]}/trips/${tripId}/join?token=${inviteToken}`
-      : null
-    : null
+
+  useEffect(() => {
+    if (!inviteToken) return
+    const locale = window.location.pathname.split('/')[1]
+    setInviteUrl(`${window.location.origin}/${locale}/trips/${tripId}/join?token=${inviteToken}`)
+  }, [inviteToken, tripId])
 
   function handleQueryChange(value: string) {
     setQuery(value)
