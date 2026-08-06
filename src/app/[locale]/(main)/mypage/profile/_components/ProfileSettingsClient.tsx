@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
-import { createClient } from '@/lib/supabase/client'
 import { updateName, uploadAvatar, deleteAvatar } from '@/app/actions/mypage'
 import AppHeader from '@/components/common/AppHeader'
 
@@ -45,12 +43,6 @@ export default function ProfileSettingsClient({
         router.back()
       }
     })
-  }
-
-  async function handleLinkProvider(provider: 'kakao' | 'google') {
-    const supabase = createClient()
-    const redirectTo = `${window.location.origin}/${locale}/mypage/profile/link-callback`
-    await supabase.auth.linkIdentity({ provider, options: { redirectTo } })
   }
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -159,17 +151,10 @@ export default function ProfileSettingsClient({
                 <span className="flex-1 text-[14px] text-[#0F1117]">
                   {p === 'kakao' ? '카카오' : 'Google'}
                 </span>
-                {isConnected ? (
+                {isConnected && (
                   <span className="rounded-full bg-[#EBF2FF] px-2.5 py-1 text-[12px] font-semibold text-[#1B6FF0]">
                     {isCurrent ? '기본' : '연결됨'}
                   </span>
-                ) : (
-                  <button
-                    onClick={() => handleLinkProvider(p)}
-                    className="rounded-full border border-[#1B6FF0] px-3 py-1 text-[12px] font-semibold text-[#1B6FF0]"
-                  >
-                    연동하기
-                  </button>
                 )}
               </div>
             )
