@@ -11,6 +11,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_keys: {
+        Row: {
+          id: string
+          user_id: string
+          billing_key: string
+          customer_key: string
+          card_company: string | null
+          card_number: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          billing_key: string
+          customer_key: string
+          card_company?: string | null
+          card_number?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          billing_key?: string
+          customer_key?: string
+          card_company?: string | null
+          card_number?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          id: string
+          user_id: string
+          order_id: string
+          plan: string
+          period: string
+          amount: number
+          status: string
+          payment_key: string | null
+          approved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          order_id: string
+          plan: string
+          period?: string
+          amount: number
+          status?: string
+          payment_key?: string | null
+          approved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          order_id?: string
+          plan?: string
+          period?: string
+          amount?: number
+          status?: string
+          payment_key?: string | null
+          approved_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       phone_trial_grants: {
         Row: {
           phone: string

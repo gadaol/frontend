@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useTransition, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
@@ -51,12 +51,22 @@ export default function MypageClient({
   const unreadCount = useUnreadCount()
   const [isPending, startTransition] = useTransition()
 
+  const searchParams = useSearchParams()
   const [currentAvatarUrl] = useState(avatarUrl)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [showPhoneSheet, setShowPhoneSheet] = useState(false)
   const [currentSubscription, setCurrentSubscription] = useState(subscription)
+  const [subscribedToast, setSubscribedToast] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('subscribed') === '1') {
+      setSubscribedToast(true)
+      const t = setTimeout(() => setSubscribedToast(false), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [searchParams])
 
   const plan: Plan =
     currentSubscription?.plan === 'pro' || currentSubscription?.plan === 'plus'
@@ -66,6 +76,12 @@ export default function MypageClient({
 
   return (
     <div className="bg-bg2 min-h-dvh pb-10">
+      {/* 결제 완료 토스트 */}
+      {subscribedToast && (
+        <div className="fixed top-4 left-1/2 z-[100] -translate-x-1/2 rounded-2xl bg-[#0F1117] px-5 py-3 shadow-xl">
+          <p className="text-[14px] font-semibold text-white">🎉 구독이 시작됐어요!</p>
+        </div>
+      )}
       <AppHeader
         title="마이페이지"
         border
@@ -399,12 +415,13 @@ export default function MypageClient({
                       </li>
                     ))}
                   </ul>
-                  {p.key !== plan && (
+                  {p.key !== plan && p.key !== 'free' && (
                     <button
+                      onClick={() => router.push(`/${locale}/payment?plan=${p.key}`)}
                       className="mt-3 w-full rounded-xl py-3 text-[14px] font-bold text-white"
-                      style={{ backgroundColor: PLAN_BADGE_STYLE[p.key].color }}
+                      style={{ backgroundColor: PLAN_BADGE_STYLE[p.key as Plan].color }}
                     >
-                      {p.key === 'free' ? '다운그레이드' : `${PLAN_LABEL[p.key]}로 업그레이드`}
+                      {`${PLAN_LABEL[p.key as Plan]}로 업그레이드`}
                     </button>
                   )}
                 </div>
