@@ -13,11 +13,7 @@ const STATUS_LABEL: Record<string, { label: string; bg: string; text: string }> 
   answered: { label: '답변 완료', bg: '#D1FAE5', text: '#12B76A' },
 }
 
-export default async function InquiryDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function InquiryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const locale = await getLocale()
@@ -27,11 +23,11 @@ export default async function InquiryDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: inquiry } = await supabase
+  const { data: inquiry } = (await supabase
     .from('inquiries')
     .select('*, inquiry_answers(*)')
     .eq('id', id)
-    .single() as { data: InquiryWithAnswer | null; error: unknown }
+    .single()) as { data: InquiryWithAnswer | null; error: unknown }
 
   if (!inquiry) notFound()
   if (inquiry.user_id !== user.id && !inquiry.is_public) notFound()
@@ -43,7 +39,7 @@ export default async function InquiryDetailPage({
     <div className="min-h-dvh bg-[#F5F6F8]">
       <AppHeader title="문의 상세" onBack="router" border />
 
-      <div className="px-4 pt-5 pb-10 flex flex-col gap-3">
+      <div className="flex flex-col gap-3 px-4 pt-5 pb-10">
         {/* 문의 내용 */}
         <div className="rounded-2xl border border-[#E8EAED] bg-white px-5 py-5">
           <div className="mb-3 flex items-center justify-between">
@@ -51,9 +47,7 @@ export default async function InquiryDetailPage({
               <span className="rounded-full bg-[#F5F6F8] px-2.5 py-0.5 text-[11px] font-medium text-[#9099A8]">
                 {inquiry.category}
               </span>
-              {!inquiry.is_public && (
-                <span className="text-[11px] text-[#C5CAD3]">비공개</span>
-              )}
+              {!inquiry.is_public && <span className="text-[11px] text-[#C5CAD3]">비공개</span>}
             </div>
             <span
               className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
@@ -73,7 +67,7 @@ export default async function InquiryDetailPage({
           </p>
 
           <div className="border-t border-[#F5F6F8] pt-4">
-            <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#515966]">
+            <p className="text-[14px] leading-relaxed whitespace-pre-line text-[#515966]">
               {inquiry.content}
             </p>
           </div>
@@ -85,7 +79,13 @@ export default async function InquiryDetailPage({
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B6FF0]">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6h8M6 2l4 4-4 4" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M2 6h8M6 2l4 4-4 4"
+                    stroke="white"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <p className="text-[13px] font-semibold text-[#1B6FF0]">가다올 팀 답변</p>
@@ -96,7 +96,7 @@ export default async function InquiryDetailPage({
                 })}
               </p>
             </div>
-            <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#515966]">
+            <p className="text-[14px] leading-relaxed whitespace-pre-line text-[#515966]">
               {answer.content}
             </p>
           </div>

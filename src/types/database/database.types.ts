@@ -11,6 +11,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      phone_trial_grants: {
+        Row: {
+          phone: string
+          granted_at: string
+        }
+        Insert: {
+          phone: string
+          granted_at?: string
+        }
+        Update: {
+          phone?: string
+          granted_at?: string
+        }
+        Relationships: []
+      }
       account_links: {
         Row: {
           created_at: string

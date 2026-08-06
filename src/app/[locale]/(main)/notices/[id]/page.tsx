@@ -11,11 +11,7 @@ const CATEGORY_COLOR: Record<string, { bg: string; text: string }> = {
   이벤트: { bg: '#F3EFFF', text: '#7C3AED' },
 }
 
-export default async function NoticeDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function NoticeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const locale = await getLocale()
@@ -25,11 +21,10 @@ export default async function NoticeDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: notice } = await supabase
-    .from('notices')
-    .select('*')
-    .eq('id', id)
-    .single() as { data: Tables<'notices'> | null; error: unknown }
+  const { data: notice } = (await supabase.from('notices').select('*').eq('id', id).single()) as {
+    data: Tables<'notices'> | null
+    error: unknown
+  }
 
   if (!notice) notFound()
 
@@ -57,12 +52,10 @@ export default async function NoticeDetailPage({
             </span>
           </div>
 
-          <h1 className="mb-4 text-[17px] font-bold leading-snug text-[#0F1117]">
-            {notice.title}
-          </h1>
+          <h1 className="mb-4 text-[17px] leading-snug font-bold text-[#0F1117]">{notice.title}</h1>
 
           <div className="border-t border-[#F5F6F8] pt-4">
-            <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#515966]">
+            <p className="text-[14px] leading-relaxed whitespace-pre-line text-[#515966]">
               {notice.content}
             </p>
           </div>

@@ -144,6 +144,22 @@ export default function PhoneStep({ nickname, onBack, redirectTo }: Props) {
           <p className="text-[14px] leading-relaxed text-[#9099A8]">{t('step3Subtitle')}</p>
         </div>
 
+        {/* 1개월 Pro 체험 혜택 안내 */}
+        <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[#EBF2FF] px-4 py-3.5">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#1B6FF0]">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 2l1.6 4.8H15l-3.9 2.8 1.5 4.7L9 11.6l-3.6 2.7 1.5-4.7L3 6.8h4.4z"
+                fill="#FEE500"
+              />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[13px] font-bold text-[#1B6FF0]">인증하면 1개월 Pro 무료체험</p>
+            <p className="text-[12px] text-[#5A7FBF]">무제한 여행 · AI 추천 · 광고 없음</p>
+          </div>
+        </div>
+
         <div className="mb-4">
           <label className="mb-2 block text-[13px] font-medium text-[#0F1117]">
             {t('phoneLabel')}

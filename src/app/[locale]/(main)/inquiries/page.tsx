@@ -19,12 +19,17 @@ export default async function InquiriesPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: inquiries } = await supabase
+  const { data: inquiries } = (await supabase
     .from('inquiries')
     .select('id, category, title, is_public, status, created_at')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false }) as {
-    data: Pick<Tables<'inquiries'>, 'id' | 'category' | 'title' | 'is_public' | 'status' | 'created_at'>[] | null
+    .order('created_at', { ascending: false })) as {
+    data:
+      | Pick<
+          Tables<'inquiries'>,
+          'id' | 'category' | 'title' | 'is_public' | 'status' | 'created_at'
+        >[]
+      | null
     error: unknown
   }
 
@@ -72,9 +77,7 @@ export default async function InquiriesPage() {
                     <span className="rounded-full bg-[#F5F6F8] px-2 py-0.5 text-[11px] font-medium text-[#9099A8]">
                       {inq.category}
                     </span>
-                    {!inq.is_public && (
-                      <span className="text-[11px] text-[#C5CAD3]">비공개</span>
-                    )}
+                    {!inq.is_public && <span className="text-[11px] text-[#C5CAD3]">비공개</span>}
                   </div>
                   <span
                     className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
@@ -83,9 +86,7 @@ export default async function InquiriesPage() {
                     {st.label}
                   </span>
                 </div>
-                <p className="text-[14px] font-semibold leading-snug text-[#0F1117]">
-                  {inq.title}
-                </p>
+                <p className="text-[14px] leading-snug font-semibold text-[#0F1117]">{inq.title}</p>
                 <p className="text-[12px] text-[#9099A8]">
                   {new Date(inq.created_at).toLocaleDateString('ko-KR', {
                     year: 'numeric',

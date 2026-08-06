@@ -23,7 +23,7 @@ export default async function Page() {
       .from('subscriptions')
       .select('plan, status, expires_at')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'trial'])
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -48,9 +48,10 @@ export default async function Page() {
       email={email}
       initials={initials}
       avatarUrl={avatarUrl}
+      phone={profile?.phone ?? null}
       subscription={
         subscriptionRow
-          ? { ...subscriptionRow, plan: subscriptionRow.plan as 'free' | 'pro' | 'team' }
+          ? { ...subscriptionRow, plan: subscriptionRow.plan as 'free' | 'pro' | 'plus' }
           : null
       }
       tripCount={tripCount ?? 0}

@@ -21,11 +21,11 @@ export default async function NoticesPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: notices } = await supabase
+  const { data: notices } = (await supabase
     .from('notices')
     .select('id, category, title, is_pinned, created_at')
     .order('is_pinned', { ascending: false })
-    .order('created_at', { ascending: false }) as {
+    .order('created_at', { ascending: false })) as {
     data: Pick<Tables<'notices'>, 'id' | 'category' | 'title' | 'is_pinned' | 'created_at'>[] | null
     error: unknown
   }
@@ -64,7 +64,7 @@ export default async function NoticesPage() {
                     {notice.category}
                   </span>
                 </div>
-                <p className="text-[14px] font-semibold leading-snug text-[#0F1117]">
+                <p className="text-[14px] leading-snug font-semibold text-[#0F1117]">
                   {notice.title}
                 </p>
                 <p className="text-[12px] text-[#9099A8]">

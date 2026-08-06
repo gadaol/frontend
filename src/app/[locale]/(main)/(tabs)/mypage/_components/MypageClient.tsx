@@ -8,10 +8,9 @@ import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
 import { BellIcon } from '@/components/icons'
+import api, { isApiError } from '@/lib/axios/client'
 
-export type Plan = 'free' | 'pro' | 'team'
-
-const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', team: 'Team' }
+export type Plan = 'free' | 'pro' | 'plus'
 
 interface Subscription {
   plan: Plan
@@ -19,11 +18,19 @@ interface Subscription {
   expires_at: string | null
 }
 
+function getPlanLabel(subscription: Subscription | null): string {
+  if (!subscription || subscription.plan === 'free') return 'Free'
+  if (subscription.status === 'trial') return 'Pro(체험)'
+  if (subscription.plan === 'plus') return 'Plus'
+  return 'Pro'
+}
+
 interface Props {
   displayName: string
   email: string
   initials: string
   avatarUrl: string | null
+  phone: string | null
   subscription: Subscription | null
   tripCount: number
   placeCount: number
@@ -34,6 +41,7 @@ export default function MypageClient({
   email,
   initials,
   avatarUrl,
+  phone,
   subscription,
   tripCount,
   placeCount,
@@ -44,13 +52,17 @@ export default function MypageClient({
   const [isPending, startTransition] = useTransition()
 
   const [currentAvatarUrl] = useState(avatarUrl)
-
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
+  const [showPhoneSheet, setShowPhoneSheet] = useState(false)
+  const [currentSubscription, setCurrentSubscription] = useState(subscription)
 
   const plan: Plan =
-    subscription?.plan === 'pro' || subscription?.plan === 'team' ? subscription.plan : 'free'
+    currentSubscription?.plan === 'pro' || currentSubscription?.plan === 'plus'
+      ? currentSubscription.plan
+      : 'free'
+  const planLabel = getPlanLabel(currentSubscription)
 
   return (
     <div className="bg-bg2 min-h-dvh pb-10">
@@ -125,7 +137,7 @@ export default function MypageClient({
           {[
             { num: tripCount, label: '참여 여행' },
             { num: placeCount, label: '저장 장소' },
-            { num: PLAN_LABEL[plan], label: '현재 플랜' },
+            { num: planLabel, label: '현재 플랜' },
           ].map((s, i) => (
             <div
               key={s.label}
@@ -161,6 +173,36 @@ export default function MypageClient({
               d="M7 4l5 5-5 5"
               stroke="rgba(255,255,255,0.5)"
               strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
+
+      {/* 전화번호 미인증 배너 */}
+      {!phone && plan === 'free' && (
+        <button
+          onClick={() => setShowPhoneSheet(true)}
+          className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5"
+        >
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#EBF2FF]">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 2l1.6 4.8H15l-3.9 2.8 1.5 4.7L9 11.6l-3.6 2.7 1.5-4.7L3 6.8h4.4z"
+                fill="#1B6FF0"
+              />
+            </svg>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[13px] font-bold text-[#0F1117]">전화번호 인증하고 1개월 Pro 무료</p>
+            <p className="text-[12px] text-[#9099A8]">인증 한 번으로 Pro 체험 혜택 받기</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M6 3.5l4.5 4.5L6 12.5"
+              stroke="#C5CAD3"
+              strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -389,11 +431,7 @@ export default function MypageClient({
       )}
 
       {showDeleteConfirm && (
-        <ConfirmSheet
-          title="회원탈퇴"
-          message="정말 탈퇴하시겠어요? 모든 데이터가 삭제되며 복구할 수 없어요."
-          confirmLabel="탈퇴하기"
-          confirmColor="#F04438"
+        <DeleteConfirmSheet
           onCancel={() => setShowDeleteConfirm(false)}
           onConfirm={() =>
             startTransition(async () => {
@@ -401,6 +439,24 @@ export default function MypageClient({
             })
           }
           loading={isPending}
+        />
+      )}
+
+      {showPhoneSheet && (
+        <PhoneVerifySheet
+          onClose={() => setShowPhoneSheet(false)}
+          onVerified={(trialGranted) => {
+            setShowPhoneSheet(false)
+            if (trialGranted) {
+              const expiresAt = new Date()
+              expiresAt.setMonth(expiresAt.getMonth() + 1)
+              setCurrentSubscription({
+                plan: 'pro',
+                status: 'trial',
+                expires_at: expiresAt.toISOString(),
+              })
+            }
+          }}
         />
       )}
     </div>
@@ -412,19 +468,21 @@ export default function MypageClient({
 const PLAN_BADGE_STYLE: Record<Plan, { backgroundColor: string; color: string }> = {
   free: { backgroundColor: '#F5F6F8', color: '#9099A8' },
   pro: { backgroundColor: '#EBF2FF', color: '#1B6FF0' },
-  team: { backgroundColor: '#F3EFFF', color: '#7C3AED' },
+  plus: { backgroundColor: '#F3EFFF', color: '#7C3AED' },
 }
 
+const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', plus: 'Plus' }
+
 const PLAN_BENEFITS: Record<Plan, string[]> = {
-  free: ['여행 최대 3개', '여행당 멤버 최대 3명', '장소 검색 · 백로그 저장'],
-  pro: ['여행 무제한', '여행당 멤버 최대 10명', '후보 장소 투표', 'AI 장소 추천 (출시 예정)'],
-  team: ['여행 무제한', '멤버 무제한', '실시간 협업 편집', 'AI 장소 추천'],
+  free: ['여행 최대 3개', '메이트 최대 2명', '백로그 무제한 저장'],
+  pro: ['여행 무제한', '메이트 최대 10명', 'AI 추천 월 20회', '광고 없음'],
+  plus: ['여행 무제한', '메이트 무제한', 'AI 추천 무제한', '공유 백로그'],
 }
 
 const PLANS: { key: Plan; price: string; period?: string; features: string[] }[] = [
   { key: 'free', price: '무료', features: PLAN_BENEFITS.free },
-  { key: 'pro', price: '₩4,900', period: '/ 월', features: PLAN_BENEFITS.pro },
-  { key: 'team', price: '₩9,900', period: '/ 월', features: PLAN_BENEFITS.team },
+  { key: 'pro', price: '₩3,900', period: '/ 월', features: PLAN_BENEFITS.pro },
+  { key: 'plus', price: '₩6,900', period: '/ 월', features: PLAN_BENEFITS.plus },
 ]
 
 // ── 서브 컴포넌트 ────────────────────────────────────────────
@@ -482,6 +540,196 @@ function MenuItem({
       </div>
       {right}
     </button>
+  )
+}
+
+function DeleteConfirmSheet({
+  onCancel,
+  onConfirm,
+  loading,
+}: {
+  onCancel: () => void
+  onConfirm: () => void
+  loading: boolean
+}) {
+  const [input, setInput] = useState('')
+  const confirmed = input === '탈퇴'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8">
+      <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
+        <p className="mb-1.5 text-center text-[17px] font-bold text-[#0F1117]">
+          정말 탈퇴하시겠어요?
+        </p>
+        <p className="mb-4 text-center text-[14px] leading-relaxed text-[#9099A8]">
+          탈퇴 시 모든 데이터가 삭제되며 복구할 수 없어요.
+        </p>
+        <div className="mb-5 overflow-hidden rounded-2xl border border-[#E8EAED] px-4 py-3">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="'탈퇴'를 입력해주세요"
+            className="w-full bg-transparent text-center text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-2xl border border-[#E8EAED] py-3.5 text-[15px] font-semibold text-[#5A6270]"
+          >
+            취소
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!confirmed || loading}
+            className="flex-1 rounded-2xl bg-[#F04438] py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+          >
+            {loading ? '처리 중...' : '탈퇴하기'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
+function PhoneVerifySheet({
+  onClose,
+  onVerified,
+}: {
+  onClose: () => void
+  onVerified: (trialGranted: boolean) => void
+}) {
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const rawPhone = phone.replace(/-/g, '')
+
+  const handleSend = async () => {
+    setError(null)
+    setSending(true)
+    try {
+      await api.post('/api/find-account/send', { phone: rawPhone })
+      setOtpSent(true)
+    } catch {
+      setError('인증번호 전송에 실패했어요. 다시 시도해주세요.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleVerify = async () => {
+    setError(null)
+    setVerifying(true)
+    try {
+      const res = await api.post('/api/social-phone-verify', { phone: rawPhone, code: otp })
+      setSuccess(true)
+      setTimeout(() => onVerified(res.data.trialGranted ?? false), 1500)
+    } catch (err) {
+      if (isApiError(err) && err.status === 409) {
+        setError('이미 다른 계정에 등록된 전화번호예요.')
+      } else {
+        setError('인증에 실패했어요. 번호를 확인해주세요.')
+      }
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+      <div className="w-full max-w-sm rounded-t-3xl bg-white px-6 pt-5 pb-10">
+        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#E8EAED]" />
+
+        {success ? (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF2FF]">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <path
+                  d="M7 14l5 5 9-9"
+                  stroke="#1B6FF0"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <p className="text-[17px] font-bold text-[#0F1117]">인증 완료!</p>
+            <p className="text-center text-[14px] text-[#9099A8]">1개월 Pro 체험이 시작됐어요.</p>
+          </div>
+        ) : (
+          <>
+            <p className="mb-1 text-[17px] font-bold text-[#0F1117]">전화번호 인증</p>
+            <p className="mb-5 text-[13px] text-[#9099A8]">
+              인증 완료 시 1개월 Pro 무료체험이 시작돼요.
+            </p>
+
+            <div className="mb-3 flex gap-2">
+              <div className="flex h-[50px] flex-1 items-center rounded-xl border border-[#E8EAED] px-4">
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="010-0000-0000"
+                  inputMode="numeric"
+                  disabled={otpSent}
+                  className="w-full bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3] disabled:text-[#9099A8]"
+                />
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={rawPhone.length < 10 || sending}
+                className="h-[50px] rounded-xl bg-[#1B6FF0] px-4 text-[13px] font-semibold text-white disabled:opacity-40"
+              >
+                {sending ? '전송 중' : otpSent ? '재전송' : '인증번호'}
+              </button>
+            </div>
+
+            {otpSent && (
+              <div className="mb-4 flex h-[50px] items-center rounded-xl border border-[#1B6FF0] px-4">
+                <input
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="인증번호 6자리"
+                  inputMode="numeric"
+                  className="w-full bg-transparent text-[15px] tracking-widest text-[#0F1117] outline-none placeholder:tracking-normal placeholder:text-[#C5CAD3]"
+                />
+              </div>
+            )}
+
+            {error && <p className="mb-3 text-[13px] text-[#F04438]">{error}</p>}
+
+            <div className="flex gap-2">
+              <button
+                onClick={onClose}
+                className="flex-1 rounded-2xl border border-[#E8EAED] py-3.5 text-[15px] font-medium text-[#5A6270]"
+              >
+                취소
+              </button>
+              {otpSent && (
+                <button
+                  onClick={handleVerify}
+                  disabled={otp.length < 6 || verifying}
+                  className="flex-1 rounded-2xl bg-[#1B6FF0] py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+                >
+                  {verifying ? '확인 중...' : '인증 완료'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 
