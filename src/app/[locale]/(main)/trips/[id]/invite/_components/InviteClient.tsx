@@ -1,62 +1,24 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import { searchUsers, sendDirectInvite, type UserSearchResult } from '@/app/actions/invite'
-
-const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
 
 interface Props {
   tripId: string
   tripTitle: string
   inviteToken: string | null
-  memberIds: string[]
 }
 
-export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds }: Props) {
+export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) {
   const router = useRouter()
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<UserSearchResult[]>([])
-  const [searching, setSearching] = useState(false)
-  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set())
-  const [, startTransition] = useTransition()
   const [copyToast, setCopyToast] = useState(false)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!inviteToken) return
     const locale = window.location.pathname.split('/')[1]
     setInviteUrl(`${window.location.origin}/${locale}/trips/${tripId}/join?token=${inviteToken}`)
   }, [inviteToken, tripId])
-
-  function handleQueryChange(value: string) {
-    setQuery(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!value.trim()) {
-      setResults([])
-      return
-    }
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true)
-      const res = await searchUsers(tripId, value)
-      setResults(res)
-      setSearching(false)
-    }, 300)
-  }
-
-  function handleInvite(userId: string) {
-    startTransition(async () => {
-      const res = await sendDirectInvite(tripId, userId)
-      if (!res.error || res.error === 'already_invited') {
-        setInvitedIds((prev) => new Set(prev).add(userId))
-        setResults((prev) =>
-          prev.map((r) => (r.id === userId ? { ...r, alreadyInvited: true } : r)),
-        )
-      }
-    })
-  }
 
   async function handleShareLink() {
     if (!inviteUrl) return
@@ -105,157 +67,56 @@ export default function InviteClient({ tripId, tripTitle, inviteToken, memberIds
         <h1 className="text-[17px] font-bold text-[#0F1117]">메이트 초대</h1>
       </div>
 
-      <div className="flex-1 px-4 pt-5">
-        {/* 유저 검색 */}
-        <p className="mb-2 text-[13px] font-semibold text-[#515966]">앱에서 찾기</p>
-        <div className="relative mb-4">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="absolute top-1/2 left-3.5 -translate-y-1/2 text-[#9099A8]"
-          >
-            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.4" />
-            <path d="M10.5 10.5l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
+        {/* 아이콘 */}
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-[#EBF2FF]">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="14" cy="11" r="6" stroke="#1B6FF0" strokeWidth="2" />
+            <path d="M4 30c0-5.52 4.48-10 10-10" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
+            <path d="M26 20v10M21 25h10" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="이름 또는 전화번호로 검색"
-            className="w-full rounded-xl border border-[#E8EAED] bg-[#F5F7FA] py-3 pl-9 pr-4 text-[14px] text-[#0F1117] placeholder:text-[#9099A8] focus:border-[#1B6FF0] focus:outline-none"
-          />
-          {searching && (
-            <div className="absolute top-1/2 right-3.5 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
-            </div>
-          )}
         </div>
 
-        {/* 검색 결과 */}
-        {query.trim() && !searching && results.length === 0 && (
-          <p className="py-6 text-center text-[13px] text-[#9099A8]">검색 결과가 없어요</p>
-        )}
+        <h2 className="mb-2 text-[20px] font-bold text-[#0F1117]">링크로 초대하기</h2>
+        <p className="mb-10 text-[14px] leading-relaxed text-[#9099A8]">
+          링크를 공유해서 메이트를 초대하세요.{'\n'}
+          링크를 받은 사람은 가입 후 여행에 참여할 수 있어요.
+        </p>
 
-        {results.length > 0 && (
-          <div className="mb-6 flex flex-col gap-2">
-            {results.map((user, i) => {
-              const alreadyDone = invitedIds.has(user.id) || user.alreadyInvited
-              const isMember = memberIds.includes(user.id)
-              return (
-                <div key={user.id} className="flex items-center gap-3 py-1">
-                  <UserAvatar
-                    name={user.name}
-                    avatarUrl={user.avatar_url}
-                    index={i}
-                    size={40}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-[#0F1117] truncate">
-                      {user.name ?? '이름 없음'}
-                    </p>
-                  </div>
-                  {isMember ? (
-                    <span className="rounded-full bg-[#F0F4FF] px-3 py-1.5 text-[12px] font-medium text-[#1B6FF0]">
-                      이미 멤버
-                    </span>
-                  ) : alreadyDone ? (
-                    <span className="rounded-full bg-[#F0F9F4] px-3 py-1.5 text-[12px] font-medium text-[#059669]">
-                      초대 완료
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleInvite(user.id)}
-                      className="rounded-full bg-[#1B6FF0] px-3 py-1.5 text-[12px] font-semibold text-white"
-                    >
-                      초대
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* 링크 공유 구분선 */}
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#E8EAED]" />
-          <span className="text-[12px] text-[#9099A8]">또는 링크로 초대</span>
-          <div className="h-px flex-1 bg-[#E8EAED]" />
-        </div>
-
-        {/* 링크 공유 카드 */}
         {inviteUrl ? (
-          <div className="rounded-2xl border border-[#E8EAED] bg-[#F5F7FA] p-4">
-            <p className="mb-1 text-[13px] font-semibold text-[#0F1117]">초대 링크</p>
-            <p className="mb-3 break-all text-[11px] text-[#9099A8]">{inviteUrl}</p>
-            <div className="flex gap-2">
+          <div className="w-full space-y-3">
+            <div className="rounded-2xl border border-[#E8EAED] bg-[#F5F7FA] px-4 py-3">
+              <p className="break-all text-[12px] text-[#9099A8]">{inviteUrl}</p>
+            </div>
+            <div className="flex gap-2.5">
               <button
                 onClick={handleCopy}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#E8EAED] bg-white py-3 text-[13px] font-semibold text-[#515966]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#E8EAED] bg-white py-4 text-[15px] font-semibold text-[#515966]"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <rect x="5" y="5" width="8" height="9" rx="1.5" stroke="#515966" strokeWidth="1.3" />
-                  <path d="M3 11V3.5A1.5 1.5 0 014.5 2H11" stroke="#515966" strokeWidth="1.3" strokeLinecap="round" />
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <rect x="6" y="6" width="9" height="10" rx="1.5" stroke="#515966" strokeWidth="1.4" />
+                  <path d="M3 12V4a1.5 1.5 0 011.5-1.5H12" stroke="#515966" strokeWidth="1.4" strokeLinecap="round" />
                 </svg>
                 링크 복사
               </button>
               <button
                 onClick={handleShareLink}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1B6FF0] py-3 text-[13px] font-semibold text-white"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#1B6FF0] py-4 text-[15px] font-semibold text-white"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle cx="12" cy="3" r="1.5" stroke="white" strokeWidth="1.3" />
-                  <circle cx="12" cy="13" r="1.5" stroke="white" strokeWidth="1.3" />
-                  <circle cx="4" cy="8" r="1.5" stroke="white" strokeWidth="1.3" />
-                  <path d="M5.4 7.3l5.2-3M5.4 8.7l5.2 3" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="14" cy="4" r="2" stroke="white" strokeWidth="1.4" />
+                  <circle cx="14" cy="14" r="2" stroke="white" strokeWidth="1.4" />
+                  <circle cx="4" cy="9" r="2" stroke="white" strokeWidth="1.4" />
+                  <path d="M5.9 8l6.2-3M5.9 10l6.2 3" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
                 </svg>
                 공유하기
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-center text-[13px] text-[#9099A8]">링크를 생성할 수 없어요</p>
+          <p className="text-[13px] text-[#9099A8]">링크를 생성할 수 없어요</p>
         )}
       </div>
-    </div>
-  )
-}
-
-function UserAvatar({
-  name,
-  avatarUrl,
-  index,
-  size,
-}: {
-  name: string | null
-  avatarUrl: string | null
-  index: number
-  size: number
-}) {
-  if (avatarUrl) {
-    return (
-      <Image
-        src={avatarUrl}
-        alt={name ?? ''}
-        width={size}
-        height={size}
-        className="rounded-full object-cover flex-shrink-0"
-        style={{ width: size, height: size }}
-      />
-    )
-  }
-  return (
-    <div
-      className="flex flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
-      }}
-    >
-      {(name ?? '?')[0]}
     </div>
   )
 }

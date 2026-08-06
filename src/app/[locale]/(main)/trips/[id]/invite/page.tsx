@@ -37,7 +37,6 @@ export default async function InvitePage({
       tripId={id}
       tripTitle={trip.title}
       inviteToken={token}
-      memberIds={trip.trip_members.map((m) => m.user_id)}
     />
   )
 }
