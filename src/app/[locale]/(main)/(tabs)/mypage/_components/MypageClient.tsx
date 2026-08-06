@@ -63,9 +63,10 @@ export default function MypageClient({
   useEffect(() => {
     if (searchParams.get('subscribed') !== '1') return
     startTransition(() => setSubscribedToast(true))
-    const t = setTimeout(() => setSubscribedToast(false), 3000)
+    router.replace(`/${locale}/mypage`, { scroll: false })
+    const t = setTimeout(() => setSubscribedToast(false), 3500)
     return () => clearTimeout(t)
-  }, [searchParams])
+  }, [searchParams, router, locale])
 
   const plan: Plan =
     currentSubscription?.plan === 'pro' || currentSubscription?.plan === 'plus'
@@ -77,8 +78,24 @@ export default function MypageClient({
     <div className="bg-bg2 min-h-dvh pb-10">
       {/* 결제 완료 토스트 */}
       {subscribedToast && (
-        <div className="fixed top-4 left-1/2 z-[100] -translate-x-1/2 rounded-2xl bg-[#0F1117] px-5 py-3 shadow-xl">
-          <p className="text-[14px] font-semibold text-white">🎉 구독이 시작됐어요!</p>
+        <div className="fixed top-5 left-1/2 z-[100] -translate-x-1/2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3 rounded-2xl bg-[#0F1117] px-4 py-3.5 shadow-2xl">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#1B6FF0]">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path
+                  d="M4 9l4 4 6-7"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-white">구독이 시작됐어요!</p>
+              <p className="text-[12px] text-white/60">Pro 혜택을 마음껏 누려보세요</p>
+            </div>
+          </div>
         </div>
       )}
       <AppHeader
