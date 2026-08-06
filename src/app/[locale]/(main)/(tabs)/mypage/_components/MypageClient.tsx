@@ -363,7 +363,21 @@ export default function MypageClient({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#E8EAED]" />
-            <h2 className="mb-5 text-[18px] font-bold text-[#0F1117]">프로필 설정</h2>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-[18px] font-bold text-[#0F1117]">프로필 설정</h2>
+              <button
+                onClick={() => {
+                  setShowProfileSheet(false)
+                  setNameValue(displayName)
+                  setNameError('')
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F6F8]"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 2l10 10M12 2L2 12" stroke="#515966" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
 
             {/* 아바타 업로드 */}
             <div className="mb-6 flex flex-col items-center gap-2">
