@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
-import { createClient } from '@/lib/supabase/client'
-import { updateName, logout, deleteAccount, uploadAvatar, deleteAvatar } from '@/app/actions/mypage'
+import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
 import { BellIcon } from '@/components/icons'
@@ -25,8 +24,6 @@ interface Props {
   email: string
   initials: string
   avatarUrl: string | null
-  linkedProviders: string[]
-  currentProvider: string
   subscription: Subscription | null
   tripCount: number
   placeCount: number
@@ -37,8 +34,6 @@ export default function MypageClient({
   email,
   initials,
   avatarUrl,
-  linkedProviders,
-  currentProvider,
   subscription,
   tripCount,
   placeCount,
@@ -48,60 +43,14 @@ export default function MypageClient({
   const unreadCount = useUnreadCount()
   const [isPending, startTransition] = useTransition()
 
-  const [nameValue, setNameValue] = useState(displayName)
-  const [nameError, setNameError] = useState('')
-  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
-  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [currentAvatarUrl] = useState(avatarUrl)
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanSheet, setShowPlanSheet] = useState(false)
-  const [showProfileSheet, setShowProfileSheet] = useState(false)
 
   const plan: Plan =
     subscription?.plan === 'pro' || subscription?.plan === 'team' ? subscription.plan : 'free'
-
-  function handleSaveName() {
-    if (!nameValue.trim()) {
-      setNameError('이름을 입력해주세요')
-      return
-    }
-    startTransition(async () => {
-      const res = await updateName(nameValue)
-      if (res?.error) {
-        setNameError('저장에 실패했어요')
-      } else {
-        setShowProfileSheet(false)
-        setNameError('')
-        router.refresh()
-      }
-    })
-  }
-
-  async function handleLinkProvider(provider: 'kakao' | 'google') {
-    const supabase = createClient()
-    const redirectTo = `${window.location.origin}/${locale}/auth/callback?redirect_to=/${locale}/mypage`
-    await supabase.auth.linkIdentity({ provider, options: { redirectTo } })
-  }
-
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setAvatarUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await uploadAvatar(fd)
-    if (res.avatarUrl) setCurrentAvatarUrl(res.avatarUrl)
-    setAvatarUploading(false)
-    e.target.value = ''
-  }
-
-  async function handleDeleteAvatar() {
-    setAvatarUploading(true)
-    await deleteAvatar()
-    setCurrentAvatarUrl(null)
-    setAvatarUploading(false)
-  }
 
   return (
     <div className="bg-bg2 min-h-dvh pb-10">
@@ -146,7 +95,7 @@ export default function MypageClient({
 
           {/* 프로필 편집 버튼 */}
           <button
-            onClick={() => setShowProfileSheet(true)}
+            onClick={() => router.push(`/${locale}/mypage/profile`)}
             className="absolute right-4 bottom-3 flex items-center gap-1.5 rounded-[20px] border border-white/25 px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm"
             style={{ background: 'rgba(255,255,255,0.15)' }}
           >
@@ -232,7 +181,7 @@ export default function MypageClient({
             </svg>
           }
           label="프로필 설정"
-          onPress={() => setShowProfileSheet(true)}
+          onPress={() => router.push(`/${locale}/mypage/profile`)}
           right={<ChevronRight />}
         />
         <MenuItem
@@ -347,149 +296,6 @@ export default function MypageClient({
       >
         회원탈퇴
       </button>
-
-      {/* 프로필 편집 시트 */}
-      {showProfileSheet && (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-black/50"
-          onClick={() => {
-            setShowProfileSheet(false)
-            setNameValue(displayName)
-            setNameError('')
-          }}
-        >
-          <div
-            className="max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-white pb-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 헤더 */}
-            <div className="sticky top-0 flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
-              <button
-                onClick={() => {
-                  setShowProfileSheet(false)
-                  setNameValue(displayName)
-                  setNameError('')
-                }}
-                className="flex h-9 w-9 items-center justify-center rounded-full"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M12.5 5l-5 5 5 5" stroke="#0F1117" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <h2 className="text-[17px] font-bold text-[#0F1117]">프로필 설정</h2>
-            </div>
-            {/* 콘텐츠 */}
-            <div className="px-5 pt-5">
-
-            {/* 아바타 업로드 */}
-            <div className="mb-6 flex flex-col items-center gap-2">
-              <label className="relative cursor-pointer">
-                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#E8EAED]">
-                  {currentAvatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={currentAvatarUrl} alt="avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center text-[28px] font-black text-white"
-                      style={{ background: '#1B6FF0' }}
-                    >
-                      {initials}
-                    </div>
-                  )}
-                </div>
-                <div className="absolute right-0 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#1B6FF0]">
-                  {avatarUploading ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M6 2v8M2 6h8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                  disabled={avatarUploading}
-                />
-              </label>
-              <div className="flex items-center gap-3">
-                <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
-                {currentAvatarUrl && (
-                  <button
-                    type="button"
-                    onClick={handleDeleteAvatar}
-                    disabled={avatarUploading}
-                    className="text-[12px] font-medium text-[#F04438] disabled:opacity-40"
-                  >
-                    삭제
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 이름 편집 */}
-            <div className="mb-4">
-              <label className="mb-1.5 block text-[12px] font-semibold text-[#9099A8]">이름</label>
-              <input
-                autoFocus
-                value={nameValue}
-                onChange={(e) => {
-                  setNameValue(e.target.value)
-                  setNameError('')
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                className="w-full rounded-2xl border border-[#E8EAED] px-4 py-3 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0]"
-                placeholder="이름을 입력하세요"
-                maxLength={20}
-              />
-              {nameError && <p className="mt-1 text-[12px] text-red-500">{nameError}</p>}
-            </div>
-
-            {/* 연동 계정 */}
-            <p className="mb-2 text-[12px] font-semibold text-[#9099A8]">연동 계정</p>
-            <div className="mb-5 overflow-hidden rounded-2xl border border-[#E8EAED]">
-              {(['kakao', 'google'] as const).map((p, idx) => {
-                const isConnected = linkedProviders.includes(p)
-                const isCurrent = currentProvider === p
-                return (
-                  <div
-                    key={p}
-                    className={`flex items-center gap-3 px-4 py-3 ${idx === 0 ? 'border-b border-[#F5F6F8]' : ''}`}
-                  >
-                    <ProviderIcon provider={p} />
-                    <span className="flex-1 text-[14px] text-[#0F1117]">
-                      {p === 'kakao' ? '카카오' : 'Google'}
-                    </span>
-                    {isConnected ? (
-                      <span className="rounded-full bg-[#EBF2FF] px-2.5 py-1 text-[12px] font-semibold text-[#1B6FF0]">
-                        {isCurrent ? '기본' : '연결됨'}
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleLinkProvider(p)}
-                        className="rounded-full border border-[#1B6FF0] px-3 py-1 text-[12px] font-semibold text-[#1B6FF0]"
-                      >
-                        연동하기
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={handleSaveName}
-              disabled={isPending}
-              className="w-full rounded-2xl bg-[#1B6FF0] py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
-            >
-              {isPending ? '저장 중...' : '저장'}
-            </button>
-            </div>{/* /콘텐츠 */}
-          </div>
-        </div>
-      )}
 
       {/* 구독 관리 시트 */}
       {showPlanSheet && (

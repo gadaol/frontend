@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { updateNotificationPrefs, type NotificationPrefs } from '@/app/actions/notifications'
+import AppHeader from '@/components/common/AppHeader'
 
 type PrefKey = keyof NotificationPrefs
 
@@ -62,7 +62,6 @@ const ITEMS: { key: PrefKey; iconBg: string; icon: React.ReactNode }[] = [
 
 export default function NotificationSettingsClient({ prefs }: { prefs: NotificationPrefs }) {
   const t = useTranslations('notifications.settings')
-  const router = useRouter()
   const [, startTransition] = useTransition()
   const [values, setValues] = useState<NotificationPrefs>(prefs)
 
@@ -76,23 +75,7 @@ export default function NotificationSettingsClient({ prefs }: { prefs: Notificat
 
   return (
     <div className="min-h-dvh bg-[#F5F6F8]">
-      <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
-        <button
-          onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M12.5 5l-5 5 5 5"
-              stroke="#0F1117"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <h1 className="text-[17px] font-bold text-[#0F1117]">{t('title')}</h1>
-      </div>
+      <AppHeader title={t('title')} onBack="router" border />
 
       <div className="mx-4 mt-4 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
         {ITEMS.map((item, idx) => (

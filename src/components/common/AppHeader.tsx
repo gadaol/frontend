@@ -28,19 +28,25 @@ export default function AppHeader({ title, onBack, right, border = true }: Props
       }`}
     >
       {onBack ? (
-        <button
-          onClick={handleBack}
-          className="text-ink flex h-10 w-10 items-center justify-center"
-          aria-label={t('back')}
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
+        <>
+          <button
+            onClick={handleBack}
+            className="text-ink mr-2 flex h-10 w-10 flex-shrink-0 items-center justify-center"
+            aria-label={t('back')}
+          >
+            <ChevronLeftIcon size={24} />
+          </button>
+          {title && (
+            <span className="text-ink flex-1 text-[17px] font-bold">{title}</span>
+          )}
+        </>
       ) : (
-        <div className="w-10" />
-      )}
-
-      {title && (
-        <span className="text-ink flex-1 text-center text-[17px] font-semibold">{title}</span>
+        <>
+          <div className="w-10" />
+          {title && (
+            <span className="text-ink flex-1 text-center text-[17px] font-bold">{title}</span>
+          )}
+        </>
       )}
 
       <div className="flex min-w-10 items-center justify-end">{right}</div>

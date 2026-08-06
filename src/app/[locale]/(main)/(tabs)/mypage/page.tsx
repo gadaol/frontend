@@ -61,8 +61,6 @@ export default async function Page() {
       email={email}
       initials={initials}
       avatarUrl={avatarUrl}
-      linkedProviders={[...linkedSet]}
-      currentProvider={provider}
       subscription={
         subscriptionRow
           ? { ...subscriptionRow, plan: subscriptionRow.plan as 'free' | 'pro' | 'team' }
