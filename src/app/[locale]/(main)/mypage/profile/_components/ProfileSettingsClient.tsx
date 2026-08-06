@@ -9,16 +9,14 @@ interface Props {
   displayName: string
   initials: string
   avatarUrl: string | null
-  linkedProviders: string[]
-  currentProvider: string
+  provider: string
 }
 
 export default function ProfileSettingsClient({
   displayName,
   initials,
   avatarUrl,
-  linkedProviders,
-  currentProvider,
+  provider,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -135,29 +133,18 @@ export default function ProfileSettingsClient({
           </div>
         </div>
 
-        {/* 연동 계정 */}
-        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">연동 계정</p>
+        {/* 로그인 계정 */}
+        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">로그인 계정</p>
         <div className="mb-6 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
-          {(['kakao', 'google'] as const).map((p, idx) => {
-            const isConnected = linkedProviders.includes(p)
-            const isCurrent = currentProvider === p
-            return (
-              <div
-                key={p}
-                className={`flex items-center gap-3 px-4 py-3.5 ${idx === 0 ? 'border-b border-[#F5F6F8]' : ''}`}
-              >
-                <ProviderIcon provider={p} />
-                <span className="flex-1 text-[14px] text-[#0F1117]">
-                  {p === 'kakao' ? '카카오' : 'Google'}
-                </span>
-                {isConnected && (
-                  <span className="rounded-full bg-[#EBF2FF] px-2.5 py-1 text-[12px] font-semibold text-[#1B6FF0]">
-                    {isCurrent ? '기본' : '연결됨'}
-                  </span>
-                )}
-              </div>
-            )
-          })}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <ProviderIcon provider={provider} />
+            <span className="flex-1 text-[14px] text-[#0F1117]">
+              {provider === 'kakao' ? '카카오' : provider === 'google' ? 'Google' : '이메일'}
+            </span>
+            <span className="rounded-full bg-[#EBF2FF] px-2.5 py-1 text-[12px] font-semibold text-[#1B6FF0]">
+              기본
+            </span>
+          </div>
         </div>
 
         <button

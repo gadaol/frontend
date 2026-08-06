@@ -14,9 +14,6 @@ export default async function ProfileSettingsPage() {
 
   const provider = (user.app_metadata?.provider ?? 'email') as string
 
-  // linkIdentity로 연동된 계정은 user.identities에 반영됨
-  const linkedProviders = Array.from(new Set(user.identities?.map((i) => i.provider) ?? [provider]))
-
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, avatar_url')
@@ -31,8 +28,7 @@ export default async function ProfileSettingsPage() {
       displayName={displayName}
       initials={initials}
       avatarUrl={profile?.avatar_url ?? null}
-      linkedProviders={linkedProviders}
-      currentProvider={provider}
+      provider={provider}
     />
   )
 }
