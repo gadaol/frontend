@@ -234,32 +234,43 @@ export default function MypageClient({
       {/* 앱 그룹 */}
       <MenuGroup label="앱">
         <MenuItem
-          iconBg="#F5F7FA"
+          iconBg="#EBF2FF"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="7" stroke="#515966" strokeWidth="1.4" />
-              <path d="M9 6v4M9 12.5v.5" stroke="#515966" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="7" stroke="#1B6FF0" strokeWidth="1.4" />
+              <path d="M9 6v4M9 12.5v.5" stroke="#1B6FF0" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           }
           label="공지사항"
+          onPress={() => router.push(`/${locale}/notices`)}
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="#F5F7FA"
+          iconBg="#EBF2FF"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
-                d="M9 2l1.8 5.4H17l-4.9 3.6 1.9 5.4L9 13l-5 3.4 1.9-5.4L1 6.4h6.2z"
-                stroke="#515966"
-                strokeWidth="1.3"
+                d="M3 3h12a1 1 0 011 1v8a1 1 0 01-1 1H6l-3 3V4a1 1 0 011-1z"
+                stroke="#1B6FF0"
+                strokeWidth="1.4"
                 strokeLinejoin="round"
               />
             </svg>
           }
+          label="문의하기"
+          onPress={() => router.push(`/${locale}/inquiries`)}
+          right={<ChevronRight />}
+          last
+        />
+        {/* 앱 평가하기 — 네이티브 연동 후 활성화
+        <MenuItem
+          iconBg="#F5F7FA"
+          icon={...}
           label="앱 평가하기"
           right={<ChevronRight />}
           last
         />
+        */}
       </MenuGroup>
 
       {/* 로그아웃 */}
