@@ -5,17 +5,17 @@ interface IconProps {
 
 export function HomeIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
       <path
-        d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"
+        d="M3 9L11 2l8 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
       <path
-        d="M9 21V12h6v9"
+        d="M8 21v-8h6v8"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -25,15 +25,13 @@ export function HomeIcon({ size = 24, className }: IconProps) {
 
 export function TripsIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <rect x="3" y="8" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.7" />
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
       <path
-        d="M8 8V6a4 4 0 0 1 8 0v2"
+        d="M2 18L18 2L14 18L8 12Z"
         stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
       />
-      <path d="M3 13h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   )
 }
@@ -49,26 +47,36 @@ export function PlacesIcon({ size = 24, className }: IconProps) {
 
 export function BacklogIcon({ size = 24, className, filled }: IconProps & { filled?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M5 3h14a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
+      <rect
+        x="2"
+        y="7"
+        width="18"
+        height="12"
+        rx="2"
         stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
+        strokeWidth="1.5"
         fill={filled ? 'var(--color-primary-light)' : 'none'}
       />
+      <path
+        d="M7 7V5a2 2 0 0 1 4 0v2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="11" cy="13" r="2" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   )
 }
 
 export function MypageIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.7" />
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
+      <circle cx="11" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
       <path
-        d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6"
+        d="M3 20c0-3.31 3.58-6 8-6s8 2.69 8 6"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.5"
         strokeLinecap="round"
       />
     </svg>
@@ -77,19 +85,14 @@ export function MypageIcon({ size = 24, className }: IconProps) {
 
 export function BellIcon({ size = 24, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
       <path
-        d="M12 2a7 7 0 0 1 7 7v3l1.5 3H3.5L5 12V9a7 7 0 0 1 7-7z"
+        d="M11 2a5 5 0 0 1 5 5v3l2 3H4l2-3V7a5 5 0 0 1 5-5z"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <path
-        d="M10 19a2 2 0 0 0 4 0"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
+      <path d="M9 18a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   )
 }

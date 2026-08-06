@@ -227,7 +227,7 @@ export default function PlaceMapSearch({
                         textAlign: 'center',
                         fontSize: 13,
                         fontWeight: 700,
-                        color: '#1B6FF0',
+                        color: 'var(--color-primary)',
                         textDecoration: 'none',
                         borderTop: '1px solid #EEE',
                       }}
@@ -249,17 +249,17 @@ export default function PlaceMapSearch({
       {/* 검색바 + 내위치 버튼 */}
       <div className="relative z-10 px-4 pt-5 pb-3">
         <div className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white px-3.5 py-3 shadow-lg">
-          <SearchIcon className="flex-shrink-0 text-[#9099A8]" />
+          <SearchIcon className="text-ink3 flex-shrink-0" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="flex-1 bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#9099A8]"
+            className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[15px] outline-none"
             autoComplete="off"
           />
           {isPending && (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+            <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
           )}
         </div>
         {/* 내 위치 버튼 — 검색바 우측 아래 고정 */}
@@ -268,14 +268,14 @@ export default function PlaceMapSearch({
           className="absolute right-4 -bottom-12 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
         >
           {locating ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+            <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
           ) : (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
-              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+              <circle cx="10" cy="10" r="3.5" fill="var(--color-primary)" />
+              <circle cx="10" cy="10" r="6" stroke="var(--color-primary)" strokeWidth="1.5" />
               <path
                 d="M10 2v2M10 16v2M2 10h2M16 10h2"
-                stroke="#1B6FF0"
+                stroke="var(--color-primary)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
@@ -288,8 +288,8 @@ export default function PlaceMapSearch({
       {!hasSearched && query.length < 2 && (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-20 text-center">
           <div className="mx-4 rounded-3xl bg-white/90 px-6 py-5 shadow-lg backdrop-blur-sm">
-            <p className="text-[14px] font-semibold text-[#0F1117]">{t('searchHint')}</p>
-            <p className="mt-0.5 text-[12px] text-[#9099A8]">{t('searchHintDesc')}</p>
+            <p className="text-ink text-[14px] font-semibold">{t('searchHint')}</p>
+            <p className="text-ink3 mt-0.5 text-[12px]">{t('searchHintDesc')}</p>
           </div>
         </div>
       )}
@@ -298,7 +298,7 @@ export default function PlaceMapSearch({
       {hasSearched && results.length === 0 && !isPending && (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-20">
           <div className="mx-4 rounded-3xl bg-white/90 px-6 py-4 shadow-lg backdrop-blur-sm">
-            <p className="text-center text-[14px] text-[#9099A8]">{t('noResults')}</p>
+            <p className="text-ink3 text-center text-[14px]">{t('noResults')}</p>
           </div>
         </div>
       )}
@@ -313,9 +313,9 @@ export default function PlaceMapSearch({
             {/* 토글 헤더 — PlacesMapTab과 동일 패턴 */}
             <button
               onClick={() => setShowList((v) => !v)}
-              className="flex w-full items-center justify-between border-b border-[#F0F1F3] px-5 py-3"
+              className="border-border flex w-full items-center justify-between border-b px-5 py-3"
             >
-              <span className="text-[14px] font-semibold text-[#0F1117]">
+              <span className="text-ink text-[14px] font-semibold">
                 {t('results', { count: results.length })}
               </span>
               <svg
@@ -327,7 +327,7 @@ export default function PlaceMapSearch({
               >
                 <path
                   d="M4.5 11L9 6.5l4.5 4.5"
-                  stroke="#9099A8"
+                  stroke="var(--color-ink3)"
                   strokeWidth="1.6"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -348,7 +348,7 @@ export default function PlaceMapSearch({
                   return (
                     <div
                       key={place.id}
-                      className="flex items-center gap-0 px-4 py-2.5 active:bg-[#F5F6FA]"
+                      className="active:bg-bg2 flex items-center gap-0 px-4 py-2.5"
                     >
                       <button
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
@@ -360,14 +360,14 @@ export default function PlaceMapSearch({
                           <Icon size={18} className={category.color} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[14px] font-semibold text-[#0F1117]">
+                          <p className="text-ink truncate text-[14px] font-semibold">
                             {place.displayName.text}
                           </p>
-                          <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">
+                          <p className="text-ink3 mt-0.5 truncate text-[12px]">
                             {place.formattedAddress}
                           </p>
                           {place.rating && (
-                            <p className="mt-0.5 text-[11px] text-[#9099A8]">
+                            <p className="text-ink3 mt-0.5 text-[11px]">
                               ★ {place.rating.toFixed(1)}
                             </p>
                           )}

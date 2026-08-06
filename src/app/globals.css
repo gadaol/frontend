@@ -8,7 +8,7 @@
 @theme {
   /* 브랜드 */
   --color-primary: #1b6ff0;
-  --color-primary-hover: #1558c0;
+  --color-primary-hover: #1458c0;
   --color-primary-light: #ebf2ff;
 
   /* 히어로 */
@@ -26,18 +26,34 @@
 
   /* 시맨틱 */
   --color-success: #12b76a;
+  --color-success-light: #d1fae5;
+  --color-success-ink: #065f46;
   --color-warning: #f79009;
+  --color-warning-light: #fef3c7;
+  --color-warning-ink: #92400e;
   --color-error: #f04438;
+  --color-error-light: #fef3f2;
   --color-border: #e8eaed;
+
+  /* 보조 액센트 (Plus 플랜, 이벤트 등) */
+  --color-accent: #7c3aed;
+  --color-accent-light: #f3efff;
+
+  /* 카카오 */
+  --color-kakao: #fee500;
+  --color-kakao-ink: #191919;
 
   /* 폰트 */
   --font-sans: 'Pretendard Variable', Pretendard, sans-serif;
 
-  /* 라디우스 */
+  /* 라디우스 — 디자인 시스템 sm/md/lg 스케일(버튼/인풋=md, 카드=lg)과 일치.
+     xl(24px)은 Tailwind 기본 rounded-3xl과 이미 동일해 별도 토큰 불필요 —
+     rounded-xl(12px)이 코드 전반에서 이미 이 값으로 광범위하게 쓰이고 있어
+     --radius-xl을 재정의하면 기존 rounded-xl 사용처가 전부 깨지므로 추가하지 않음. */
   --radius-pill: 9999px;
-  --radius-card: 16px;
-  --radius-card-lg: 24px;
-  --radius-icon: 12px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 /* ── shadcn 변수를 가다올 토큰으로 매핑 ── */
@@ -51,9 +67,6 @@
   --color-input: var(--color-border);
   --color-ring: var(--color-primary);
   --color-destructive: var(--color-error);
-  --radius-sm: var(--radius-icon);
-  --radius-md: var(--radius-card);
-  --radius-lg: var(--radius-card-lg);
 }
 
 @layer base {

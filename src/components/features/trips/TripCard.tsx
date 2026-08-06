@@ -5,7 +5,7 @@ import { isGradient } from '@/utils/uploadCover'
 import type { TripWithMembers } from '@/types/trip'
 
 const GRADIENTS = [
-  'from-[#1B6FF0] to-[#0D3E8A]',
+  'from-primary to-[#0D3E8A]',
   'from-[#7C3AED] to-[#4C1D95]',
   'from-[#059669] to-[#064E3B]',
   'from-[#DC2626] to-[#7F1D1D]',

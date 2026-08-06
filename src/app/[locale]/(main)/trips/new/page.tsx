@@ -2,13 +2,14 @@
 
 import { useState, useTransition, useRef } from 'react'
 import AppHeader from '@/components/common/AppHeader'
+import Button from '@/components/ui/Button'
 import { createTrip } from '@/app/actions/trip'
 import { MapPinIcon } from '@/components/icons'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
 
 const COVER_PRESETS = [
-  'linear-gradient(135deg, #0c1f45 0%, #1B6FF0 100%)',
+  'linear-gradient(135deg, #0c1f45 0%, var(--color-primary) 100%)',
   'linear-gradient(135deg, #1a1a2e 0%, #e94560 100%)',
   'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
   'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
@@ -21,7 +22,7 @@ const COVER_PRESETS = [
 ]
 
 const INPUT_CLASS =
-  'w-full rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] placeholder:text-[#C0C6D0] outline-none focus:border-[#1B6FF0] focus:bg-white transition-colors'
+  'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
 
 export default function NewTripPage() {
   const [isPending, startTransition] = useTransition()
@@ -82,29 +83,29 @@ export default function NewTripPage() {
       >
         {/* 커버 선택 */}
         <div>
-          <p className="mb-3 text-[13px] font-semibold text-[#0F1117]">커버 선택</p>
+          <p className="text-ink mb-3 text-[13px] font-semibold">커버 선택</p>
           <div className="grid grid-cols-5 gap-2">
             {/* 이미지 업로드 버튼 */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed border-[#C0C6D0] bg-[#F7F8FA] disabled:opacity-50"
+              className="border-ink3 bg-bg2 relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed disabled:opacity-50"
             >
               {uploading ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+                <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
               ) : (
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path
                     d="M9 4v10M4 9h10"
-                    stroke="#9099A8"
+                    stroke="var(--color-ink3)"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                   />
                 </svg>
               )}
               {!isGradient(selectedCover) && (
-                <span className="absolute inset-0 rounded-xl ring-2 ring-[#1B6FF0] ring-offset-2" />
+                <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
               )}
             </button>
             <input
@@ -123,7 +124,7 @@ export default function NewTripPage() {
                 style={{ background: gradient }}
               >
                 {selectedCover === gradient && (
-                  <span className="absolute inset-0 rounded-xl ring-2 ring-[#1B6FF0] ring-offset-2" />
+                  <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
                 )}
               </button>
             ))}
@@ -132,7 +133,7 @@ export default function NewTripPage() {
 
         {/* 여행 제목 */}
         <div>
-          <label className="mb-2 block text-[13px] font-semibold text-[#0F1117]">여행 제목</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">여행 제목</label>
           <input
             name="title"
             type="text"
@@ -145,12 +146,9 @@ export default function NewTripPage() {
 
         {/* 목적지 */}
         <div>
-          <label className="mb-2 block text-[13px] font-semibold text-[#0F1117]">목적지</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">목적지</label>
           <div className="relative">
-            <MapPinIcon
-              size={16}
-              className="absolute top-1/2 left-4 -translate-y-1/2 text-[#9099A8]"
-            />
+            <MapPinIcon size={16} className="text-ink3 absolute top-1/2 left-4 -translate-y-1/2" />
             <input
               name="destination"
               type="text"
@@ -163,7 +161,7 @@ export default function NewTripPage() {
 
         {/* 날짜 */}
         <div>
-          <label className="mb-2 block text-[13px] font-semibold text-[#0F1117]">여행 날짜</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">여행 날짜</label>
           <div className="flex items-center gap-2">
             <input
               name="start_date"
@@ -173,34 +171,29 @@ export default function NewTripPage() {
                 setStartDate(e.target.value)
                 if (endDate && e.target.value > endDate) setEndDate('')
               }}
-              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] transition-colors outline-none focus:border-[#1B6FF0] focus:bg-white"
+              className="border-border text-ink focus:border-primary bg-bg2 flex-1 rounded-2xl border px-4 py-3.5 text-[15px] transition-colors outline-none focus:bg-white"
             />
-            <span className="text-[13px] text-[#C0C6D0]">~</span>
+            <span className="text-ink3 text-[13px]">~</span>
             <input
               name="end_date"
               type="date"
               value={endDate}
               min={startDate || undefined}
               onChange={(e) => setEndDate(e.target.value)}
-              className="flex-1 rounded-2xl border border-[#E8EAED] bg-[#F7F8FA] px-4 py-3.5 text-[15px] text-[#0F1117] transition-colors outline-none focus:border-[#1B6FF0] focus:bg-white"
+              className="border-border text-ink focus:border-primary bg-bg2 flex-1 rounded-2xl border px-4 py-3.5 text-[15px] transition-colors outline-none focus:bg-white"
             />
           </div>
-          <p className="mt-1.5 text-[12px] text-[#9099A8]">날짜는 나중에 설정할 수 있어요</p>
+          <p className="text-ink3 mt-1.5 text-[12px]">날짜는 나중에 설정할 수 있어요</p>
         </div>
 
         {errorMsg && <p className="text-center text-[13px] text-red-500">{errorMsg}</p>}
       </form>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed right-0 bottom-0 left-0 border-t border-[#F0F1F3] bg-white px-4 pt-3 pb-8">
-        <button
-          form="new-trip-form"
-          type="submit"
-          disabled={isPending}
-          className="w-full rounded-2xl bg-[#1B6FF0] py-4 text-[16px] font-bold text-white disabled:opacity-60"
-        >
+      <div className="border-border fixed right-0 bottom-0 left-0 border-t bg-white px-4 pt-3 pb-8">
+        <Button form="new-trip-form" type="submit" disabled={isPending} fullWidth>
           {isPending ? '만드는 중...' : '여행 만들기'}
-        </button>
+        </Button>
       </div>
     </div>
   )

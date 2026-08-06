@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
+import Button from '@/components/ui/Button'
+import Logo from '@/components/common/Logo'
 
 interface Props {
   onEmailClick: () => void
@@ -37,62 +39,54 @@ export default function SocialLoginView({ onEmailClick, errorMessage, redirectTo
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,#070E1A_0%,#0F2351_100%)]">
-      <div className="px-7 pt-12 pb-8 text-center">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,var(--color-hero-top)_0%,var(--color-hero-bot)_100%)]">
+      <div className="flex flex-col items-center px-7 pt-12 pb-8 text-center">
+        <Logo size={48} variant="dark" className="mb-3" />
         <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">gadaol</div>
         <div className="text-sm text-white/45">{t('tagline')}</div>
       </div>
 
       <div className="flex flex-1 flex-col overflow-y-auto rounded-t-[28px] bg-white px-6 pt-8 pb-10">
-        <div className="mb-1 text-[22px] font-bold tracking-tight text-[#0F1117]">{t('title')}</div>
-        <div className="mb-4 text-sm text-[#9099A8]">{t('subtitle')}</div>
+        <div className="text-ink mb-1 text-[22px] font-bold tracking-tight">{t('title')}</div>
+        <div className="text-ink3 mb-4 text-sm">{t('subtitle')}</div>
         {errorMessage && (
-          <div className="mb-4 rounded-xl bg-[#FEF3F2] px-4 py-3 text-[13px] text-[#F04438]">
+          <div className="text-error bg-error-light mb-4 rounded-xl px-4 py-3 text-[13px]">
             {errorMessage}
           </div>
         )}
 
         <div className="flex flex-col gap-3">
-          <button
-            onClick={signInWithKakao}
-            className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#FEE500] text-[15px] font-medium text-[#191919]"
-          >
+          <Button variant="kakao" onClick={signInWithKakao} fullWidth>
             <KakaoIcon />
             {t('kakao')}
-          </button>
+          </Button>
 
-          <button
-            onClick={signInWithGoogle}
-            className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl border border-[#E8EAED] bg-white text-[15px] font-medium text-[#0F1117]"
-          >
+          <Button variant="google" onClick={signInWithGoogle} fullWidth>
             <GoogleIcon />
             {t('google')}
-          </button>
+          </Button>
 
-          <div className="flex items-center gap-3 text-[13px] text-[#9099A8]">
-            <span className="h-px flex-1 bg-[#E8EAED]" />
+          <div className="text-ink3 flex items-center gap-3 text-[13px]">
+            <span className="bg-border h-px flex-1" />
             {t('or')}
-            <span className="h-px flex-1 bg-[#E8EAED]" />
+            <span className="bg-border h-px flex-1" />
           </div>
 
-          <button
-            onClick={onEmailClick}
-            className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#0F1117] text-[15px] font-medium text-white"
-          >
+          <Button variant="email" onClick={onEmailClick} fullWidth>
             <EmailIcon />
             {t('email')}
-          </button>
+          </Button>
         </div>
 
-        <p className="mt-5 text-center text-[12px] leading-relaxed text-[#9099A8]">
+        <p className="text-ink3 mt-5 text-center text-[12px] leading-relaxed">
           {t.rich('termsNotice', {
             termsLink: (chunks) => (
-              <button type="button" className="text-[#1B6FF0]">
+              <button type="button" className="text-primary">
                 {chunks}
               </button>
             ),
             privacyLink: (chunks) => (
-              <button type="button" className="text-[#1B6FF0]">
+              <button type="button" className="text-primary">
                 {chunks}
               </button>
             ),
@@ -108,7 +102,7 @@ function KakaoIcon() {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path
         d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.09 1.32 3.93 3.31 4.97L3.9 15l3.6-2.37c.49.07.99.1 1.5.1 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z"
-        fill="#191919"
+        fill="var(--color-kakao-ink)"
       />
     </svg>
   )

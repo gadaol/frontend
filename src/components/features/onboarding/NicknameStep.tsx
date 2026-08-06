@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import Button from '@/components/ui/Button'
 import StepIndicator from './StepIndicator'
 
 const MAX = 12
@@ -30,37 +31,33 @@ export default function NicknameStep({ nickname, onChange, onNext, redirectTo }:
     <div className="flex flex-1 flex-col px-6 pb-8">
       <div className="flex items-center justify-between py-5">
         <StepIndicator current={1} total={3} />
-        <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
+        <button onClick={handleSkip} className="text-ink3 text-[14px] font-medium">
           {t('skip')}
         </button>
       </div>
 
       <div className="mb-8">
-        <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">{t('step1Label')}</div>
-        <h1 className="mb-2 text-[24px] leading-snug font-bold text-[#0F1117]">
-          {t('step1Title')}
-        </h1>
-        <p className="text-[14px] leading-relaxed text-[#9099A8]">{t('step1Subtitle')}</p>
+        <div className="text-primary mb-1.5 text-[13px] font-medium">{t('step1Label')}</div>
+        <h1 className="text-ink mb-2 text-[24px] leading-snug font-bold">{t('step1Title')}</h1>
+        <p className="text-ink3 text-[14px] leading-relaxed">{t('step1Subtitle')}</p>
       </div>
 
       <div className="mb-8 flex flex-col items-center gap-3">
         <button className="relative">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#1B6FF0] to-[#0D3E8A] text-[28px] font-bold text-white">
+          <div className="from-primary flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br to-[#0D3E8A] text-[28px] font-bold text-white">
             {nickname ? nickname[0].toUpperCase() : '?'}
           </div>
-          <div className="absolute right-0 bottom-0 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-[#E8EAED] bg-white">
+          <div className="border-border absolute right-0 bottom-0 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 bg-white">
             <CameraIcon />
           </div>
         </button>
-        <span className="text-[12px] text-[#9099A8]">{t('avatarHint')}</span>
+        <span className="text-ink3 text-[12px]">{t('avatarHint')}</span>
       </div>
 
       <div className="mb-6">
-        <label className="mb-2 block text-[13px] font-medium text-[#0F1117]">
-          {t('nicknameLabel')}
-        </label>
+        <label className="text-ink mb-2 block text-[13px] font-medium">{t('nicknameLabel')}</label>
         <div
-          className="flex h-[52px] cursor-text items-center rounded-xl border-[1.5px] border-[#1B6FF0] bg-white px-4 shadow-[0_0_0_3px_rgba(27,111,240,0.1)]"
+          className="border-primary flex h-[52px] cursor-text items-center rounded-xl border-[1.5px] bg-white px-4 shadow-[0_0_0_3px_rgba(27,111,240,0.1)]"
           onClick={() => inputRef.current?.focus()}
         >
           <input
@@ -68,23 +65,19 @@ export default function NicknameStep({ nickname, onChange, onNext, redirectTo }:
             value={nickname}
             onChange={(e) => onChange(e.target.value.slice(0, MAX))}
             placeholder={t('nicknamePlaceholder')}
-            className="flex-1 bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
+            className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[15px] outline-none"
           />
-          <span className="text-[12px] text-[#9099A8]">
+          <span className="text-ink3 text-[12px]">
             {nickname.length}/{MAX}
           </span>
         </div>
       </div>
 
       <div className="mt-auto">
-        <button
-          onClick={onNext}
-          disabled={nickname.trim().length === 0}
-          className="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-40"
-        >
+        <Button onClick={onNext} disabled={nickname.trim().length === 0} fullWidth>
           {t('next')}
           <ChevronRight />
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -104,7 +97,7 @@ function CameraIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path
         d="M8.5 1.5l2 2-7 7H1.5v-2l7-7z"
-        stroke="#515966"
+        stroke="var(--color-ink2)"
         strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"

@@ -11,15 +11,17 @@ import {
   tripDuration,
 } from '@/utils/date'
 import { isGradient } from '@/utils/uploadCover'
+import { AVATAR_COLORS } from '@/utils/avatarColors'
 import type { TripWithMembers } from '@/types/trip'
+import Tabs, { type TabItem } from '@/components/ui/Tabs'
 
 type Tab = 'upcoming' | 'ongoing' | 'done'
 
-const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
+type ProfileInfo = { name: string; avatarUrl: string | null }
 
 interface Props {
   trips: TripWithMembers[]
-  profileMap: Map<string, string>
+  profileMap: Map<string, ProfileInfo>
 }
 
 function TripCard({
@@ -29,7 +31,7 @@ function TripCard({
 }: {
   trip: TripWithMembers
   locale: string
-  profileMap: Map<string, string>
+  profileMap: Map<string, ProfileInfo>
 }) {
   const t = useTranslations('trips')
   const ongoing = isTripOngoing(trip.start_date, trip.end_date)
@@ -93,17 +95,25 @@ function TripCard({
           <div className="flex items-center gap-2">
             <div className="flex">
               {trip.trip_members.slice(0, 4).map((m, i) => {
-                const initial = profileMap.get(m.user_id)?.[0] ?? '?'
+                const profile = profileMap.get(m.user_id)
+                const initial = profile?.name?.[0] ?? '?'
                 return (
                   <div
                     key={m.user_id}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
-                    style={{
-                      backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                      marginLeft: i > 0 ? -8 : 0,
-                    }}
+                    className="h-7 w-7 overflow-hidden rounded-full border-2 border-white"
+                    style={{ marginLeft: i > 0 ? -8 : 0 }}
                   >
-                    {initial}
+                    {profile?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center text-[11px] font-bold text-white"
+                        style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                      >
+                        {initial}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -161,7 +171,7 @@ export default function TripTabs({ trips, profileMap }: Props) {
   const tabMap: Record<Tab, TripWithMembers[]> = { upcoming, ongoing, done }
   const current = tabMap[tab]
 
-  const tabs: { key: Tab; label: string; count: number }[] = [
+  const tabItems: TabItem<Tab>[] = [
     { key: 'upcoming', label: t('tabUpcoming'), count: upcoming.length },
     { key: 'ongoing', label: t('tabOngoing'), count: ongoing.length },
     { key: 'done', label: t('tabDone'), count: done.length },
@@ -169,30 +179,7 @@ export default function TripTabs({ trips, profileMap }: Props) {
 
   return (
     <div className="flex flex-col">
-      {/* 탭 바 */}
-      <div className="border-border border-b px-4">
-        <div className="flex gap-0">
-          {tabs.map(({ key, label, count }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`relative flex-1 py-3.5 text-[14px] font-semibold transition-colors ${
-                tab === key ? 'text-primary' : 'text-ink3'
-              }`}
-            >
-              {label}
-              {count > 0 && (
-                <span className={`ml-1 text-[11px] ${tab === key ? 'text-primary' : 'text-ink3'}`}>
-                  {count}
-                </span>
-              )}
-              {tab === key && (
-                <span className="bg-primary absolute right-0 bottom-0 left-0 h-[2px] rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs items={tabItems} value={tab} onChange={setTab} fullWidth className="px-4" />
 
       {/* 여행 목록 */}
       <div className="flex flex-col gap-3 px-4 py-4">

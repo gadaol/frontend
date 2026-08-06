@@ -46,12 +46,12 @@ export default function InquiryNewClient({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F5F6F8]">
+    <div className="bg-bg2 min-h-dvh">
       <AppHeader title="문의 작성" onBack="router" border />
 
       <div className="px-4 pt-5 pb-10">
         {/* 카테고리 */}
-        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">카테고리</p>
+        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">카테고리</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <button
@@ -59,9 +59,9 @@ export default function InquiryNewClient({ userId }: { userId: string }) {
               onClick={() => setCategory(c)}
               className="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
               style={{
-                borderColor: category === c ? '#1B6FF0' : '#E8EAED',
-                backgroundColor: category === c ? '#EBF2FF' : '#fff',
-                color: category === c ? '#1B6FF0' : '#515966',
+                borderColor: category === c ? 'var(--color-primary)' : 'var(--color-border)',
+                backgroundColor: category === c ? 'var(--color-primary-light)' : '#fff',
+                color: category === c ? 'var(--color-primary)' : 'var(--color-ink2)',
               }}
             >
               {c}
@@ -70,43 +70,43 @@ export default function InquiryNewClient({ userId }: { userId: string }) {
         </div>
 
         {/* 제목 */}
-        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">제목</p>
-        <div className="mb-4 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5">
+        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">제목</p>
+        <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white px-4 py-3.5">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목을 입력해주세요"
             maxLength={100}
-            className="w-full bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
+            className="text-ink placeholder:text-ink3 w-full bg-transparent text-[15px] outline-none"
           />
         </div>
 
         {/* 내용 */}
-        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">내용</p>
-        <div className="mb-4 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5">
+        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">내용</p>
+        <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white px-4 py-3.5">
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="문의 내용을 자세히 작성해주세요"
             maxLength={2000}
             rows={8}
-            className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
+            className="text-ink placeholder:text-ink3 w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none"
           />
-          <p className="mt-1 text-right text-[11px] text-[#C5CAD3]">{content.length}/2000</p>
+          <p className="text-ink3 mt-1 text-right text-[11px]">{content.length}/2000</p>
         </div>
 
         {/* 공개 여부 */}
-        <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5">
+        <div className="border-border mb-6 flex items-center justify-between rounded-2xl border bg-white px-4 py-3.5">
           <div>
-            <p className="text-[14px] font-medium text-[#0F1117]">공개 문의</p>
-            <p className="mt-0.5 text-[12px] text-[#9099A8]">
+            <p className="text-ink text-[14px] font-medium">공개 문의</p>
+            <p className="text-ink3 mt-0.5 text-[12px]">
               공개 시 다른 사용자도 문의와 답변을 볼 수 있어요
             </p>
           </div>
           <button
             onClick={() => setIsPublic((v) => !v)}
             className="relative h-7 w-12 rounded-full transition-colors"
-            style={{ backgroundColor: isPublic ? '#1B6FF0' : '#E8EAED' }}
+            style={{ backgroundColor: isPublic ? 'var(--color-primary)' : 'var(--color-border)' }}
           >
             <span
               className="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all"
@@ -115,12 +115,12 @@ export default function InquiryNewClient({ userId }: { userId: string }) {
           </button>
         </div>
 
-        {error && <p className="mb-3 text-center text-[13px] text-[#F04438]">{error}</p>}
+        {error && <p className="text-error mb-3 text-center text-[13px]">{error}</p>}
 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full rounded-2xl bg-[#1B6FF0] py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+          className="bg-primary w-full rounded-2xl py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
         >
           {submitting ? '제출 중...' : '문의 제출'}
         </button>

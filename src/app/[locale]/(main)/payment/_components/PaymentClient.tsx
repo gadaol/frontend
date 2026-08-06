@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, startTransition } from 'react'
 import Script from 'next/script'
+import Button from '@/components/ui/Button'
 
 interface Props {
   plan: 'pro' | 'plus'
@@ -92,7 +93,9 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
         {/* 플랜 정보 */}
         <div
           className="mx-4 mt-4 rounded-2xl p-5"
-          style={{ background: 'linear-gradient(135deg,#070E1A,#1B6FF0)' }}
+          style={{
+            background: 'linear-gradient(135deg,var(--color-hero-top),var(--color-primary))',
+          }}
         >
           <div className="mb-3 flex items-center gap-2">
             <span className="rounded-full bg-white/20 px-3 py-1 text-[12px] font-bold text-white">
@@ -116,7 +119,7 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
 
         {/* 결제 주기 선택 */}
         <div className="mx-4 mt-4">
-          <p className="mb-2 text-[12px] font-semibold tracking-wide text-[#9099A8] uppercase">
+          <p className="text-ink3 mb-2 text-[12px] font-semibold tracking-wide uppercase">
             결제 주기
           </p>
           <div className="flex gap-2">
@@ -126,16 +129,16 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
                 onClick={() => setPeriod(p)}
                 className="relative flex-1 rounded-xl border-[1.5px] py-3 text-[14px] font-semibold transition-all"
                 style={{
-                  borderColor: period === p ? '#1B6FF0' : '#E8EAED',
-                  color: period === p ? '#1B6FF0' : '#515966',
-                  backgroundColor: period === p ? '#EBF2FF' : 'white',
+                  borderColor: period === p ? 'var(--color-primary)' : 'var(--color-border)',
+                  color: period === p ? 'var(--color-primary)' : 'var(--color-ink2)',
+                  backgroundColor: period === p ? 'var(--color-primary-light)' : 'white',
                 }}
               >
                 {p === 'monthly' ? '월간' : '연간'}
                 {p === 'yearly' && (
                   <span
                     className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                    style={{ backgroundColor: '#12B76A' }}
+                    style={{ backgroundColor: 'var(--color-success)' }}
                   >
                     {plan === 'pro' ? '36%' : '28%'} 할인
                   </span>
@@ -146,14 +149,12 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
         </div>
 
         {/* 혜택 목록 */}
-        <div className="mx-4 mt-4 rounded-2xl border border-[#E8EAED] bg-white p-4">
-          <p className="mb-3 text-[13px] font-semibold text-[#0F1117]">
-            {PLAN_LABEL[plan]} 플랜 혜택
-          </p>
+        <div className="border-border mx-4 mt-4 rounded-2xl border bg-white p-4">
+          <p className="text-ink mb-3 text-[13px] font-semibold">{PLAN_LABEL[plan]} 플랜 혜택</p>
           <ul className="space-y-2">
             {PLAN_FEATURES[plan].map((f) => (
-              <li key={f} className="flex items-center gap-2 text-[13px] text-[#5A6270]">
-                <span className="text-[#1B6FF0]">✓</span> {f}
+              <li key={f} className="text-ink2 flex items-center gap-2 text-[13px]">
+                <span className="text-primary">✓</span> {f}
               </li>
             ))}
           </ul>
@@ -161,25 +162,20 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
 
         <div className="flex-1" />
 
-        <p className="mx-4 mt-4 text-center text-[12px] leading-relaxed text-[#9099A8]">
+        <p className="text-ink3 mx-4 mt-4 text-center text-[12px] leading-relaxed">
           구독은 만료일 전 언제든 취소 가능해요.
           <br />
           카드 정보는 토스페이먼츠에서 안전하게 관리돼요.
         </p>
 
         <div className="mx-4 mt-4 mb-8">
-          <button
-            onClick={handlePayment}
-            disabled={loading || !sdkReady}
-            className="h-[54px] w-full rounded-2xl text-[16px] font-bold text-white disabled:opacity-40"
-            style={{ backgroundColor: '#1B6FF0' }}
-          >
+          <Button onClick={handlePayment} disabled={loading || !sdkReady} fullWidth>
             {loading
               ? '이동 중...'
               : !sdkReady
                 ? '로딩 중...'
                 : `₩${amount.toLocaleString()} 결제하기`}
-          </button>
+          </Button>
         </div>
       </div>
     </>

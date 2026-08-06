@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import Button from '@/components/ui/Button'
 import StepIndicator from './StepIndicator'
 
 type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
@@ -63,7 +64,7 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
                 d="M13 16l-6-6 6-6"
-                stroke="#9099A8"
+                stroke="var(--color-ink3)"
                 strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -72,18 +73,16 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
           </button>
           <StepIndicator current={2} total={3} />
         </div>
-        <button onClick={handleSkip} className="text-[14px] font-medium text-[#9099A8]">
+        <button onClick={handleSkip} className="text-ink3 text-[14px] font-medium">
           {t('skip')}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-8">
         <div className="mb-8">
-          <div className="mb-1.5 text-[13px] font-medium text-[#1B6FF0]">{t('step2Label')}</div>
-          <h1 className="mb-2 text-[24px] leading-snug font-bold text-[#0F1117]">
-            {t('step2Title')}
-          </h1>
-          <p className="text-[14px] leading-relaxed text-[#9099A8]">
+          <div className="text-primary mb-1.5 text-[13px] font-medium">{t('step2Label')}</div>
+          <h1 className="text-ink mb-2 text-[24px] leading-snug font-bold">{t('step2Title')}</h1>
+          <p className="text-ink3 text-[14px] leading-relaxed">
             {t('step2Subtitle')
               .split('\n')
               .map((line, i) => (
@@ -118,13 +117,9 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
         />
 
         <div className="pt-4">
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="h-[54px] w-full rounded-2xl bg-[#1B6FF0] text-[16px] font-semibold text-white disabled:opacity-50"
-          >
+          <Button onClick={handleSubmit} disabled={saving} fullWidth>
             {t('next')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -146,7 +141,7 @@ function ChipSection<T extends string>({
 }) {
   return (
     <div className="mb-6">
-      <div className="mb-2 text-[13px] font-medium text-[#0F1117]">{label}</div>
+      <div className="text-ink mb-2 text-[13px] font-medium">{label}</div>
       <div className="flex flex-wrap gap-2">
         {options.map((key) => {
           const active = selected.includes(key)
@@ -156,8 +151,8 @@ function ChipSection<T extends string>({
               onClick={() => onToggle(key)}
               className={`h-9 rounded-full border-[1.5px] px-[14px] text-[13px] font-medium transition-colors ${
                 active
-                  ? 'border-[#1B6FF0] bg-[#EBF2FF] text-[#1B6FF0]'
-                  : 'border-[#E8EAED] bg-white text-[#515966]'
+                  ? 'border-primary bg-primary-light text-primary'
+                  : 'border-border text-ink2 bg-white'
               }`}
             >
               {getLabel(key)}

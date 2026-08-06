@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/axios/client'
+import Button from '@/components/ui/Button'
 
 type FormValues = {
   name: string
@@ -85,7 +86,7 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
+      <div className="border-border flex h-14 flex-shrink-0 items-center gap-1 border-b px-4">
         <button
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center"
@@ -94,14 +95,14 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">{t('signupTitle')}</span>
+        <span className="text-ink text-[17px] font-semibold">{t('signupTitle')}</span>
       </div>
 
       <form
@@ -145,17 +146,13 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
             />
           </Field>
 
-          {serverError && <span className="text-[13px] text-[#F04438]">{serverError}</span>}
+          {serverError && <span className="text-error text-[13px]">{serverError}</span>}
         </div>
 
         <div className="mt-auto pt-8">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isSubmitting} fullWidth>
             {isSubmitting ? t('processing') : t('signupAction')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -173,15 +170,15 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] font-medium text-[#0F1117]">{label}</label>
+      <label className="text-ink text-[13px] font-medium">{label}</label>
       {children}
-      {error && <span className="text-[12px] text-[#F04438]">{error}</span>}
+      {error && <span className="text-error text-[12px]">{error}</span>}
     </div>
   )
 }
 
 function inputClass(hasError: boolean) {
-  return `h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${
-    hasError ? 'border-[#F04438]' : 'border-[#E8EAED]'
+  return `h-12 rounded-xl border px-3.5 text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
+    hasError ? 'border-error' : 'border-border'
   }`
 }

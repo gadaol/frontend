@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import api, { isApiError } from '@/lib/axios/client'
+import Button from '@/components/ui/Button'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -160,7 +161,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
+      <div className="border-border flex h-14 flex-shrink-0 items-center gap-1 border-b px-4">
         <button
           onClick={backAction}
           className="flex h-10 w-10 items-center justify-center"
@@ -169,25 +170,25 @@ export default function ForgotPasswordView({ onBack }: Props) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">{t('forgotPasswordTitle')}</span>
+        <span className="text-ink text-[17px] font-semibold">{t('forgotPasswordTitle')}</span>
       </div>
 
       {/* 탭 */}
       {showTabs && (
-        <div className="flex border-b border-[#E8EAED]">
+        <div className="border-border flex border-b">
           {(['email', 'sms'] as Method[]).map((m) => (
             <button
               key={m}
               onClick={() => handleMethodChange(m)}
               className={`flex-1 py-3 text-[14px] font-medium transition-colors ${
-                method === m ? 'border-b-2 border-[#1B6FF0] text-[#1B6FF0]' : 'text-[#9099A8]'
+                method === m ? 'border-primary text-primary border-b-2' : 'text-ink3'
               }`}
             >
               {m === 'email' ? t('methodEmailTab') : t('methodSms')}
@@ -200,34 +201,28 @@ export default function ForgotPasswordView({ onBack }: Props) {
         {/* 이메일 - 입력 */}
         {method === 'email' && !sentEmail && (
           <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="flex flex-1 flex-col">
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              {t('forgotPasswordDesc')}
-            </p>
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">{t('forgotPasswordDesc')}</p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('emailLabel')}</label>
+              <label className="text-ink text-[13px] font-medium">{t('emailLabel')}</label>
               <input
                 {...regEmail('email')}
                 type="email"
                 placeholder="hello@gadaol.com"
-                className={`h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${
-                  emailErrors.email ? 'border-[#F04438]' : 'border-[#E8EAED]'
+                className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${
+                  emailErrors.email ? 'border-error' : 'border-border'
                 }`}
               />
               {emailErrors.email && (
-                <span className="text-[12px] text-[#F04438]">{emailErrors.email.message}</span>
+                <span className="text-error text-[12px]">{emailErrors.email.message}</span>
               )}
             </div>
             {emailServerError && (
-              <span className="mt-2 text-[13px] text-[#F04438]">{emailServerError}</span>
+              <span className="text-error mt-2 text-[13px]">{emailServerError}</span>
             )}
             <div className="mt-auto pt-8">
-              <button
-                type="submit"
-                disabled={emailSubmitting}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button type="submit" disabled={emailSubmitting} fullWidth>
                 {emailSubmitting ? t('processing') : t('sendResetLink')}
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -235,31 +230,42 @@ export default function ForgotPasswordView({ onBack }: Props) {
         {/* 이메일 - 발송 완료 */}
         {method === 'email' && sentEmail && (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF2FF]">
+            <div className="bg-primary-light mb-6 flex h-16 w-16 items-center justify-center rounded-full">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <rect x="3" y="8" width="26" height="18" rx="3" stroke="#1B6FF0" strokeWidth="2" />
-                <path d="M3 12l13 8 13-8" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
+                <rect
+                  x="3"
+                  y="8"
+                  width="26"
+                  height="18"
+                  rx="3"
+                  stroke="var(--color-primary)"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M3 12l13 8 13-8"
+                  stroke="var(--color-primary)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
-            <h2 className="mb-2 text-[20px] font-bold text-[#0F1117]">{t('resetLinkSentTitle')}</h2>
-            <p className="text-[14px] leading-relaxed text-[#9099A8]">
-              <span className="font-medium text-[#0F1117]">{sentEmail}</span>
+            <h2 className="text-ink mb-2 text-[20px] font-bold">{t('resetLinkSentTitle')}</h2>
+            <p className="text-ink3 text-[14px] leading-relaxed">
+              <span className="text-ink font-medium">{sentEmail}</span>
               {t('resetLinkSentDesc')}
             </p>
             <button
               onClick={handleResend}
               disabled={resending}
-              className="mt-6 text-[14px] font-medium text-[#1B6FF0] disabled:opacity-50"
+              className="text-primary mt-6 text-[14px] font-medium disabled:opacity-50"
             >
               {resending ? t('processing') : t('resendEmail')}
             </button>
-            {resent && (
-              <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>
-            )}
+            {resent && <span className="text-primary mt-2 text-[13px]">{t('resendSuccess')}</span>}
             <div className="mt-auto w-full pt-8">
               <button
                 onClick={onBack}
-                className="h-[52px] w-full rounded-xl border border-[#E8EAED] text-[15px] font-medium text-[#0F1117]"
+                className="border-border text-ink h-[52px] w-full rounded-xl border text-[15px] font-medium"
               >
                 {t('backToLogin')}
               </button>
@@ -270,29 +276,25 @@ export default function ForgotPasswordView({ onBack }: Props) {
         {/* SMS - 전화번호 입력 */}
         {method === 'sms' && smsStep === 'phone' && (
           <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">
               {t('forgotPasswordSmsDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('phoneLabel')}</label>
+              <label className="text-ink text-[13px] font-medium">{t('phoneLabel')}</label>
               <input
                 type="tel"
                 inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
                 placeholder={t('phonePlaceholder')}
-                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2"
               />
             </div>
-            {smsError && <span className="mt-2 text-[13px] text-[#F04438]">{smsError}</span>}
+            {smsError && <span className="text-error mt-2 text-[13px]">{smsError}</span>}
             <div className="mt-auto pt-8">
-              <button
-                onClick={handleSendOtp}
-                disabled={sending || !phone.trim()}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button onClick={handleSendOtp} disabled={sending || !phone.trim()} fullWidth>
                 {sending ? t('otpSending') : t('sendOtp')}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -300,12 +302,12 @@ export default function ForgotPasswordView({ onBack }: Props) {
         {/* SMS - OTP 입력 */}
         {method === 'sms' && smsStep === 'otp' && (
           <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              <span className="font-medium text-[#0F1117]">{phone}</span>
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">
+              <span className="text-ink font-medium">{phone}</span>
               {t('otpSentDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('otpLabel')}</label>
+              <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -313,10 +315,10 @@ export default function ForgotPasswordView({ onBack }: Props) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder={t('otpPlaceholder')}
-                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] tracking-widest text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2"
               />
             </div>
-            {smsError && <span className="mt-2 text-[13px] text-[#F04438]">{smsError}</span>}
+            {smsError && <span className="text-error mt-2 text-[13px]">{smsError}</span>}
             <button
               onClick={async () => {
                 setOtp('')
@@ -324,18 +326,14 @@ export default function ForgotPasswordView({ onBack }: Props) {
                 await handleSendOtp()
               }}
               disabled={sending}
-              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
+              className="text-primary mt-3 self-start text-[13px] font-medium disabled:opacity-50"
             >
               {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
-              <button
-                onClick={handleVerifyOtp}
-                disabled={otp.length < 6 || verifyingOtp}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button onClick={handleVerifyOtp} disabled={otp.length < 6 || verifyingOtp} fullWidth>
                 {verifyingOtp ? t('processing') : t('verifyOtp')}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -343,54 +341,44 @@ export default function ForgotPasswordView({ onBack }: Props) {
         {/* SMS - 새 비밀번호 입력 */}
         {method === 'sms' && smsStep === 'password' && (
           <form onSubmit={handlePwSubmit(onPasswordSubmit)} className="flex flex-1 flex-col">
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              {t('newPasswordTitle')}
-            </p>
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">{t('newPasswordTitle')}</p>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#0F1117]">
-                  {t('newPasswordLabel')}
-                </label>
+                <label className="text-ink text-[13px] font-medium">{t('newPasswordLabel')}</label>
                 <input
                   {...regPw('password')}
                   type="password"
                   placeholder="••••••••"
-                  className={`h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${
-                    pwErrors.password ? 'border-[#F04438]' : 'border-[#E8EAED]'
+                  className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${
+                    pwErrors.password ? 'border-error' : 'border-border'
                   }`}
                 />
                 {pwErrors.password && (
-                  <span className="text-[12px] text-[#F04438]">{pwErrors.password.message}</span>
+                  <span className="text-error text-[12px]">{pwErrors.password.message}</span>
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#0F1117]">
+                <label className="text-ink text-[13px] font-medium">
                   {t('confirmNewPasswordLabel')}
                 </label>
                 <input
                   {...regPw('confirmPassword')}
                   type="password"
                   placeholder="••••••••"
-                  className={`h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${
-                    pwErrors.confirmPassword ? 'border-[#F04438]' : 'border-[#E8EAED]'
+                  className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${
+                    pwErrors.confirmPassword ? 'border-error' : 'border-border'
                   }`}
                 />
                 {pwErrors.confirmPassword && (
-                  <span className="text-[12px] text-[#F04438]">
-                    {pwErrors.confirmPassword.message}
-                  </span>
+                  <span className="text-error text-[12px]">{pwErrors.confirmPassword.message}</span>
                 )}
               </div>
-              {pwServerError && <span className="text-[13px] text-[#F04438]">{pwServerError}</span>}
+              {pwServerError && <span className="text-error text-[13px]">{pwServerError}</span>}
             </div>
             <div className="mt-auto pt-8">
-              <button
-                type="submit"
-                disabled={pwSubmitting}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button type="submit" disabled={pwSubmitting} fullWidth>
                 {pwSubmitting ? t('processing') : t('setNewPassword')}
-              </button>
+              </Button>
             </div>
           </form>
         )}

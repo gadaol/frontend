@@ -15,7 +15,15 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   ],
 }
 
-const DAY_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2', '#DB2777']
+const DAY_COLORS = [
+  'var(--color-primary)',
+  '#7C3AED',
+  '#059669',
+  '#DC2626',
+  '#D97706',
+  '#0891B2',
+  '#DB2777',
+]
 
 type PlacePin = {
   id: string
@@ -131,7 +139,7 @@ export default function PlacesMapTab({ trip }: Props) {
   if (!isLoaded) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -139,19 +147,19 @@ export default function PlacesMapTab({ trip }: Props) {
   if (!hasAnyItems) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#EBF2FF]">
+        <div className="bg-primary-light flex h-16 w-16 items-center justify-center rounded-[20px]">
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
             <path
               d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z"
-              stroke="#1B6FF0"
+              stroke="var(--color-primary)"
               strokeWidth="2"
             />
-            <circle cx="15" cy="12" r="3" stroke="#1B6FF0" strokeWidth="2" />
+            <circle cx="15" cy="12" r="3" stroke="var(--color-primary)" strokeWidth="2" />
           </svg>
         </div>
         <div>
-          <p className="mb-1 text-[15px] font-semibold text-[#0F1117]">아직 장소가 없어요</p>
-          <p className="text-[13px] text-[#9099A8]">일정에 장소를 추가하면 지도에 표시돼요</p>
+          <p className="text-ink mb-1 text-[15px] font-semibold">아직 장소가 없어요</p>
+          <p className="text-ink3 text-[13px]">일정에 장소를 추가하면 지도에 표시돼요</p>
         </div>
       </div>
     )
@@ -210,11 +218,25 @@ export default function PlacesMapTab({ trip }: Props) {
               onCloseClick={() => setSelectedPin(null)}
             >
               <div style={{ maxWidth: 180, padding: '6px 4px 4px' }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 4 }}>
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--color-ink)',
+                    marginBottom: 4,
+                  }}
+                >
                   {selectedPin.name}
                 </p>
                 {selectedPin.address && (
-                  <p style={{ fontSize: 11, color: '#9099A8', marginBottom: 4, lineHeight: 1.4 }}>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--color-ink3)',
+                      marginBottom: 4,
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {selectedPin.address}
                   </p>
                 )}
@@ -232,14 +254,14 @@ export default function PlacesMapTab({ trip }: Props) {
           className="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
         >
           {locating ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+            <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
           ) : (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
-              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+              <circle cx="10" cy="10" r="3.5" fill="var(--color-primary)" />
+              <circle cx="10" cy="10" r="6" stroke="var(--color-primary)" strokeWidth="1.5" />
               <path
                 d="M10 2v2M10 16v2M2 10h2M16 10h2"
-                stroke="#1B6FF0"
+                stroke="var(--color-primary)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
@@ -253,11 +275,11 @@ export default function PlacesMapTab({ trip }: Props) {
         {/* 토글 핸들 */}
         <button
           onClick={() => setListOpen((v) => !v)}
-          className="flex w-full items-center justify-between border-b border-[#F0F1F3] px-4 py-3"
+          className="border-border flex w-full items-center justify-between border-b px-4 py-3"
         >
           <div className="flex items-center gap-2">
-            <span className="text-[14px] font-semibold text-[#0F1117]">장소 목록</span>
-            <span className="rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[11px] font-bold text-[#1B6FF0]">
+            <span className="text-ink text-[14px] font-semibold">장소 목록</span>
+            <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
               {pins.length}
             </span>
           </div>
@@ -270,7 +292,7 @@ export default function PlacesMapTab({ trip }: Props) {
                     className="h-2 w-2 rounded-full"
                     style={{ backgroundColor: dayPins[0].color }}
                   />
-                  <span className="text-[10px] text-[#9099A8]">D{dayNum}</span>
+                  <span className="text-ink3 text-[10px]">D{dayNum}</span>
                 </div>
               ))}
             </div>
@@ -283,7 +305,7 @@ export default function PlacesMapTab({ trip }: Props) {
             >
               <path
                 d="M4.5 11L9 6.5l4.5 4.5"
-                stroke="#9099A8"
+                stroke="var(--color-ink3)"
                 strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -299,7 +321,7 @@ export default function PlacesMapTab({ trip }: Props) {
         >
           <div className="px-4 pt-3 pb-6">
             {pins.length === 0 && (
-              <p className="py-4 text-center text-[13px] text-[#9099A8]">
+              <p className="text-ink3 py-4 text-center text-[13px]">
                 장소 좌표가 없어 지도에 표시할 수 없어요
               </p>
             )}
@@ -313,7 +335,7 @@ export default function PlacesMapTab({ trip }: Props) {
                   >
                     Day {dayNum}
                   </span>
-                  <span className="text-[11px] text-[#9099A8]">{dayPins[0].dayDate}</span>
+                  <span className="text-ink3 text-[11px]">{dayPins[0].dayDate}</span>
                 </div>
 
                 {/* 장소 카드 */}
@@ -328,7 +350,7 @@ export default function PlacesMapTab({ trip }: Props) {
                         key={pin.id}
                         onClick={() => handlePinClick(pin)}
                         className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
-                          isSelected ? 'border-[#1B6FF0] bg-[#EBF2FF]' : 'border-[#E8EAED] bg-white'
+                          isSelected ? 'border-primary bg-primary-light' : 'border-border bg-white'
                         }`}
                       >
                         <div
@@ -344,14 +366,12 @@ export default function PlacesMapTab({ trip }: Props) {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`truncate text-[13px] font-semibold ${isSelected ? 'text-[#1B6FF0]' : 'text-[#0F1117]'}`}
+                            className={`truncate text-[13px] font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}
                           >
                             {pin.name}
                           </p>
                           {pin.address && (
-                            <p className="mt-0.5 truncate text-[11px] text-[#9099A8]">
-                              {pin.address}
-                            </p>
+                            <p className="text-ink3 mt-0.5 truncate text-[11px]">{pin.address}</p>
                           )}
                         </div>
                         <svg
@@ -359,7 +379,7 @@ export default function PlacesMapTab({ trip }: Props) {
                           height="14"
                           viewBox="0 0 14 14"
                           fill="none"
-                          className="flex-shrink-0 text-[#9099A8]"
+                          className="text-ink3 flex-shrink-0"
                         >
                           <path
                             d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"

@@ -14,14 +14,15 @@ import {
 } from '@/app/actions/trip'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
+import Button from '@/components/ui/Button'
 import type { TripDetail } from '../../page'
 
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
 
 const COVER_PRESETS = [
-  'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)',
-  'linear-gradient(160deg,#0F2351 0%,#7C3AED 70%,#4C1D95 100%)',
+  'linear-gradient(160deg,var(--color-hero-top) 0%,var(--color-primary) 70%,var(--color-hero-bot) 100%)',
+  'linear-gradient(160deg,var(--color-hero-bot) 0%,#7C3AED 70%,#4C1D95 100%)',
   'linear-gradient(160deg,#064E3B 0%,#059669 70%,#022C22 100%)',
   'linear-gradient(160deg,#7C2D12 0%,#EA580C 70%,#431407 100%)',
   'linear-gradient(160deg,#1E1B4B 0%,#EC4899 70%,#831843 100%)',
@@ -170,9 +171,9 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
   }
 
   return (
-    <div className="relative flex h-[100dvh] flex-col bg-[#F5F7FA]">
+    <div className="bg-bg2 relative flex h-[100dvh] flex-col">
       {/* 헤더 */}
-      <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#E8EAED] bg-white px-2 pr-3">
+      <div className="border-border flex h-14 flex-shrink-0 items-center justify-between border-b bg-white px-2 pr-3">
         <button
           onClick={() => router.back()}
           className="flex h-10 w-10 items-center justify-center"
@@ -180,41 +181,32 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">일정 편집</span>
+        <span className="text-ink text-[17px] font-semibold">일정 편집</span>
         {activeTab === 'info' ? (
-          <button
-            onClick={handleSaveInfo}
-            disabled={saving}
-            className="h-[34px] rounded-[8px] bg-[#1B6FF0] px-4 text-[14px] font-medium text-white disabled:opacity-60"
-          >
+          <Button onClick={handleSaveInfo} disabled={saving} size="sm">
             {saving ? '저장 중' : '저장'}
-          </button>
+          </Button>
         ) : (
-          <button
-            onClick={() => router.back()}
-            className="h-[34px] rounded-[8px] bg-[#1B6FF0] px-4 text-[14px] font-medium text-white"
-          >
+          <Button onClick={() => router.back()} size="sm">
             완료
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* 탭 */}
-      <div className="flex flex-shrink-0 [scrollbar-width:none] overflow-x-auto border-b border-[#E8EAED] bg-white px-3 [&::-webkit-scrollbar]:hidden">
+      {/* 탭 — DAY별 날짜 2줄 표기 + 아이콘이 있어 공통 Tabs 컴포넌트로는 표현이 안 돼 구조는 유지하고 토큰만 통일 */}
+      <div className="border-border flex flex-shrink-0 [scrollbar-width:none] overflow-x-auto border-b bg-white px-3 [&::-webkit-scrollbar]:hidden">
         {/* 정보 탭 */}
         <button
           onClick={() => setActiveTab('info')}
           className={`flex flex-shrink-0 items-center gap-1 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-            activeTab === 'info'
-              ? 'border-[#1B6FF0] text-[#1B6FF0]'
-              : 'border-transparent text-[#9099A8]'
+            activeTab === 'info' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
           }`}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -229,16 +221,14 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
           정보
         </button>
         {/* 구분선 */}
-        <div className="mx-1 my-3 w-px flex-shrink-0 bg-[#E8EAED]" />
+        <div className="bg-border mx-1 my-3 w-px flex-shrink-0" />
         {/* Day 탭들 */}
         {expectedDays.map((day, idx) => (
           <button
             key={day.dayDate}
             onClick={() => setActiveTab(idx)}
             className={`flex flex-shrink-0 flex-col items-center gap-0.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-              activeTab === idx
-                ? 'border-[#1B6FF0] text-[#1B6FF0]'
-                : 'border-transparent text-[#9099A8]'
+              activeTab === idx ? 'border-primary text-primary' : 'text-ink3 border-transparent'
             }`}
           >
             <span>DAY {day.dayNumber}</span>
@@ -246,7 +236,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
           </button>
         ))}
         {expectedDays.length === 0 && (
-          <span className="flex items-center px-2 py-3 text-[12px] text-[#C0C6D0]">
+          <span className="text-ink3 flex items-center px-2 py-3 text-[12px]">
             날짜 설정 후 일정 편집 가능
           </span>
         )}
@@ -274,23 +264,23 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                   <img src={coverUrl} alt="커버" className="h-full w-full object-cover" />
                 )}
               </div>
-              <p className="mb-2 text-[12px] font-semibold text-[#515966]">커버</p>
+              <p className="text-ink2 mb-2 text-[12px] font-semibold">커버</p>
               <div className="flex flex-wrap gap-2">
                 {/* 이미지 업로드 */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-[#C0C6D0] bg-[#F5F7FA] disabled:opacity-50 ${
-                    !isGradient(coverUrl) ? 'ring-2 ring-[#1B6FF0] ring-offset-2' : ''
+                  className={`border-ink3 bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed disabled:opacity-50 ${
+                    !isGradient(coverUrl) ? 'ring-primary ring-2 ring-offset-2' : ''
                   }`}
                 >
                   {uploading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+                    <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                   ) : (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
                         d="M8 3v10M3 8h10"
-                        stroke="#9099A8"
+                        stroke="var(--color-ink3)"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
@@ -309,7 +299,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                     key={preset}
                     onClick={() => setCoverUrl(preset)}
                     className={`h-10 w-10 flex-shrink-0 rounded-full transition-transform ${
-                      coverUrl === preset ? 'scale-110 ring-2 ring-[#1B6FF0] ring-offset-2' : ''
+                      coverUrl === preset ? 'ring-primary scale-110 ring-2 ring-offset-2' : ''
                     }`}
                     style={{ background: preset }}
                   />
@@ -319,38 +309,34 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
 
             {/* 여행 이름 */}
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold text-[#515966]">
+              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
                 여행 이름 <span className="text-red-500">*</span>
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="여행 이름을 입력하세요"
-                className="w-full rounded-xl border border-[#E8EAED] bg-white px-4 py-3 text-[14px] text-[#0F1117] placeholder:text-[#C0C6D0] focus:border-[#1B6FF0] focus:outline-none"
+                className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
               />
             </div>
 
             {/* 목적지 */}
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold text-[#515966]">
-                목적지
-              </label>
+              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">목적지</label>
               <input
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="예) 제주도, 도쿄, 파리"
-                className="w-full rounded-xl border border-[#E8EAED] bg-white px-4 py-3 text-[14px] text-[#0F1117] placeholder:text-[#C0C6D0] focus:border-[#1B6FF0] focus:outline-none"
+                className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
               />
             </div>
 
             {/* 날짜 */}
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold text-[#515966]">
-                여행 기간
-              </label>
+              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">여행 기간</label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <p className="mb-1 text-[11px] text-[#9099A8]">시작일</p>
+                  <p className="text-ink3 mb-1 text-[11px]">시작일</p>
                   <input
                     type="date"
                     value={startDate}
@@ -358,23 +344,23 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                       setStartDate(e.target.value)
                       if (endDate && e.target.value > endDate) setEndDate(e.target.value)
                     }}
-                    className="w-full rounded-xl border border-[#E8EAED] bg-white px-3 py-3 text-[14px] text-[#0F1117] focus:border-[#1B6FF0] focus:outline-none"
+                    className="border-border text-ink focus:border-primary w-full rounded-xl border bg-white px-3 py-3 text-[14px] focus:outline-none"
                   />
                 </div>
-                <div className="flex items-end pb-[13px] text-[#C0C6D0]">—</div>
+                <div className="text-ink3 flex items-end pb-[13px]">—</div>
                 <div className="flex-1">
-                  <p className="mb-1 text-[11px] text-[#9099A8]">종료일</p>
+                  <p className="text-ink3 mb-1 text-[11px]">종료일</p>
                   <input
                     type="date"
                     value={endDate}
                     min={startDate || undefined}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full rounded-xl border border-[#E8EAED] bg-white px-3 py-3 text-[14px] text-[#0F1117] focus:border-[#1B6FF0] focus:outline-none"
+                    className="border-border text-ink focus:border-primary w-full rounded-xl border bg-white px-3 py-3 text-[14px] focus:outline-none"
                   />
                 </div>
               </div>
               {startDate && endDate && expectedDays.length > 0 && (
-                <p className="mt-1.5 text-[12px] text-[#1B6FF0]">
+                <p className="text-primary mt-1.5 text-[12px]">
                   {expectedDays.length === 1
                     ? '당일치기'
                     : `${expectedDays.length - 1}박 ${expectedDays.length}일`}
@@ -388,16 +374,16 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
         {typeof activeTab === 'number' && selectedDay && (
           <div className="p-3 pb-24">
             {/* Day 요약 */}
-            <div className="mb-3 flex gap-5 rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5">
+            <div className="border-border mb-3 flex gap-5 rounded-2xl border bg-white px-4 py-3.5">
               <div className="flex flex-col items-center gap-1">
-                <span className="text-[18px] font-bold text-[#0F1117]">{visibleItems.length}</span>
-                <span className="text-[11px] text-[#9099A8]">장소</span>
+                <span className="text-ink text-[18px] font-bold">{visibleItems.length}</span>
+                <span className="text-ink3 text-[11px]">장소</span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-[18px] font-bold text-[#0F1117]">
+                <span className="text-ink text-[18px] font-bold">
                   {dayjs(selectedDay.dayDate).format('M/D')}
                 </span>
-                <span className="text-[11px] text-[#9099A8]">날짜</span>
+                <span className="text-ink3 text-[11px]">날짜</span>
               </div>
             </div>
 
@@ -415,7 +401,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
             <div className="pl-[64px]">
               <Link
                 href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#E8EAED] py-3 text-[13px] text-[#9099A8]"
+                className="border-border text-ink3 flex items-center justify-center gap-1.5 rounded-xl border border-dashed py-3 text-[13px]"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
@@ -436,14 +422,14 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
       {confirmDialog && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5">
-            <p className="mb-1 text-[16px] font-bold text-[#0F1117]">장소가 삭제돼요</p>
-            <p className="mb-3 text-[13px] text-[#515966]">
+            <p className="text-ink mb-1 text-[16px] font-bold">장소가 삭제돼요</p>
+            <p className="text-ink2 mb-3 text-[13px]">
               변경된 날짜 범위 밖의 날에 등록된 장소가 있어요.
             </p>
-            <div className="mb-4 flex flex-col gap-1 rounded-xl bg-[#F5F7FA] px-4 py-3">
+            <div className="bg-bg2 mb-4 flex flex-col gap-1 rounded-xl px-4 py-3">
               {confirmDialog.affectedDays.map((d) => (
                 <div key={d.dayDate} className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#515966]">{dayjs(d.dayDate).format('M월 D일 (ddd)')}</span>
+                  <span className="text-ink2">{dayjs(d.dayDate).format('M월 D일 (ddd)')}</span>
                   <span className="font-semibold text-red-500">장소 {d.itemCount}개 삭제</span>
                 </div>
               ))}
@@ -451,7 +437,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDialog(null)}
-                className="flex-1 rounded-xl border border-[#E8EAED] py-3 text-[14px] font-medium text-[#515966]"
+                className="border-border text-ink2 flex-1 rounded-xl border py-3 text-[14px] font-medium"
               >
                 취소
               </button>
@@ -471,7 +457,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
       {typeof activeTab === 'number' && selectedDay && (
         <Link
           href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
-          className="fixed right-4 bottom-6 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#1B6FF0] shadow-[0_4px_16px_rgba(27,111,240,0.4)]"
+          className="bg-primary fixed right-4 bottom-6 flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[0_4px_16px_rgba(27,111,240,0.4)]"
         >
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
             <path d="M11 4v14M4 11h14" stroke="white" strokeWidth="2" strokeLinecap="round" />
@@ -664,9 +650,9 @@ function TimelineItemRow({
           className="w-full text-right text-[11px] leading-tight font-medium"
         >
           {item.visit_time ? (
-            <span className="text-[#9099A8]">{item.visit_time.slice(0, 5)}</span>
+            <span className="text-ink3">{item.visit_time.slice(0, 5)}</span>
           ) : (
-            <span className="text-[#C0C6D0]">--:--</span>
+            <span className="text-ink3">--:--</span>
           )}
         </button>
         <input
@@ -679,8 +665,8 @@ function TimelineItemRow({
       </div>
 
       <div className="mt-[6px] flex w-5 flex-shrink-0 flex-col items-center">
-        <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#1B6FF0]" />
-        {!isLast && <div className="mt-1 w-0.5 flex-1 bg-[#E8EAED]" style={{ minHeight: 32 }} />}
+        <div className="bg-primary h-2.5 w-2.5 flex-shrink-0 rounded-full" />
+        {!isLast && <div className="bg-border mt-1 w-0.5 flex-1" style={{ minHeight: 32 }} />}
       </div>
 
       <div className="mb-2 flex flex-1 items-start gap-1">
@@ -695,7 +681,7 @@ function TimelineItemRow({
           </button>
 
           <div
-            className="border border-[#E8EAED] bg-white"
+            className="border-border border bg-white"
             style={{
               transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
               transition: 'transform 0.2s ease',
@@ -706,20 +692,20 @@ function TimelineItemRow({
             onClick={() => swiped && setSwiped(false)}
           >
             <div className="px-3.5 py-3">
-              <p className="text-[14px] font-semibold text-[#0F1117]">
+              <p className="text-ink text-[14px] font-semibold">
                 {item.places?.name ?? '알 수 없는 장소'}
               </p>
               {item.places?.address && (
-                <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">{item.places.address}</p>
+                <p className="text-ink3 mt-0.5 truncate text-[12px]">{item.places.address}</p>
               )}
               {item.memo && (
-                <p className="mt-1.5 border-t border-[#E8EAED] pt-1.5 text-[12px] text-[#515966]">
+                <p className="border-border text-ink2 mt-1.5 border-t pt-1.5 text-[12px]">
                   {item.memo}
                 </p>
               )}
               <div className="mt-2 flex items-center gap-1.5">
                 {catLabel !== '기타' && (
-                  <span className="rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[11px] font-medium text-[#1B6FF0]">
+                  <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
                     {catLabel}
                   </span>
                 )}
@@ -727,7 +713,7 @@ function TimelineItemRow({
                   <Link
                     href={placeHref}
                     onClick={(e) => e.stopPropagation()}
-                    className="rounded-full border border-[#E8EAED] px-2 py-0.5 text-[11px] text-[#9099A8]"
+                    className="border-border text-ink3 rounded-full border px-2 py-0.5 text-[11px]"
                   >
                     상세 보기
                   </Link>
@@ -743,8 +729,8 @@ function TimelineItemRow({
           aria-label="순서 변경"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="2" y="4" width="10" height="1.5" rx="0.75" fill="#C0C6D0" />
-            <rect x="2" y="8.5" width="10" height="1.5" rx="0.75" fill="#C0C6D0" />
+            <rect x="2" y="4" width="10" height="1.5" rx="0.75" fill="var(--color-ink3)" />
+            <rect x="2" y="8.5" width="10" height="1.5" rx="0.75" fill="var(--color-ink3)" />
           </svg>
         </button>
       </div>

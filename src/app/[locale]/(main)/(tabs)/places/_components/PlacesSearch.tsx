@@ -44,12 +44,12 @@ export default function PlacesSearch() {
             className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
           >
             {isSaving ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+              <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
             ) : (
               <BacklogIcon
                 size={20}
                 filled={isSaved}
-                className={isSaved ? 'text-[#1B6FF0]' : 'text-[#C4C8CF]'}
+                className={isSaved ? 'text-primary' : 'text-[#C4C8CF]'}
               />
             )}
           </button>

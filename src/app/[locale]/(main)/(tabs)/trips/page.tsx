@@ -27,9 +27,14 @@ export default async function TripsPage() {
   // 모든 여행 멤버 id 수집 → 프로필 한 번에 조회
   const allUserIds = [...new Set(trips.flatMap((t) => t.trip_members.map((m) => m.user_id)))]
   const { data: profilesData } = allUserIds.length
-    ? await supabase.from('profiles').select('id, name').in('id', allUserIds)
+    ? await supabase.from('profiles').select('id, name, avatar_url').in('id', allUserIds)
     : { data: [] }
-  const profileMap = new Map((profilesData ?? []).map((p) => [p.id, p.name ?? '']))
+  const profileMap = new Map(
+    (profilesData ?? []).map((p) => [
+      p.id,
+      { name: p.name ?? '', avatarUrl: p.avatar_url ?? null },
+    ]),
+  )
 
   return (
     <div className="bg-bg2 flex min-h-full flex-col">

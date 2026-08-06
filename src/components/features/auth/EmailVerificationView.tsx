@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import Button from '@/components/ui/Button'
 
 interface Props {
   email: string
@@ -59,7 +60,7 @@ export default function EmailVerificationView({ email, onBack }: Props) {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
+      <div className="border-border flex h-14 flex-shrink-0 items-center gap-1 border-b px-4">
         <button
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center"
@@ -68,49 +69,57 @@ export default function EmailVerificationView({ email, onBack }: Props) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">
-          {t('emailVerificationTitle')}
-        </span>
+        <span className="text-ink text-[17px] font-semibold">{t('emailVerificationTitle')}</span>
       </div>
 
       <div className="flex flex-1 flex-col items-center px-8 pt-12 text-center">
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF2FF]">
+        <div className="bg-primary-light mb-6 flex h-16 w-16 items-center justify-center rounded-full">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect x="3" y="8" width="26" height="18" rx="3" stroke="#1B6FF0" strokeWidth="2" />
-            <path d="M3 12l13 8 13-8" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
+            <rect
+              x="3"
+              y="8"
+              width="26"
+              height="18"
+              rx="3"
+              stroke="var(--color-primary)"
+              strokeWidth="2"
+            />
+            <path
+              d="M3 12l13 8 13-8"
+              stroke="var(--color-primary)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
         </div>
 
-        <h2 className="mb-2 text-[20px] font-bold text-[#0F1117]">{t('emailVerificationTitle')}</h2>
-        <p className="text-[14px] leading-relaxed text-[#9099A8]">
-          <span className="font-medium text-[#0F1117]">{email}</span>
+        <h2 className="text-ink mb-2 text-[20px] font-bold">{t('emailVerificationTitle')}</h2>
+        <p className="text-ink3 text-[14px] leading-relaxed">
+          <span className="text-ink font-medium">{email}</span>
           {t('emailVerificationDesc')}
         </p>
 
         <button
           onClick={handleResend}
           disabled={resending}
-          className="mt-8 text-[14px] font-medium text-[#1B6FF0] disabled:opacity-50"
+          className="text-primary mt-8 text-[14px] font-medium disabled:opacity-50"
         >
           {resending ? t('processing') : t('resendEmail')}
         </button>
 
-        {resent && <span className="mt-2 text-[13px] text-[#1B6FF0]">{t('resendSuccess')}</span>}
+        {resent && <span className="text-primary mt-2 text-[13px]">{t('resendSuccess')}</span>}
 
         <div className="mt-auto w-full pt-8 pb-6">
-          <button
-            onClick={onBack}
-            className="h-[52px] w-full rounded-xl border border-[#E8EAED] text-[15px] font-medium text-[#0F1117]"
-          >
+          <Button variant="secondary" onClick={onBack} fullWidth>
             {t('backToLogin')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

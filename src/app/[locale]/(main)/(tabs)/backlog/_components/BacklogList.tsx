@@ -7,6 +7,7 @@ import { useLocale } from 'next-intl'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { removeFromBacklog } from '@/app/actions/backlog'
 import { SearchIcon, MapPinIcon, BacklogIcon } from '@/components/icons'
+import Tabs, { type TabItem } from '@/components/ui/Tabs'
 
 type BacklogItem = {
   id: string
@@ -92,39 +93,26 @@ export default function BacklogList({ items: initialItems }: { items: BacklogIte
       {/* 헤더 영역 */}
       <div className="bg-bg border-border border-b px-4 pt-3 pb-0">
         {/* 검색바 */}
-        <div className="border-border mb-3 flex items-center gap-2 rounded-xl border bg-[#F5F7FA] px-3 py-2.5">
-          <SearchIcon className="flex-shrink-0 text-[#9099A8]" />
+        <div className="border-border bg-bg2 mb-3 flex items-center gap-2 rounded-xl border px-3 py-2.5">
+          <SearchIcon className="text-ink3 flex-shrink-0" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="장소 이름으로 검색"
-            className="flex-1 bg-transparent text-[14px] text-[#0F1117] outline-none placeholder:text-[#9099A8]"
+            className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[14px] outline-none"
             autoComplete="off"
           />
         </div>
 
         {/* 카테고리 탭 */}
-        <div
-          className="flex gap-2 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden"
-          style={
-            { scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties
-          }
-        >
-          {categoryTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                activeTab === tab
-                  ? 'bg-primary text-white'
-                  : 'border-border bg-bg border text-[#515966]'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pill"
+          items={categoryTabs.map<TabItem<string>>((tab) => ({ key: tab, label: tab }))}
+          value={activeTab}
+          onChange={setActiveTab}
+          className="pb-3"
+        />
       </div>
 
       {/* 리스트 */}

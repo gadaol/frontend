@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronLeftIcon } from '@/components/icons'
+import Button from '@/components/ui/Button'
 import { getCategoryInfo } from '@/utils/placeCategory'
 import { addToBacklog, removeFromBacklogByGooglePlaceId } from '@/app/actions/backlog'
 import type { GooglePlaceDetail } from '../page'
@@ -17,8 +18,8 @@ const COVER_GRADIENTS: Record<string, string> = {
   restaurant: 'linear-gradient(135deg,#FFF0E6,#FFCBA4)',
   food: 'linear-gradient(135deg,#FFF0E6,#FFCBA4)',
   meal_takeaway: 'linear-gradient(135deg,#FFF0E6,#FFCBA4)',
-  cafe: 'linear-gradient(135deg,#FEF3C7,#FDE68A)',
-  bakery: 'linear-gradient(135deg,#FEF3C7,#FDE68A)',
+  cafe: 'linear-gradient(135deg,var(--color-warning-light),#FDE68A)',
+  bakery: 'linear-gradient(135deg,var(--color-warning-light),#FDE68A)',
   lodging: 'linear-gradient(135deg,#EBF1FE,#BFDBFE)',
   hotel: 'linear-gradient(135deg,#EBF1FE,#BFDBFE)',
   tourist_attraction: 'linear-gradient(135deg,#FEF9C3,#FDE047)',
@@ -26,8 +27,8 @@ const COVER_GRADIENTS: Record<string, string> = {
   amusement_park: 'linear-gradient(135deg,#FEF9C3,#FDE047)',
   shopping_mall: 'linear-gradient(135deg,#EDE9FE,#DDD6FE)',
   store: 'linear-gradient(135deg,#EDE9FE,#DDD6FE)',
-  park: 'linear-gradient(135deg,#D1FAE5,#A7F3D0)',
-  natural_feature: 'linear-gradient(135deg,#D1FAE5,#A7F3D0)',
+  park: 'linear-gradient(135deg,var(--color-success-light),#A7F3D0)',
+  natural_feature: 'linear-gradient(135deg,var(--color-success-light),#A7F3D0)',
   night_club: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)',
   bar: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)',
   subway_station: 'linear-gradient(135deg,#CFFAFE,#A5F3FC)',
@@ -39,7 +40,7 @@ function getCoverGradient(types: string[]): string {
   for (const type of types) {
     if (COVER_GRADIENTS[type]) return COVER_GRADIENTS[type]
   }
-  return 'linear-gradient(135deg,#EBF2FF,#C7D9FF)'
+  return 'linear-gradient(135deg,var(--color-primary-light),#C7D9FF)'
 }
 
 export default function PlaceDetailClient({ place, initialSaved = false }: Props) {
@@ -147,7 +148,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
         {place.regularOpeningHours?.weekdayDescriptions && (
           <div className="bg-bg mt-2 px-4 py-4">
             <p className="text-ink mb-3 text-[15px] font-semibold">{t('hours')}</p>
-            <div className="flex flex-col divide-y divide-[#F0F1F3]">
+            <div className="divide-border flex flex-col divide-y">
               {place.regularOpeningHours.weekdayDescriptions.map((desc, i) => {
                 const [day, ...rest] = desc.split(': ')
                 return (
@@ -182,14 +183,21 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
         {place.reviews &&
           place.reviews.length > 0 &&
           (() => {
-            const COLORS = ['#1B6FF0', '#515966', '#059669', '#D97706', '#7C3AED', '#DB2777']
+            const COLORS = [
+              'var(--color-primary)',
+              'var(--color-ink2)',
+              '#059669',
+              '#D97706',
+              '#7C3AED',
+              '#DB2777',
+            ]
             return (
               <div className="bg-bg mt-2 px-4 py-4">
                 <p className="text-ink mb-3 text-[15px] font-semibold">
                   {t('reviewsTitle')} (
                   {place.userRatingCount?.toLocaleString() ?? place.reviews.length})
                 </p>
-                <div className="flex flex-col divide-y divide-[#F0F1F3]">
+                <div className="divide-border flex flex-col divide-y">
                   {place.reviews.map((review, i) => (
                     <div key={i} className="flex gap-3 py-3">
                       <div
@@ -239,9 +247,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
         >
           {saved ? t('savedToBacklog') : t('saveToBacklog')}
         </button>
-        <button className="bg-primary flex h-12 flex-[2] items-center justify-center gap-1.5 rounded-xl text-[15px] font-medium text-white">
-          {t('addToTrip')}
-        </button>
+        <Button className="flex-[2]">{t('addToTrip')}</Button>
       </div>
     </div>
   )

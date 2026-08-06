@@ -7,6 +7,7 @@ import { useLocale } from 'next-intl'
 import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
+import Button from '@/components/ui/Button'
 import { BellIcon } from '@/components/icons'
 import api, { isApiError } from '@/lib/axios/client'
 
@@ -83,12 +84,12 @@ export default function MypageClient({
     <div className="bg-bg2 min-h-dvh pb-10">
       {/* 결제 완료 토스트 */}
       {subscribedToast && (
-        <div className="fixed top-4 left-4 right-4 z-[100] animate-in fade-in slide-in-from-top-3 duration-300">
+        <div className="animate-in fade-in slide-in-from-top-3 fixed top-4 right-4 left-4 z-[100] duration-300">
           <div
             className="flex items-center gap-4 rounded-2xl px-5 py-4 shadow-2xl"
-            style={{ background: 'linear-gradient(135deg,#070E1A,#1B3A7A)' }}
+            style={{ background: 'linear-gradient(135deg,var(--color-hero-top),#1B3A7A)' }}
           >
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#1B6FF0]">
+            <div className="bg-primary flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <path
                   d="M5 11l5 5 7-9"
@@ -129,7 +130,10 @@ export default function MypageClient({
         {/* 배너 */}
         <div
           className="relative h-[72px]"
-          style={{ background: 'linear-gradient(135deg,#070E1A 0%,#1B6FF0 60%,#0F2351 100%)' }}
+          style={{
+            background:
+              'linear-gradient(135deg,var(--color-hero-top) 0%,var(--color-primary) 60%,var(--color-hero-bot) 100%)',
+          }}
         >
           {/* 아바타 — 배너 아래로 오버랩 */}
           <div className="absolute -bottom-7 left-5">
@@ -140,7 +144,7 @@ export default function MypageClient({
               ) : (
                 <div
                   className="flex h-full w-full items-center justify-center text-[22px] font-black text-white"
-                  style={{ background: '#1B6FF0' }}
+                  style={{ background: 'var(--color-primary)' }}
                 >
                   {initials}
                 </div>
@@ -168,8 +172,8 @@ export default function MypageClient({
 
         {/* 이름/이메일 */}
         <div className="px-5 pt-9 pb-4">
-          <p className="text-[18px] font-bold tracking-[-0.3px] text-[#0F1117]">{displayName}</p>
-          <p className="mt-0.5 text-[13px] text-[#9099A8]">{email}</p>
+          <p className="text-ink text-[18px] font-bold tracking-[-0.3px]">{displayName}</p>
+          <p className="text-ink3 mt-0.5 text-[13px]">{email}</p>
         </div>
 
         {/* 스탯 */}
@@ -183,10 +187,8 @@ export default function MypageClient({
               key={s.label}
               className={`flex flex-col items-center py-3.5 ${i < 2 ? 'border-border border-r' : ''}`}
             >
-              <span className="text-[20px] font-black tracking-[-0.5px] text-[#0F1117]">
-                {s.num}
-              </span>
-              <span className="mt-0.5 text-[11px] text-[#9099A8]">{s.label}</span>
+              <span className="text-ink text-[20px] font-black tracking-[-0.5px]">{s.num}</span>
+              <span className="text-ink3 mt-0.5 text-[11px]">{s.label}</span>
             </div>
           ))}
         </div>
@@ -197,11 +199,13 @@ export default function MypageClient({
         <button
           onClick={() => setShowPlanSheet(true)}
           className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3.5 rounded-2xl p-4"
-          style={{ background: 'linear-gradient(135deg,#070E1A,#1B6FF0)' }}
+          style={{
+            background: 'linear-gradient(135deg,var(--color-hero-top),var(--color-primary))',
+          }}
         >
           <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M11 2l2 6h6l-5 4 2 6-5-3.5L6 18l2-6-5-4h6z" fill="#FEE500" />
+              <path d="M11 2l2 6h6l-5 4 2 6-5-3.5L6 18l2-6-5-4h6z" fill="var(--color-kakao)" />
             </svg>
           </div>
           <div className="flex-1 text-left">
@@ -224,24 +228,24 @@ export default function MypageClient({
       {!phone && plan === 'free' && (
         <button
           onClick={() => setShowPhoneSheet(true)}
-          className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border border-[#E8EAED] bg-white px-4 py-3.5"
+          className="border-border mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3 rounded-2xl border bg-white px-4 py-3.5"
         >
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#EBF2FF]">
+          <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
                 d="M9 2l1.6 4.8H15l-3.9 2.8 1.5 4.7L9 11.6l-3.6 2.7 1.5-4.7L3 6.8h4.4z"
-                fill="#1B6FF0"
+                fill="var(--color-primary)"
               />
             </svg>
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[13px] font-bold text-[#0F1117]">전화번호 인증하고 1개월 Pro 무료</p>
-            <p className="text-[12px] text-[#9099A8]">인증 한 번으로 Pro 체험 혜택 받기</p>
+            <p className="text-ink text-[13px] font-bold">전화번호 인증하고 1개월 Pro 무료</p>
+            <p className="text-ink3 text-[12px]">인증 한 번으로 Pro 체험 혜택 받기</p>
           </div>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
               d="M6 3.5l4.5 4.5L6 12.5"
-              stroke="#C5CAD3"
+              stroke="var(--color-ink3)"
               strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -253,13 +257,13 @@ export default function MypageClient({
       {/* 계정 그룹 */}
       <MenuGroup label="계정">
         <MenuItem
-          iconBg="#EBF2FF"
+          iconBg="var(--color-primary-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="6" r="3.5" stroke="#1B6FF0" strokeWidth="1.4" />
+              <circle cx="9" cy="6" r="3.5" stroke="var(--color-primary)" strokeWidth="1.4" />
               <path
                 d="M2 17c0-3.31 3.13-6 7-6s7 2.69 7 6"
-                stroke="#1B6FF0"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
               />
@@ -270,11 +274,24 @@ export default function MypageClient({
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="#FEF3C7"
+          iconBg="var(--color-warning-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <rect x="2" y="4" width="14" height="10" rx="2" stroke="#F79009" strokeWidth="1.4" />
-              <path d="M2 7.5l7 4 7-4" stroke="#F79009" strokeWidth="1.4" strokeLinecap="round" />
+              <rect
+                x="2"
+                y="4"
+                width="14"
+                height="10"
+                rx="2"
+                stroke="var(--color-warning)"
+                strokeWidth="1.4"
+              />
+              <path
+                d="M2 7.5l7 4 7-4"
+                stroke="var(--color-warning)"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
             </svg>
           }
           label="알림 설정"
@@ -282,13 +299,21 @@ export default function MypageClient({
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="#D1FAE5"
+          iconBg="var(--color-success-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <rect x="3" y="2" width="12" height="14" rx="2" stroke="#12B76A" strokeWidth="1.4" />
+              <rect
+                x="3"
+                y="2"
+                width="12"
+                height="14"
+                rx="2"
+                stroke="var(--color-success)"
+                strokeWidth="1.4"
+              />
               <path
                 d="M6 6h6M6 9h6M6 12h4"
-                stroke="#12B76A"
+                stroke="var(--color-success)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
               />
@@ -300,7 +325,7 @@ export default function MypageClient({
           right={
             plan === 'free' ? (
               <div className="flex items-center gap-1.5">
-                <span className="rounded-[10px] bg-[#EBF2FF] px-2 py-0.5 text-[11px] font-semibold text-[#1B6FF0]">
+                <span className="bg-primary-light text-primary rounded-[10px] px-2 py-0.5 text-[11px] font-semibold">
                   업그레이드
                 </span>
                 <ChevronRight />
@@ -316,11 +341,16 @@ export default function MypageClient({
       {/* 앱 그룹 */}
       <MenuGroup label="앱">
         <MenuItem
-          iconBg="#EBF2FF"
+          iconBg="var(--color-primary-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="7" stroke="#1B6FF0" strokeWidth="1.4" />
-              <path d="M9 6v4M9 12.5v.5" stroke="#1B6FF0" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="7" stroke="var(--color-primary)" strokeWidth="1.4" />
+              <path
+                d="M9 6v4M9 12.5v.5"
+                stroke="var(--color-primary)"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
             </svg>
           }
           label="공지사항"
@@ -328,12 +358,12 @@ export default function MypageClient({
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="#EBF2FF"
+          iconBg="var(--color-primary-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
                 d="M3 3h12a1 1 0 011 1v8a1 1 0 01-1 1H6l-3 3V4a1 1 0 011-1z"
-                stroke="#1B6FF0"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
                 strokeLinejoin="round"
               />
@@ -346,7 +376,7 @@ export default function MypageClient({
         />
         {/* 앱 평가하기 — 네이티브 연동 후 활성화
         <MenuItem
-          iconBg="#F5F7FA"
+          iconBg="var(--color-bg2)"
           icon={...}
           label="앱 평가하기"
           right={<ChevronRight />}
@@ -356,7 +386,7 @@ export default function MypageClient({
       </MenuGroup>
 
       {/* 로그아웃 */}
-      <div className="mx-4 mt-3 mb-6 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
+      <div className="border-border mx-4 mt-3 mb-6 overflow-hidden rounded-2xl border bg-white">
         <button
           onClick={() => setShowLogoutConfirm(true)}
           className="flex w-full items-center gap-3 px-4 py-3.5"
@@ -365,22 +395,27 @@ export default function MypageClient({
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
                 d="M7 3H3a1 1 0 00-1 1v10a1 1 0 001 1h4"
-                stroke="#F04438"
+                stroke="var(--color-error)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
               />
               <path
                 d="M12 12l4-3-4-3M6 9h10"
-                stroke="#F04438"
+                stroke="var(--color-error)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           </div>
-          <span className="flex-1 text-left text-[14px] font-medium text-[#F04438]">로그아웃</span>
+          <span className="text-error flex-1 text-left text-[14px] font-medium">로그아웃</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 4l4 4-4 4" stroke="#F04438" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M6 4l4 4-4 4"
+              stroke="var(--color-error)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
       </div>
@@ -388,7 +423,7 @@ export default function MypageClient({
       {/* 회원탈퇴 */}
       <button
         onClick={() => setShowDeleteConfirm(true)}
-        className="mx-auto mb-2 block text-[13px] text-[#C5CAD3]"
+        className="text-ink3 mx-auto mb-2 block text-[13px]"
       >
         회원탈퇴
       </button>
@@ -403,15 +438,17 @@ export default function MypageClient({
             className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pt-5 pb-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#E8EAED]" />
-            <h2 className="mb-5 text-center text-[20px] font-black text-[#0F1117]">플랜 선택</h2>
+            <div className="bg-border mx-auto mb-4 h-1 w-10 rounded-full" />
+            <h2 className="text-ink mb-5 text-center text-[20px] font-black">플랜 선택</h2>
 
             <div className="space-y-3">
               {PLANS.map((p) => (
                 <div
                   key={p.key}
                   className="rounded-2xl border-2 p-4"
-                  style={{ borderColor: p.key === plan ? '#1B6FF0' : '#E8EAED' }}
+                  style={{
+                    borderColor: p.key === plan ? 'var(--color-primary)' : 'var(--color-border)',
+                  }}
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -421,20 +458,16 @@ export default function MypageClient({
                       >
                         {PLAN_LABEL[p.key]}
                       </span>
-                      {p.key === plan && (
-                        <span className="text-[12px] text-[#9099A8]">현재 플랜</span>
-                      )}
+                      {p.key === plan && <span className="text-ink3 text-[12px]">현재 플랜</span>}
                     </div>
                     <div className="text-right">
-                      <span className="text-[17px] font-black text-[#0F1117]">{p.price}</span>
-                      {p.period && (
-                        <span className="ml-1 text-[12px] text-[#9099A8]">{p.period}</span>
-                      )}
+                      <span className="text-ink text-[17px] font-black">{p.price}</span>
+                      {p.period && <span className="text-ink3 ml-1 text-[12px]">{p.period}</span>}
                     </div>
                   </div>
                   <ul className="space-y-1">
                     {p.features.map((f) => (
-                      <li key={f} className="flex items-center gap-1.5 text-[13px] text-[#5A6270]">
+                      <li key={f} className="text-ink2 flex items-center gap-1.5 text-[13px]">
                         <span style={{ color: PLAN_BADGE_STYLE[p.key].color }}>✓</span> {f}
                       </li>
                     ))}
@@ -460,7 +493,7 @@ export default function MypageClient({
           title="로그아웃"
           message="정말 로그아웃 하시겠어요?"
           confirmLabel="로그아웃"
-          confirmColor="#F04438"
+          confirmColor="var(--color-error)"
           onCancel={() => setShowLogoutConfirm(false)}
           onConfirm={() =>
             startTransition(async () => {
@@ -507,9 +540,9 @@ export default function MypageClient({
 // ── 데이터 ──────────────────────────────────────────────────
 
 const PLAN_BADGE_STYLE: Record<Plan, { backgroundColor: string; color: string }> = {
-  free: { backgroundColor: '#F5F6F8', color: '#9099A8' },
-  pro: { backgroundColor: '#EBF2FF', color: '#1B6FF0' },
-  plus: { backgroundColor: '#F3EFFF', color: '#7C3AED' },
+  free: { backgroundColor: 'var(--color-bg2)', color: 'var(--color-ink3)' },
+  pro: { backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' },
+  plus: { backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' },
 }
 
 const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', plus: 'Plus' }
@@ -546,7 +579,7 @@ const PLANS: { key: Plan; price: string; period?: string; features: string[] }[]
 function ChevronRight() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M6 4l4 4-4 4" stroke="#9099A8" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 4l4 4-4 4" stroke="var(--color-ink3)" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -554,10 +587,10 @@ function ChevronRight() {
 function MenuGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mx-4 mt-3">
-      <p className="mb-2 pl-1 text-[11px] font-semibold tracking-[1px] text-[#9099A8] uppercase">
+      <p className="text-ink3 mb-2 pl-1 text-[11px] font-semibold tracking-[1px] uppercase">
         {label}
       </p>
-      <div className="overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">{children}</div>
+      <div className="border-border overflow-hidden rounded-2xl border bg-white">{children}</div>
     </div>
   )
 }
@@ -582,7 +615,7 @@ function MenuItem({
   return (
     <button
       onClick={onPress}
-      className={`flex w-full items-center gap-3 px-4 py-3.5 ${!last ? 'border-b border-[#E8EAED]' : ''}`}
+      className={`flex w-full items-center gap-3 px-4 py-3.5 ${!last ? 'border-border border-b' : ''}`}
     >
       <div
         className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
@@ -591,8 +624,8 @@ function MenuItem({
         {icon}
       </div>
       <div className="flex-1 text-left">
-        <p className="text-[14px] font-medium text-[#0F1117]">{label}</p>
-        {sub && <p className="mt-0.5 text-[11px] text-[#9099A8]">{sub}</p>}
+        <p className="text-ink text-[14px] font-medium">{label}</p>
+        {sub && <p className="text-ink3 mt-0.5 text-[11px]">{sub}</p>}
       </div>
       {right}
     </button>
@@ -614,34 +647,30 @@ function DeleteConfirmSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
-        <p className="mb-1.5 text-center text-[17px] font-bold text-[#0F1117]">
-          정말 탈퇴하시겠어요?
-        </p>
-        <p className="mb-4 text-center text-[14px] leading-relaxed text-[#9099A8]">
+        <p className="text-ink mb-1.5 text-center text-[17px] font-bold">정말 탈퇴하시겠어요?</p>
+        <p className="text-ink3 mb-4 text-center text-[14px] leading-relaxed">
           탈퇴 시 모든 데이터가 삭제되며 복구할 수 없어요.
         </p>
-        <div className="mb-5 overflow-hidden rounded-2xl border border-[#E8EAED] px-4 py-3">
+        <div className="border-border mb-5 overflow-hidden rounded-2xl border px-4 py-3">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="'탈퇴'를 입력해주세요"
-            className="w-full bg-transparent text-center text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3]"
+            className="text-ink placeholder:text-ink3 w-full bg-transparent text-center text-[15px] outline-none"
           />
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 rounded-2xl border border-[#E8EAED] py-3.5 text-[15px] font-semibold text-[#5A6270]"
-          >
+          <Button variant="secondary" onClick={onCancel} className="flex-1">
             취소
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             onClick={onConfirm}
             disabled={!confirmed || loading}
-            className="flex-1 rounded-2xl bg-[#F04438] py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+            className="flex-1"
           >
             {loading ? '처리 중...' : '탈퇴하기'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -706,80 +735,73 @@ function PhoneVerifySheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
       <div className="w-full max-w-sm rounded-t-3xl bg-white px-6 pt-5 pb-10">
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#E8EAED]" />
+        <div className="bg-border mx-auto mb-5 h-1 w-10 rounded-full" />
 
         {success ? (
           <div className="flex flex-col items-center gap-3 py-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF2FF]">
+            <div className="bg-primary-light flex h-14 w-14 items-center justify-center rounded-full">
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                 <path
                   d="M7 14l5 5 9-9"
-                  stroke="#1B6FF0"
+                  stroke="var(--color-primary)"
                   strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
             </div>
-            <p className="text-[17px] font-bold text-[#0F1117]">인증 완료!</p>
-            <p className="text-center text-[14px] text-[#9099A8]">1개월 Pro 체험이 시작됐어요.</p>
+            <p className="text-ink text-[17px] font-bold">인증 완료!</p>
+            <p className="text-ink3 text-center text-[14px]">1개월 Pro 체험이 시작됐어요.</p>
           </div>
         ) : (
           <>
-            <p className="mb-1 text-[17px] font-bold text-[#0F1117]">전화번호 인증</p>
-            <p className="mb-5 text-[13px] text-[#9099A8]">
+            <p className="text-ink mb-1 text-[17px] font-bold">전화번호 인증</p>
+            <p className="text-ink3 mb-5 text-[13px]">
               인증 완료 시 1개월 Pro 무료체험이 시작돼요.
             </p>
 
             <div className="mb-3 flex gap-2">
-              <div className="flex h-[50px] flex-1 items-center rounded-xl border border-[#E8EAED] px-4">
+              <div className="border-border flex h-[50px] flex-1 items-center rounded-xl border px-4">
                 <input
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
                   placeholder="010-0000-0000"
                   inputMode="numeric"
                   disabled={otpSent}
-                  className="w-full bg-transparent text-[15px] text-[#0F1117] outline-none placeholder:text-[#C5CAD3] disabled:text-[#9099A8]"
+                  className="text-ink placeholder:text-ink3 disabled:text-ink3 w-full bg-transparent text-[15px] outline-none"
                 />
               </div>
-              <button
-                onClick={handleSend}
-                disabled={rawPhone.length < 10 || sending}
-                className="h-[50px] rounded-xl bg-[#1B6FF0] px-4 text-[13px] font-semibold text-white disabled:opacity-40"
-              >
+              <Button onClick={handleSend} disabled={rawPhone.length < 10 || sending}>
                 {sending ? '전송 중' : otpSent ? '재전송' : '인증번호'}
-              </button>
+              </Button>
             </div>
 
             {otpSent && (
-              <div className="mb-4 flex h-[50px] items-center rounded-xl border border-[#1B6FF0] px-4">
+              <div className="border-primary mb-4 flex h-[50px] items-center rounded-xl border px-4">
                 <input
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="인증번호 6자리"
                   inputMode="numeric"
-                  className="w-full bg-transparent text-[15px] tracking-widest text-[#0F1117] outline-none placeholder:tracking-normal placeholder:text-[#C5CAD3]"
+                  className="text-ink placeholder:text-ink3 w-full bg-transparent text-[15px] tracking-widest outline-none placeholder:tracking-normal"
                 />
               </div>
             )}
 
-            {error && <p className="mb-3 text-[13px] text-[#F04438]">{error}</p>}
+            {error && <p className="text-error mb-3 text-[13px]">{error}</p>}
 
             <div className="flex gap-2">
-              <button
-                onClick={onClose}
-                className="flex-1 rounded-2xl border border-[#E8EAED] py-3.5 text-[15px] font-medium text-[#5A6270]"
-              >
+              <Button variant="secondary" onClick={onClose} className="flex-1">
                 취소
-              </button>
+              </Button>
               {otpSent && (
-                <button
+                <Button
                   onClick={handleVerify}
                   disabled={otp.length < 6 || verifying}
-                  className="flex-1 rounded-2xl bg-[#1B6FF0] py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+                  className="flex-1"
                 >
                   {verifying ? '확인 중...' : '인증 완료'}
-                </button>
+                </Button>
               )}
             </div>
           </>
@@ -809,15 +831,12 @@ function ConfirmSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
-        <p className="mb-1.5 text-center text-[17px] font-bold text-[#0F1117]">{title}</p>
-        <p className="mb-6 text-center text-[14px] leading-relaxed text-[#9099A8]">{message}</p>
+        <p className="text-ink mb-1.5 text-center text-[17px] font-bold">{title}</p>
+        <p className="text-ink3 mb-6 text-center text-[14px] leading-relaxed">{message}</p>
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 rounded-2xl border border-[#E8EAED] py-3.5 text-[15px] font-semibold text-[#5A6270]"
-          >
+          <Button variant="secondary" onClick={onCancel} className="flex-1">
             취소
-          </button>
+          </Button>
           <button
             onClick={onConfirm}
             disabled={loading}

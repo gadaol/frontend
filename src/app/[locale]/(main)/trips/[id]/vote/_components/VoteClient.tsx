@@ -91,17 +91,17 @@ export default function VoteClient({
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#F5F7FA]">
+    <div className="bg-bg2 flex min-h-dvh flex-col">
       {/* 헤더 */}
-      <div className="sticky top-0 z-20 flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
+      <div className="border-border sticky top-0 z-20 flex h-[54px] items-center gap-3 border-b bg-white px-4">
         <button
           onClick={() => router.back()}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F5F7FA]"
+          className="bg-bg2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M11 4L6 9l5 5"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -109,12 +109,12 @@ export default function VoteClient({
           </svg>
         </button>
         <div className="flex-1">
-          <p className="text-[11px] text-[#9099A8]">{tripTitle}</p>
-          <h1 className="text-[17px] font-bold text-[#0F1117]">후보 장소 투표</h1>
+          <p className="text-ink3 text-[11px]">{tripTitle}</p>
+          <h1 className="text-ink text-[17px] font-bold">후보 장소 투표</h1>
         </div>
         <Link
           href={`/${locale}/trips/${tripId}/places`}
-          className="flex h-9 items-center gap-1 rounded-full bg-[#1B6FF0] px-3.5 text-[13px] font-semibold text-white"
+          className="bg-primary flex h-9 items-center gap-1 rounded-full px-3.5 text-[13px] font-semibold text-white"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
@@ -124,8 +124,8 @@ export default function VoteClient({
       </div>
 
       {/* 안내 배너 */}
-      <div className="mx-4 mt-4 rounded-2xl bg-[#EBF2FF] px-4 py-3">
-        <p className="text-[13px] font-medium text-[#1B6FF0]">
+      <div className="bg-primary-light mx-4 mt-4 rounded-2xl px-4 py-3">
+        <p className="text-primary text-[13px] font-medium">
           👍 좋아요가 많은 장소를 일정에 추가해보세요
         </p>
         <p className="mt-0.5 text-[11px] text-[#4A8AF4]">
@@ -137,19 +137,24 @@ export default function VoteClient({
       <div className="flex-1 px-4 pt-3 pb-8">
         {candidates.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#EBF2FF]">
+            <div className="bg-primary-light flex h-16 w-16 items-center justify-center rounded-[20px]">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M16 8v8M16 20v2" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="16" cy="16" r="13" stroke="#1B6FF0" strokeWidth="2" />
+                <path
+                  d="M16 8v8M16 20v2"
+                  stroke="var(--color-primary)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <circle cx="16" cy="16" r="13" stroke="var(--color-primary)" strokeWidth="2" />
               </svg>
             </div>
             <div>
-              <p className="mb-1 text-[16px] font-semibold text-[#0F1117]">후보 장소가 없어요</p>
-              <p className="text-[13px] text-[#9099A8]">장소를 검색해서 후보에 추가해보세요</p>
+              <p className="text-ink mb-1 text-[16px] font-semibold">후보 장소가 없어요</p>
+              <p className="text-ink3 text-[13px]">장소를 검색해서 후보에 추가해보세요</p>
             </div>
             <Link
               href={`/${locale}/trips/${tripId}/places`}
-              className="mt-1 rounded-full bg-[#1B6FF0] px-5 py-2.5 text-[14px] font-semibold text-white"
+              className="bg-primary mt-1 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
             >
               후보 장소 추가하기
             </Link>
@@ -176,21 +181,19 @@ export default function VoteClient({
                       <Icon size={22} className={category.color} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] leading-snug font-semibold text-[#0F1117]">
+                      <p className="text-ink text-[15px] leading-snug font-semibold">
                         {place.name}
                       </p>
                       {place.address && (
-                        <p className="mt-0.5 truncate text-[12px] text-[#9099A8]">
-                          {place.address}
-                        </p>
+                        <p className="text-ink3 mt-0.5 truncate text-[12px]">{place.address}</p>
                       )}
-                      <span className="mt-1 inline-block rounded-full bg-[#F5F7FA] px-2 py-0.5 text-[10px] font-semibold text-[#515966]">
+                      <span className="bg-bg2 text-ink2 mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold">
                         {category.label}
                       </span>
                     </div>
                     <button
                       onClick={() => handleRemove(candidate.id, candidate.place_id)}
-                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#F5F7FA] text-[#9099A8]"
+                      className="bg-bg2 text-ink3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full"
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <path
@@ -204,13 +207,13 @@ export default function VoteClient({
                   </div>
 
                   {/* 투표 버튼 */}
-                  <div className="flex gap-2 border-t border-[#F5F7FA] px-4 py-3">
+                  <div className="border-bg2 flex gap-2 border-t px-4 py-3">
                     <button
                       onClick={() => handleVote(candidate.place_id, 'like')}
                       className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-[14px] font-semibold transition-colors ${
                         voteEntry.myVote === 'like'
-                          ? 'bg-[#EBF2FF] text-[#1B6FF0]'
-                          : 'bg-[#F5F7FA] text-[#515966]'
+                          ? 'bg-primary-light text-primary'
+                          : 'bg-bg2 text-ink2'
                       }`}
                     >
                       <span className="text-[18px]">👍</span>
@@ -220,8 +223,8 @@ export default function VoteClient({
                       onClick={() => handleVote(candidate.place_id, 'dislike')}
                       className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-[14px] font-semibold transition-colors ${
                         voteEntry.myVote === 'dislike'
-                          ? 'bg-[#FEE2E2] text-[#DC2626]'
-                          : 'bg-[#F5F7FA] text-[#515966]'
+                          ? 'bg-error-light text-error'
+                          : 'bg-bg2 text-ink2'
                       }`}
                     >
                       <span className="text-[18px]">👎</span>
@@ -231,10 +234,10 @@ export default function VoteClient({
 
                   {/* 일정 확정 영역 */}
                   {expectedDays.length > 0 && (
-                    <div className="border-t border-[#F5F7FA] px-4 pt-2 pb-4">
+                    <div className="border-bg2 border-t px-4 pt-2 pb-4">
                       {isPickingDay ? (
                         <div>
-                          <p className="mb-2 text-[12px] font-medium text-[#515966]">
+                          <p className="text-ink2 mb-2 text-[12px] font-medium">
                             어느 날에 추가할까요?
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -243,14 +246,14 @@ export default function VoteClient({
                                 key={day.dayDate}
                                 disabled={isConfirming}
                                 onClick={() => handleConfirm(candidate, day)}
-                                className="flex items-center gap-1.5 rounded-full border border-[#1B6FF0] px-3 py-1.5 text-[12px] font-semibold text-[#1B6FF0] disabled:opacity-50"
+                                className="border-primary text-primary flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold disabled:opacity-50"
                               >
                                 {isConfirming ? (
-                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+                                  <div className="border-primary h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
                                 ) : (
                                   <>
                                     <span>Day {day.dayNumber}</span>
-                                    <span className="text-[#9099A8]">
+                                    <span className="text-ink3">
                                       {dayjs(day.dayDate).format('M/D')}
                                     </span>
                                   </>
@@ -259,7 +262,7 @@ export default function VoteClient({
                             ))}
                             <button
                               onClick={() => setOpenDayPickerId(null)}
-                              className="rounded-full border border-[#E8EAED] px-3 py-1.5 text-[12px] text-[#9099A8]"
+                              className="border-border text-ink3 rounded-full border px-3 py-1.5 text-[12px]"
                             >
                               취소
                             </button>
@@ -270,8 +273,8 @@ export default function VoteClient({
                           onClick={() => setOpenDayPickerId(candidate.id)}
                           className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[13px] font-semibold ${
                             voteEntry.likes > voteEntry.dislikes
-                              ? 'bg-[#1B6FF0] text-white'
-                              : 'border border-[#E8EAED] text-[#9099A8]'
+                              ? 'bg-primary text-white'
+                              : 'border-border text-ink3 border'
                           }`}
                         >
                           {voteEntry.likes > voteEntry.dislikes && (

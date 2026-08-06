@@ -2,13 +2,14 @@ import { notFound, redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
+import Badge, { type BadgeProps } from '@/components/ui/Badge'
 import type { Tables } from '@/types/supabase'
 
-const CATEGORY_COLOR: Record<string, { bg: string; text: string }> = {
-  공지: { bg: '#EBF2FF', text: '#1B6FF0' },
-  업데이트: { bg: '#D1FAE5', text: '#12B76A' },
-  점검: { bg: '#FEF3C7', text: '#F79009' },
-  이벤트: { bg: '#F3EFFF', text: '#7C3AED' },
+const CATEGORY_VARIANT: Record<string, NonNullable<BadgeProps['variant']>> = {
+  공지: 'blue',
+  업데이트: 'green',
+  점검: 'orange',
+  이벤트: 'purple',
 }
 
 export default async function NoticeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,22 +29,17 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ i
 
   if (!notice) notFound()
 
-  const color = CATEGORY_COLOR[notice.category] ?? { bg: '#F5F6F8', text: '#9099A8' }
+  const variant = CATEGORY_VARIANT[notice.category] ?? 'gray'
 
   return (
-    <div className="min-h-dvh bg-[#F5F6F8]">
+    <div className="bg-bg2 min-h-dvh">
       <AppHeader title="공지사항" onBack="router" border />
 
       <div className="px-4 pt-5 pb-10">
-        <div className="rounded-2xl border border-[#E8EAED] bg-white px-5 py-5">
+        <div className="border-border rounded-2xl border bg-white px-5 py-5">
           <div className="mb-3 flex items-center gap-2">
-            <span
-              className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-              style={{ backgroundColor: color.bg, color: color.text }}
-            >
-              {notice.category}
-            </span>
-            <span className="text-[12px] text-[#9099A8]">
+            <Badge variant={variant}>{notice.category}</Badge>
+            <span className="text-ink3 text-[12px]">
               {new Date(notice.created_at).toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'long',
@@ -52,10 +48,10 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ i
             </span>
           </div>
 
-          <h1 className="mb-4 text-[17px] leading-snug font-bold text-[#0F1117]">{notice.title}</h1>
+          <h1 className="text-ink mb-4 text-[17px] leading-snug font-bold">{notice.title}</h1>
 
-          <div className="border-t border-[#F5F6F8] pt-4">
-            <p className="text-[14px] leading-relaxed whitespace-pre-line text-[#515966]">
+          <div className="border-bg2 border-t pt-4">
+            <p className="text-ink2 text-[14px] leading-relaxed whitespace-pre-line">
               {notice.content}
             </p>
           </div>

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import Button from '@/components/ui/Button'
 
 type FormValues = { password: string; confirmPassword: string }
 
@@ -82,10 +83,10 @@ export default function ResetPasswordPage() {
   if (expired) {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-4 bg-white px-8 text-center">
-        <p className="text-[15px] font-medium text-[#0F1117]">{t('resetLinkExpired')}</p>
+        <p className="text-ink text-[15px] font-medium">{t('resetLinkExpired')}</p>
         <button
           onClick={() => router.push(`/${locale}`)}
-          className="text-[14px] font-medium text-[#1B6FF0]"
+          className="text-primary text-[14px] font-medium"
         >
           {t('backToLogin')}
         </button>
@@ -96,15 +97,15 @@ export default function ResetPasswordPage() {
   if (!ready) {
     return (
       <div className="flex h-dvh items-center justify-center bg-white">
-        <p className="text-[14px] text-[#9099A8]">{t('processing')}</p>
+        <p className="text-ink3 text-[14px]">{t('processing')}</p>
       </div>
     )
   }
 
   return (
     <div className="flex h-dvh flex-col bg-white">
-      <div className="flex h-14 flex-shrink-0 items-center border-b border-[#E8EAED] px-4">
-        <span className="text-[17px] font-semibold text-[#0F1117]">{t('resetPasswordTitle')}</span>
+      <div className="border-border flex h-14 flex-shrink-0 items-center border-b px-4">
+        <span className="text-ink text-[17px] font-semibold">{t('resetPasswordTitle')}</span>
       </div>
 
       <form
@@ -113,46 +114,40 @@ export default function ResetPasswordPage() {
       >
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-[#0F1117]">
-              {t('newPasswordLabel')}
-            </label>
+            <label className="text-ink text-[13px] font-medium">{t('newPasswordLabel')}</label>
             <input
               {...register('password')}
               type="password"
               placeholder="••••••••"
-              className={`h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${errors.password ? 'border-[#F04438]' : 'border-[#E8EAED]'}`}
+              className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${errors.password ? 'border-error' : 'border-border'}`}
             />
             {errors.password && (
-              <span className="text-[12px] text-[#F04438]">{errors.password.message}</span>
+              <span className="text-error text-[12px]">{errors.password.message}</span>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-[#0F1117]">
+            <label className="text-ink text-[13px] font-medium">
               {t('confirmNewPasswordLabel')}
             </label>
             <input
               {...register('confirmPassword')}
               type="password"
               placeholder="••••••••"
-              className={`h-12 rounded-xl border px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10 ${errors.confirmPassword ? 'border-[#F04438]' : 'border-[#E8EAED]'}`}
+              className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${errors.confirmPassword ? 'border-error' : 'border-border'}`}
             />
             {errors.confirmPassword && (
-              <span className="text-[12px] text-[#F04438]">{errors.confirmPassword.message}</span>
+              <span className="text-error text-[12px]">{errors.confirmPassword.message}</span>
             )}
           </div>
 
-          {serverError && <span className="text-[13px] text-[#F04438]">{serverError}</span>}
+          {serverError && <span className="text-error text-[13px]">{serverError}</span>}
         </div>
 
         <div className="mt-auto pt-8">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isSubmitting} fullWidth>
             {isSubmitting ? t('processing') : t('resetPasswordAction')}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

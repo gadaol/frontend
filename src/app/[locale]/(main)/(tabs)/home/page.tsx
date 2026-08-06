@@ -14,12 +14,14 @@ import {
 } from '@/components/icons'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { isGradient } from '@/utils/uploadCover'
+import { AVATAR_COLORS } from '@/utils/avatarColors'
 import type { BacklogItemWithPlace, TripWithMembers } from '@/types/trip'
 
-const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
-
 function greetingSubKey():
-  'greetingMorning' | 'greetingAfternoon' | 'greetingEvening' | 'greetingNight' {
+  | 'greetingMorning'
+  | 'greetingAfternoon'
+  | 'greetingEvening'
+  | 'greetingNight' {
   const h = dayjs().hour()
   if (h >= 5 && h < 12) return 'greetingMorning'
   if (h >= 12 && h < 18) return 'greetingAfternoon'
@@ -62,8 +64,8 @@ export default async function HomePage() {
   const displayName = profileResult.data?.name ?? ''
 
   const upcomingTrip =
-    allTrips.find((trip) => isTripUpcoming(trip.start_date)) ??
     allTrips.find((trip) => isTripOngoing(trip.start_date, trip.end_date)) ??
+    allTrips.find((trip) => isTripUpcoming(trip.start_date)) ??
     null
 
   type MemberAvatar = { initial: string; avatarUrl: string | null }

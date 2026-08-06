@@ -3,6 +3,7 @@
 import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/common/AppHeader'
+import Button from '@/components/ui/Button'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
 import { addItineraryItem } from '@/app/actions/trip'
 import { getOrCreatePlace } from '@/app/actions/backlog'
@@ -100,8 +101,8 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                     cx="11"
                     cy="11"
                     r="10"
-                    fill={isSelected ? '#1B6FF0' : 'none'}
-                    stroke={isSelected ? '#1B6FF0' : '#D0D3D9'}
+                    fill={isSelected ? 'var(--color-primary)' : 'none'}
+                    stroke={isSelected ? 'var(--color-primary)' : '#D0D3D9'}
                     strokeWidth="1.5"
                   />
                   {isSelected && (
@@ -133,7 +134,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                   textAlign: 'center',
                   fontSize: 13,
                   fontWeight: 700,
-                  color: isSelected ? '#059669' : '#1B6FF0',
+                  color: isSelected ? '#059669' : 'var(--color-primary)',
                   background: 'none',
                   border: 'none',
                   borderTop: '1px solid #EEE',
@@ -150,14 +151,10 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
       {/* 하단 고정 추가 바 */}
       {selectedCount > 0 && (
         <div
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-[#F0F1F3] bg-white px-4 pt-3 pb-8"
+          className="border-border fixed inset-x-0 bottom-0 z-30 border-t bg-white px-4 pt-3 pb-8"
           style={{ height: BOTTOM_BAR_HEIGHT }}
         >
-          <button
-            onClick={handleAddAll}
-            disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1B6FF0] py-3 text-[15px] font-bold text-white disabled:opacity-60"
-          >
+          <Button onClick={handleAddAll} disabled={isSubmitting} fullWidth>
             {isSubmitting ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -169,7 +166,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                 <span className="rounded-full bg-white/20 px-2">{selectedCount}개</span> 추가
               </span>
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>

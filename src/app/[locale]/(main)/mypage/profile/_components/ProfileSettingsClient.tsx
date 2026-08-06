@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateName, uploadAvatar, deleteAvatar } from '@/app/actions/mypage'
 import AppHeader from '@/components/common/AppHeader'
+import Button from '@/components/ui/Button'
+import Badge from '@/components/ui/Badge'
 
 interface Props {
   displayName: string
@@ -62,27 +64,27 @@ export default function ProfileSettingsClient({
   }
 
   return (
-    <div className="min-h-dvh bg-[#F5F6F8]">
+    <div className="bg-bg2 min-h-dvh">
       <AppHeader title="프로필 설정" onBack="router" border />
 
       <div className="px-4 pt-6 pb-10">
         {/* 아바타 */}
         <div className="mb-6 flex flex-col items-center gap-2">
           <label className="relative cursor-pointer">
-            <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#E8EAED]">
+            <div className="border-border h-20 w-20 overflow-hidden rounded-full border-2">
               {currentAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={currentAvatarUrl} alt="avatar" className="h-full w-full object-cover" />
               ) : (
                 <div
                   className="flex h-full w-full items-center justify-center text-[28px] font-black text-white"
-                  style={{ background: '#1B6FF0' }}
+                  style={{ background: 'var(--color-primary)' }}
                 >
                   {initials}
                 </div>
               )}
             </div>
-            <div className="absolute right-0 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#1B6FF0]">
+            <div className="bg-primary absolute right-0 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white">
               {avatarUploading ? (
                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
@@ -100,13 +102,13 @@ export default function ProfileSettingsClient({
             />
           </label>
           <div className="flex items-center gap-3">
-            <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
+            <span className="text-ink3 text-[12px]">프로필 사진 변경</span>
             {currentAvatarUrl && (
               <button
                 type="button"
                 onClick={handleDeleteAvatar}
                 disabled={avatarUploading}
-                className="text-[12px] font-medium text-[#F04438] disabled:opacity-40"
+                className="text-error text-[12px] font-medium disabled:opacity-40"
               >
                 삭제
               </button>
@@ -115,9 +117,9 @@ export default function ProfileSettingsClient({
         </div>
 
         {/* 이름 */}
-        <div className="mb-5 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
+        <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white">
           <div className="px-4 pt-4 pb-3">
-            <label className="mb-1.5 block text-[12px] font-semibold text-[#9099A8]">이름</label>
+            <label className="text-ink3 mb-1.5 block text-[12px] font-semibold">이름</label>
             <input
               value={nameValue}
               onChange={(e) => {
@@ -125,7 +127,7 @@ export default function ProfileSettingsClient({
                 setNameError('')
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-              className="w-full bg-transparent text-[15px] text-[#0F1117] outline-none"
+              className="text-ink w-full bg-transparent text-[15px] outline-none"
               placeholder="이름을 입력하세요"
               maxLength={20}
             />
@@ -134,26 +136,20 @@ export default function ProfileSettingsClient({
         </div>
 
         {/* 로그인 계정 */}
-        <p className="mb-2 pl-1 text-[12px] font-semibold text-[#9099A8]">로그인 계정</p>
-        <div className="mb-6 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
+        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">로그인 계정</p>
+        <div className="border-border mb-6 overflow-hidden rounded-2xl border bg-white">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <ProviderIcon provider={provider} />
-            <span className="flex-1 text-[14px] text-[#0F1117]">
+            <span className="text-ink flex-1 text-[14px]">
               {provider === 'kakao' ? '카카오' : provider === 'google' ? 'Google' : '이메일'}
             </span>
-            <span className="rounded-full bg-[#EBF2FF] px-2.5 py-1 text-[12px] font-semibold text-[#1B6FF0]">
-              기본
-            </span>
+            <Badge variant="blue">기본</Badge>
           </div>
         </div>
 
-        <button
-          onClick={handleSaveName}
-          disabled={isPending}
-          className="w-full rounded-2xl bg-[#1B6FF0] py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
-        >
+        <Button onClick={handleSaveName} disabled={isPending} fullWidth>
           {isPending ? '저장 중...' : '저장'}
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -162,7 +158,7 @@ export default function ProfileSettingsClient({
 function ProviderIcon({ provider }: { provider: string }) {
   if (provider === 'kakao')
     return (
-      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE500]">
+      <div className="bg-kakao flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
         <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
           <path
             fillRule="evenodd"
@@ -174,7 +170,7 @@ function ProviderIcon({ provider }: { provider: string }) {
       </div>
     )
   return (
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-[#E8EAED] bg-white">
+    <div className="border-border flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border bg-white">
       <svg width="16" height="16" viewBox="0 0 18 18">
         <path
           d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"

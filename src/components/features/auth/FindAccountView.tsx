@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import api, { isApiError } from '@/lib/axios/client'
+import Button from '@/components/ui/Button'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -72,7 +73,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <div className="flex h-14 flex-shrink-0 items-center gap-1 border-b border-[#E8EAED] px-4">
+      <div className="border-border flex h-14 flex-shrink-0 items-center gap-1 border-b px-4">
         <button
           onClick={backAction}
           className="flex h-10 w-10 items-center justify-center"
@@ -81,54 +82,48 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18l-6-6 6-6"
-              stroke="#0F1117"
+              stroke="var(--color-ink)"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </button>
-        <span className="text-[17px] font-semibold text-[#0F1117]">{t('findAccountTitle')}</span>
+        <span className="text-ink text-[17px] font-semibold">{t('findAccountTitle')}</span>
       </div>
 
       <div className="flex flex-1 flex-col px-5 py-6">
         {step === 'input' && (
           <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              {t('findAccountDesc')}
-            </p>
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">{t('findAccountDesc')}</p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('phoneLabel')}</label>
+              <label className="text-ink text-[13px] font-medium">{t('phoneLabel')}</label>
               <input
                 type="tel"
                 inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
                 placeholder={t('phonePlaceholder')}
-                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2"
               />
             </div>
-            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
+            {error && <span className="text-error mt-2 text-[13px]">{error}</span>}
             <div className="mt-auto pt-8">
-              <button
-                onClick={handleSendOtp}
-                disabled={sending || !phone.trim()}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button onClick={handleSendOtp} disabled={sending || !phone.trim()} fullWidth>
                 {sending ? t('otpSending') : t('sendOtp')}
-              </button>
+              </Button>
             </div>
           </>
         )}
 
         {step === 'otp' && (
           <>
-            <p className="mb-6 text-[14px] leading-relaxed text-[#9099A8]">
-              <span className="font-medium text-[#0F1117]">{phone}</span>
+            <p className="text-ink3 mb-6 text-[14px] leading-relaxed">
+              <span className="text-ink font-medium">{phone}</span>
               {t('otpSentDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-[#0F1117]">{t('otpLabel')}</label>
+              <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -136,10 +131,10 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder={t('otpPlaceholder')}
-                className="h-12 rounded-xl border border-[#E8EAED] px-3.5 text-[15px] tracking-widest text-[#0F1117] outline-none focus:border-[#1B6FF0] focus:ring-2 focus:ring-[#1B6FF0]/10"
+                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2"
               />
             </div>
-            {error && <span className="mt-2 text-[13px] text-[#F04438]">{error}</span>}
+            {error && <span className="text-error mt-2 text-[13px]">{error}</span>}
             <button
               onClick={async () => {
                 setOtp('')
@@ -147,18 +142,14 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
                 await handleSendOtp()
               }}
               disabled={sending}
-              className="mt-3 self-start text-[13px] font-medium text-[#1B6FF0] disabled:opacity-50"
+              className="text-primary mt-3 self-start text-[13px] font-medium disabled:opacity-50"
             >
               {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
-              <button
-                onClick={handleVerify}
-                disabled={verifying || otp.length < 6}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white disabled:opacity-50"
-              >
+              <Button onClick={handleVerify} disabled={verifying || otp.length < 6} fullWidth>
                 {verifying ? t('processing') : t('verifyOtp')}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -167,10 +158,10 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           <div className="flex flex-1 flex-col">
             {result.found ? (
               <>
-                <h2 className="mb-6 text-[18px] font-bold text-[#0F1117]">
+                <h2 className="text-ink mb-6 text-[18px] font-bold">
                   {t('findAccountResultTitle')}
                 </h2>
-                <div className="rounded-2xl border border-[#E8EAED] p-5">
+                <div className="border-border rounded-2xl border p-5">
                   <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail ?? '-'} />
                   <ResultRow
                     label={t('loginMethodLabel')}
@@ -189,16 +180,13 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
               </>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <p className="text-[14px] text-[#9099A8]">{t('noAccountFound')}</p>
+                <p className="text-ink3 text-[14px]">{t('noAccountFound')}</p>
               </div>
             )}
             <div className="mt-auto pt-8">
-              <button
-                onClick={onGoToLogin}
-                className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white"
-              >
+              <Button onClick={onGoToLogin} fullWidth>
                 {t('goToLogin')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -210,10 +198,10 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
 function ResultRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-between py-3 ${!last ? 'border-b border-[#E8EAED]' : ''}`}
+      className={`flex items-center justify-between py-3 ${!last ? 'border-border border-b' : ''}`}
     >
-      <span className="text-[13px] text-[#9099A8]">{label}</span>
-      <span className="text-[14px] font-medium text-[#0F1117]">{value}</span>
+      <span className="text-ink3 text-[13px]">{label}</span>
+      <span className="text-ink text-[14px] font-medium">{value}</span>
     </div>
   )
 }

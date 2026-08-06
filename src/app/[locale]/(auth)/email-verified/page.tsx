@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import Button from '@/components/ui/Button'
 
 export default function EmailVerifiedPage() {
   const t = useTranslations('auth')
@@ -10,11 +11,11 @@ export default function EmailVerifiedPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-white px-6">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF2FF]">
+      <div className="bg-primary-light mb-6 flex h-20 w-20 items-center justify-center rounded-full">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
           <path
             d="M10 20l7 7 13-14"
-            stroke="#1B6FF0"
+            stroke="var(--color-primary)"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -22,17 +23,14 @@ export default function EmailVerifiedPage() {
         </svg>
       </div>
 
-      <h1 className="mb-2 text-[22px] font-bold text-[#0F1117]">{t('emailVerifiedTitle')}</h1>
-      <p className="mb-10 text-center text-[14px] leading-relaxed text-[#9099A8]">
+      <h1 className="text-ink mb-2 text-[22px] font-bold">{t('emailVerifiedTitle')}</h1>
+      <p className="text-ink3 mb-10 text-center text-[14px] leading-relaxed">
         {t('emailVerifiedDesc')}
       </p>
 
-      <button
-        onClick={() => router.replace(`/${locale}/onboarding`)}
-        className="h-[52px] w-full rounded-xl bg-[#1B6FF0] text-[15px] font-medium text-white"
-      >
+      <Button onClick={() => router.replace(`/${locale}/onboarding`)} fullWidth>
         {t('emailVerifiedAction')}
-      </button>
+      </Button>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
+import Button from '@/components/ui/Button'
 import { acceptInvite } from '@/app/actions/invite'
 
 interface Props {
@@ -20,7 +21,7 @@ export default function JoinClient({ token, alreadyMember }: Props) {
     return (
       <button
         onClick={() => router.back()}
-        className="w-full rounded-2xl bg-[#F0F4FF] py-4 text-[16px] font-bold text-[#1B6FF0]"
+        className="text-primary bg-primary-light w-full rounded-2xl py-4 text-[16px] font-bold"
       >
         이미 참여 중이에요 · 돌아가기
       </button>
@@ -41,13 +42,9 @@ export default function JoinClient({ token, alreadyMember }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {error && <p className="text-center text-[13px] text-red-500">{error}</p>}
-      <button
-        onClick={handleAccept}
-        disabled={isPending}
-        className="w-full rounded-2xl bg-[#1B6FF0] py-4 text-[16px] font-bold text-white disabled:opacity-60"
-      >
+      <Button onClick={handleAccept} disabled={isPending} fullWidth>
         {isPending ? '참여 중...' : '여행 참여하기'}
-      </button>
+      </Button>
     </div>
   )
 }
