@@ -38,7 +38,10 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
     const needsCategoryUpdate = !existing.category_id && categoryId
     const needsLatUpdate = !existing.lat && input.lat
     if (needsCategoryUpdate && needsLatUpdate) {
-      await supabase.from('places').update({ category_id: categoryId, lat: input.lat, lng: input.lng }).eq('id', existing.id)
+      await supabase
+        .from('places')
+        .update({ category_id: categoryId, lat: input.lat, lng: input.lng })
+        .eq('id', existing.id)
     } else if (needsCategoryUpdate) {
       await supabase.from('places').update({ category_id: categoryId }).eq('id', existing.id)
     } else if (needsLatUpdate) {

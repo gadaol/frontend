@@ -236,7 +236,12 @@ export default function PlacesMapTab({ trip }: Props) {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
               <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
-              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M10 2v2M10 16v2M2 10h2M16 10h2"
+                stroke="#1B6FF0"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           )}
         </button>
@@ -322,9 +327,7 @@ export default function PlacesMapTab({ trip }: Props) {
                         key={pin.id}
                         onClick={() => handlePinClick(pin)}
                         className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
-                          isSelected
-                            ? 'border-[#1B6FF0] bg-[#EBF2FF]'
-                            : 'border-[#E8EAED] bg-white'
+                          isSelected ? 'border-[#1B6FF0] bg-[#EBF2FF]' : 'border-[#E8EAED] bg-white'
                         }`}
                       >
                         <div
