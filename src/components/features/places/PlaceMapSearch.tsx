@@ -242,7 +242,7 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
         )}
       </div>
 
-      {/* 검색바 */}
+      {/* 검색바 + 내위치 버튼 */}
       <div className="relative z-10 px-4 pt-5 pb-3">
         <div className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white px-3.5 py-3 shadow-lg">
           <SearchIcon className="flex-shrink-0 text-[#9099A8]" />
@@ -258,24 +258,22 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
           )}
         </div>
+        {/* 내 위치 버튼 — 검색바 우측 아래 고정 */}
+        <button
+          onClick={handleMyLocation}
+          className="absolute right-4 -bottom-12 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
+        >
+          {locating ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
+              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </div>
-
-      {/* 내 위치 버튼 — 시트 높이에 따라 위치 조정 */}
-      <button
-        onClick={handleMyLocation}
-        className="absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-all duration-300"
-        style={{ bottom: results.length > 0 ? 60 : 12 }}
-      >
-        {locating ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
-            <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
-            <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        )}
-      </button>
 
       {/* 초기 안내 */}
       {!hasSearched && query.length < 2 && (
