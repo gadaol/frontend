@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import { getDayColor } from '@/utils/dayColors'
 import type { TripDetail } from '../page'
 
 const MAP_OPTIONS: google.maps.MapOptions = {
@@ -14,16 +15,6 @@ const MAP_OPTIONS: google.maps.MapOptions = {
     { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   ],
 }
-
-const DAY_COLORS = [
-  'var(--color-primary)',
-  '#7C3AED',
-  '#059669',
-  '#DC2626',
-  '#D97706',
-  '#0891B2',
-  '#DB2777',
-]
 
 type PlacePin = {
   id: string
@@ -78,6 +69,13 @@ export default function PlacesMapTab({ trip }: Props) {
     )
   }, [])
 
+  // 색상 반복 주기는 실제 존재하는 일수(day_number 최댓값) 기준 — itinerary_days.length는
+  // 아이템 있는 날짜만 들어있어 비어있는 날이 있으면 최댓값보다 작아져 색상이 겹칠 수 있음
+  const maxDayNumber = useMemo(
+    () => Math.max(1, ...trip.itinerary_days.map((d) => d.day_number)),
+    [trip.itinerary_days],
+  )
+
   const pins: PlacePin[] = useMemo(
     () =>
       trip.itinerary_days
@@ -95,12 +93,12 @@ export default function PlacesMapTab({ trip }: Props) {
               lng: item.places!.lng as number,
               dayNumber: day.day_number,
               dayDate: day.day_date,
-              color: DAY_COLORS[(day.day_number - 1) % DAY_COLORS.length],
+              color: getDayColor(day.day_number, maxDayNumber),
               orderIndex: item.order_index,
               categoryName: item.places!.place_categories?.name ?? null,
             })),
         ),
-    [trip.itinerary_days],
+    [trip.itinerary_days, maxDayNumber],
   )
 
   const dayGroups = useMemo(() => {

@@ -15,21 +15,11 @@ import {
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
+import { COVER_PRESETS } from '@/utils/coverPresets'
 import type { TripDetail } from '../../page'
 
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
-
-const COVER_PRESETS = [
-  'linear-gradient(160deg,var(--color-hero-top) 0%,var(--color-primary) 70%,var(--color-hero-bot) 100%)',
-  'linear-gradient(160deg,var(--color-hero-bot) 0%,#7C3AED 70%,#4C1D95 100%)',
-  'linear-gradient(160deg,#064E3B 0%,#059669 70%,#022C22 100%)',
-  'linear-gradient(160deg,#7C2D12 0%,#EA580C 70%,#431407 100%)',
-  'linear-gradient(160deg,#1E1B4B 0%,#EC4899 70%,#831843 100%)',
-  'linear-gradient(160deg,#0C4A6E 0%,#0EA5E9 70%,#082F49 100%)',
-  'linear-gradient(160deg,#3F3F46 0%,#71717A 70%,#18181B 100%)',
-  'linear-gradient(160deg,#14532D 0%,#16A34A 70%,#052E16 100%)',
-]
 
 type EditTab = 'info' | 'day'
 
@@ -265,26 +255,27 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                 )}
               </div>
               <p className="text-ink2 mb-2 text-[12px] font-semibold">커버</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {/* 이미지 업로드 */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className={`border-ink3 bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed disabled:opacity-50 ${
-                    !isGradient(coverUrl) ? 'ring-primary ring-2 ring-offset-2' : ''
-                  }`}
+                  className="border-ink3 bg-bg2 relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed disabled:opacity-50"
                 >
                   {uploading ? (
                     <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                       <path
-                        d="M8 3v10M3 8h10"
+                        d="M9 4v10M4 9h10"
                         stroke="var(--color-ink3)"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
                     </svg>
+                  )}
+                  {!isGradient(coverUrl) && (
+                    <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
                   )}
                 </button>
                 <input
@@ -298,11 +289,13 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                   <button
                     key={preset}
                     onClick={() => setCoverUrl(preset)}
-                    className={`h-10 w-10 flex-shrink-0 rounded-full transition-transform ${
-                      coverUrl === preset ? 'ring-primary scale-110 ring-2 ring-offset-2' : ''
-                    }`}
+                    className="relative h-10 rounded-xl"
                     style={{ background: preset }}
-                  />
+                  >
+                    {coverUrl === preset && (
+                      <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
+                    )}
+                  </button>
                 ))}
               </div>
             </div>

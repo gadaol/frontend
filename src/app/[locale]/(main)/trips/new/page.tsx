@@ -7,19 +7,7 @@ import { createTrip } from '@/app/actions/trip'
 import { MapPinIcon } from '@/components/icons'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
-
-const COVER_PRESETS = [
-  'linear-gradient(135deg, #0c1f45 0%, var(--color-primary) 100%)',
-  'linear-gradient(135deg, #1a1a2e 0%, #e94560 100%)',
-  'linear-gradient(135deg, #0f3460 0%, #533483 100%)',
-  'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
-  'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)',
-  'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-]
+import { COVER_PRESETS } from '@/utils/coverPresets'
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'

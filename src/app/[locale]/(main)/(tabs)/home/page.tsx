@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/server'
 import dayjs from '@/lib/dayjs'
 import { daysUntil, formatDateRange, isTripOngoing, isTripUpcoming } from '@/utils/date'
 import {
+  BacklogIcon,
   BellIcon,
   ChevronRightIcon,
   ExploreIcon,
-  GridIcon,
   ListIcon,
   PlusIcon,
 } from '@/components/icons'
@@ -102,7 +102,7 @@ export default async function HomePage() {
     {
       label: t('quickBacklog'),
       href: `/${locale}/backlog`,
-      icon: <GridIcon className="text-ink2" />,
+      icon: <BacklogIcon className="text-ink2" />,
     },
   ]
 

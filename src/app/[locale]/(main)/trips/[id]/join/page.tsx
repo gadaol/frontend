@@ -42,7 +42,9 @@ export default async function JoinPage({ searchParams }: Props) {
         <div
           className="h-52 flex-shrink-0"
           style={{
-            background: trip.cover_url ?? 'linear-gradient(135deg, #0c1f45, var(--color-primary))',
+            background:
+              trip.cover_url ??
+              'linear-gradient(135deg, var(--color-hero-top), var(--color-primary))',
           }}
         />
         <div className="flex flex-1 flex-col px-6 pt-6 pb-10">
@@ -75,7 +77,9 @@ export default async function JoinPage({ searchParams }: Props) {
       <div
         className="h-52 flex-shrink-0"
         style={{
-          background: trip.cover_url ?? 'linear-gradient(135deg, #0c1f45, var(--color-primary))',
+          background:
+            trip.cover_url ??
+            'linear-gradient(135deg, var(--color-hero-top), var(--color-primary))',
         }}
       />
       <div className="flex flex-1 flex-col px-6 pt-6 pb-10">

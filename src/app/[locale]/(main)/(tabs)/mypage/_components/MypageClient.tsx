@@ -10,8 +10,7 @@ import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import { BellIcon } from '@/components/icons'
 import api, { isApiError } from '@/lib/axios/client'
-
-export type Plan = 'free' | 'pro' | 'plus'
+import { PLAN_LABEL, type Plan } from '@/utils/plans'
 
 interface Subscription {
   plan: Plan
@@ -56,7 +55,6 @@ export default function MypageClient({
   const [currentAvatarUrl] = useState(avatarUrl)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showPlanSheet, setShowPlanSheet] = useState(false)
   const [showPhoneSheet, setShowPhoneSheet] = useState(false)
   const [currentSubscription, setCurrentSubscription] = useState(subscription)
   const [subscribedToast, setSubscribedToast] = useState(false)
@@ -197,7 +195,7 @@ export default function MypageClient({
       {/* Pro 업그레이드 배너 (free 플랜일 때만) */}
       {plan === 'free' && (
         <button
-          onClick={() => setShowPlanSheet(true)}
+          onClick={() => router.push(`/${locale}/mypage/subscription`)}
           className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3.5 rounded-2xl p-4"
           style={{
             background: 'linear-gradient(135deg,var(--color-hero-top),var(--color-primary))',
@@ -274,7 +272,7 @@ export default function MypageClient({
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="var(--color-warning-light)"
+          iconBg="var(--color-primary-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <rect
@@ -283,12 +281,12 @@ export default function MypageClient({
                 width="14"
                 height="10"
                 rx="2"
-                stroke="var(--color-warning)"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
               />
               <path
                 d="M2 7.5l7 4 7-4"
-                stroke="var(--color-warning)"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
               />
@@ -299,7 +297,7 @@ export default function MypageClient({
           right={<ChevronRight />}
         />
         <MenuItem
-          iconBg="var(--color-success-light)"
+          iconBg="var(--color-primary-light)"
           icon={
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <rect
@@ -308,12 +306,12 @@ export default function MypageClient({
                 width="12"
                 height="14"
                 rx="2"
-                stroke="var(--color-success)"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
               />
               <path
                 d="M6 6h6M6 9h6M6 12h4"
-                stroke="var(--color-success)"
+                stroke="var(--color-primary)"
                 strokeWidth="1.4"
                 strokeLinecap="round"
               />
@@ -321,7 +319,7 @@ export default function MypageClient({
           }
           label="구독 관리"
           sub={`현재 ${PLAN_LABEL[plan]} 플랜`}
-          onPress={() => setShowPlanSheet(true)}
+          onPress={() => router.push(`/${locale}/mypage/subscription`)}
           right={
             plan === 'free' ? (
               <div className="flex items-center gap-1.5">
@@ -391,7 +389,7 @@ export default function MypageClient({
           onClick={() => setShowLogoutConfirm(true)}
           className="flex w-full items-center gap-3 px-4 py-3.5"
         >
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#FEF2F2]">
+          <div className="bg-error-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
                 d="M7 3H3a1 1 0 00-1 1v10a1 1 0 001 1h4"
@@ -427,66 +425,6 @@ export default function MypageClient({
       >
         회원탈퇴
       </button>
-
-      {/* 구독 관리 시트 */}
-      {showPlanSheet && (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-black/50"
-          onClick={() => setShowPlanSheet(false)}
-        >
-          <div
-            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pt-5 pb-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-border mx-auto mb-4 h-1 w-10 rounded-full" />
-            <h2 className="text-ink mb-5 text-center text-[20px] font-black">플랜 선택</h2>
-
-            <div className="space-y-3">
-              {PLANS.map((p) => (
-                <div
-                  key={p.key}
-                  className="rounded-2xl border-2 p-4"
-                  style={{
-                    borderColor: p.key === plan ? 'var(--color-primary)' : 'var(--color-border)',
-                  }}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="rounded-full px-2.5 py-0.5 text-[12px] font-bold"
-                        style={PLAN_BADGE_STYLE[p.key]}
-                      >
-                        {PLAN_LABEL[p.key]}
-                      </span>
-                      {p.key === plan && <span className="text-ink3 text-[12px]">현재 플랜</span>}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-ink text-[17px] font-black">{p.price}</span>
-                      {p.period && <span className="text-ink3 ml-1 text-[12px]">{p.period}</span>}
-                    </div>
-                  </div>
-                  <ul className="space-y-1">
-                    {p.features.map((f) => (
-                      <li key={f} className="text-ink2 flex items-center gap-1.5 text-[13px]">
-                        <span style={{ color: PLAN_BADGE_STYLE[p.key].color }}>✓</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {p.key !== plan && p.key !== 'free' && (
-                    <button
-                      onClick={() => router.push(`/${locale}/payment?plan=${p.key}`)}
-                      className="mt-3 w-full rounded-xl py-3 text-[14px] font-bold text-white"
-                      style={{ backgroundColor: PLAN_BADGE_STYLE[p.key as Plan].color }}
-                    >
-                      {`${PLAN_LABEL[p.key as Plan]}로 업그레이드`}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {showLogoutConfirm && (
         <ConfirmSheet
@@ -536,43 +474,6 @@ export default function MypageClient({
     </div>
   )
 }
-
-// ── 데이터 ──────────────────────────────────────────────────
-
-const PLAN_BADGE_STYLE: Record<Plan, { backgroundColor: string; color: string }> = {
-  free: { backgroundColor: 'var(--color-bg2)', color: 'var(--color-ink3)' },
-  pro: { backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' },
-  plus: { backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' },
-}
-
-const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', plus: 'Plus' }
-
-const PLAN_BENEFITS: Record<Plan, string[]> = {
-  free: ['여행 최대 3개', '메이트 최대 2명', 'AI 추천 3회/월', '백로그 무제한 저장'],
-  pro: [
-    '여행 무제한',
-    '메이트 최대 10명',
-    'AI 추천 월 20회',
-    '백로그 폴더/태그 정리',
-    '팀 권한 관리',
-    '광고 없음',
-  ],
-  plus: [
-    '여행 무제한',
-    '메이트 무제한',
-    'AI 추천 무제한',
-    '백로그 폴더/태그 정리',
-    '팀 권한 관리',
-    '공유 백로그',
-    '광고 없음',
-  ],
-}
-
-const PLANS: { key: Plan; price: string; period?: string; features: string[] }[] = [
-  { key: 'free', price: '무료', features: PLAN_BENEFITS.free },
-  { key: 'pro', price: '₩3,900', period: '/ 월', features: PLAN_BENEFITS.pro },
-  { key: 'plus', price: '₩6,900', period: '/ 월', features: PLAN_BENEFITS.plus },
-]
 
 // ── 서브 컴포넌트 ────────────────────────────────────────────
 

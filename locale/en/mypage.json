@@ -22,5 +22,43 @@
   "logout": "Log out",
   "deleteAccount": "Delete account",
   "deleteAccountConfirm": "Are you sure? All your data will be deleted and cannot be recovered.",
-  "version": "Version"
+  "version": "Version",
+  "subscription": {
+    "title": "Subscription",
+    "currentPlan": "Current plan",
+    "trialSuffix": " · Trial",
+    "upgradeButton": "Upgrade to {plan}",
+    "free": "Free",
+    "perMonth": "/ mo",
+    "planLabel": {
+      "free": "Free",
+      "pro": "Pro",
+      "plus": "Plus"
+    },
+    "benefits": {
+      "free": [
+        "Up to 3 trips",
+        "Up to 2 mates",
+        "3 AI recommendations / month",
+        "Unlimited backlog saves"
+      ],
+      "pro": [
+        "Unlimited trips",
+        "Up to 10 mates",
+        "20 AI recommendations / month",
+        "Backlog folders & tags",
+        "Team permission management",
+        "No ads"
+      ],
+      "plus": [
+        "Unlimited trips",
+        "Unlimited mates",
+        "Unlimited AI recommendations",
+        "Backlog folders & tags",
+        "Team permission management",
+        "Shared backlog",
+        "No ads"
+      ]
+    }
+  }
 }

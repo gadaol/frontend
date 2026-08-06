@@ -22,5 +22,38 @@
   "logout": "로그아웃",
   "deleteAccount": "회원탈퇴",
   "deleteAccountConfirm": "정말 탈퇴하시겠어요? 모든 데이터가 삭제되며 복구할 수 없어요.",
-  "version": "버전"
+  "version": "버전",
+  "subscription": {
+    "title": "구독 관리",
+    "currentPlan": "현재 플랜",
+    "trialSuffix": " · 체험 중",
+    "upgradeButton": "{plan}로 업그레이드",
+    "free": "무료",
+    "perMonth": "/ 월",
+    "planLabel": {
+      "free": "Free",
+      "pro": "Pro",
+      "plus": "Plus"
+    },
+    "benefits": {
+      "free": ["여행 최대 3개", "메이트 최대 2명", "AI 추천 3회/월", "백로그 무제한 저장"],
+      "pro": [
+        "여행 무제한",
+        "메이트 최대 10명",
+        "AI 추천 월 20회",
+        "백로그 폴더/태그 정리",
+        "팀 권한 관리",
+        "광고 없음"
+      ],
+      "plus": [
+        "여행 무제한",
+        "메이트 무제한",
+        "AI 추천 무제한",
+        "백로그 폴더/태그 정리",
+        "팀 권한 관리",
+        "공유 백로그",
+        "광고 없음"
+      ]
+    }
+  }
 }
