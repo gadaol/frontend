@@ -43,6 +43,9 @@ export default function AuthPage() {
       if (provider === 'email') return t('usePrimaryAccountEmail')
       return t('usePrimaryAccount')
     }
+    if (error === 'email_exists') {
+      return t('emailExistsError')
+    }
     return null
     // searchParams, t는 마운트 시점 스냅샷으로만 사용
     // eslint-disable-next-line react-hooks/exhaustive-deps

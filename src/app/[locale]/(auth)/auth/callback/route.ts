@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
@@ -21,6 +22,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
 
       if (user) {
         const provider = user.app_metadata?.provider ?? ''
+
+        // Social login: check if the email is already registered under a different provider
+        if (provider !== 'email' && user.email) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: existingProvider } = await (supabase as any).rpc('email_already_in_use', {
+            check_email: user.email,
+            exclude_user_id: user.id,
+          })
+
+          if (existingProvider) {
+            // Delete the orphan social user and redirect with error
+            const admin = createAdminClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            )
+            await admin.auth.admin.deleteUser(user.id)
+            await supabase.auth.signOut()
+            return NextResponse.redirect(
+              `${origin}/${locale}?error=email_exists&provider=${existingProvider}`,
+            )
+          }
+        }
 
         const { data: profile } = await supabase
           .from('profiles')
