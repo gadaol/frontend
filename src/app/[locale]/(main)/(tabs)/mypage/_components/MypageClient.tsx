@@ -359,11 +359,11 @@ export default function MypageClient({
           }}
         >
           <div
-            className="w-full rounded-t-3xl bg-white pb-10"
+            className="max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-white pb-10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 헤더 */}
-            <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
+            <div className="sticky top-0 flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
               <button
                 onClick={() => {
                   setShowProfileSheet(false)
