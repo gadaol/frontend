@@ -240,21 +240,6 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
           </div>
         )}
-        {/* 내 위치 버튼 */}
-        <button
-          onClick={handleMyLocation}
-          className="absolute right-3 bottom-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
-        >
-          {locating ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
-              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
-              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
       </div>
 
       {/* 검색바 */}
@@ -275,6 +260,23 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
         </div>
       </div>
 
+      {/* 내 위치 버튼 — 시트 높이에 따라 위치 조정 */}
+      <button
+        onClick={handleMyLocation}
+        className="absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-all duration-300"
+        style={{ bottom: results.length > 0 ? 60 : 12 }}
+      >
+        {locating ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
+            <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+            <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        )}
+      </button>
+
       {/* 초기 안내 */}
       {!hasSearched && query.length < 2 && (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-20 text-center">
@@ -294,9 +296,12 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottom
         </div>
       )}
 
+      {/* 결과 있을 때 스페이서 — 검색바와 시트 헤더 사이 지도가 보이도록 */}
+      {results.length > 0 && <div className="flex-1" />}
+
       {/* 결과 리스트 하단 시트 */}
       {results.length > 0 && (
-        <div className="relative z-10 mt-auto">
+        <div className="relative z-10 mt-auto min-h-0">
           <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
             {/* 토글 헤더 — PlacesMapTab과 동일 패턴 */}
             <button
