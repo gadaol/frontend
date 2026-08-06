@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
@@ -12,13 +12,10 @@ interface Props {
 export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) {
   const router = useRouter()
   const [copyToast, setCopyToast] = useState(false)
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!inviteToken) return
-    const locale = window.location.pathname.split('/')[1]
-    setInviteUrl(`${window.location.origin}/${locale}/trips/${tripId}/join?token=${inviteToken}`)
-  }, [inviteToken, tripId])
+  const inviteUrl =
+    typeof window !== 'undefined' && inviteToken
+      ? `${window.location.origin}/${window.location.pathname.split('/')[1]}/trips/${tripId}/join?token=${inviteToken}`
+      : null
 
   async function handleShareLink() {
     if (!inviteUrl) return
@@ -72,7 +69,12 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-[#EBF2FF]">
           <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
             <circle cx="14" cy="11" r="6" stroke="#1B6FF0" strokeWidth="2" />
-            <path d="M4 30c0-5.52 4.48-10 10-10" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
+            <path
+              d="M4 30c0-5.52 4.48-10 10-10"
+              stroke="#1B6FF0"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
             <path d="M26 20v10M21 25h10" stroke="#1B6FF0" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </div>
@@ -86,7 +88,7 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
         {inviteUrl ? (
           <div className="w-full space-y-3">
             <div className="rounded-2xl border border-[#E8EAED] bg-[#F5F7FA] px-4 py-3">
-              <p className="break-all text-[12px] text-[#9099A8]">{inviteUrl}</p>
+              <p className="text-[12px] break-all text-[#9099A8]">{inviteUrl}</p>
             </div>
             <div className="flex gap-2.5">
               <button
@@ -94,8 +96,21 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-[#E8EAED] bg-white py-4 text-[15px] font-semibold text-[#515966]"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <rect x="6" y="6" width="9" height="10" rx="1.5" stroke="#515966" strokeWidth="1.4" />
-                  <path d="M3 12V4a1.5 1.5 0 011.5-1.5H12" stroke="#515966" strokeWidth="1.4" strokeLinecap="round" />
+                  <rect
+                    x="6"
+                    y="6"
+                    width="9"
+                    height="10"
+                    rx="1.5"
+                    stroke="#515966"
+                    strokeWidth="1.4"
+                  />
+                  <path
+                    d="M3 12V4a1.5 1.5 0 011.5-1.5H12"
+                    stroke="#515966"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
                 </svg>
                 링크 복사
               </button>
@@ -107,7 +122,12 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
                   <circle cx="14" cy="4" r="2" stroke="white" strokeWidth="1.4" />
                   <circle cx="14" cy="14" r="2" stroke="white" strokeWidth="1.4" />
                   <circle cx="4" cy="9" r="2" stroke="white" strokeWidth="1.4" />
-                  <path d="M5.9 8l6.2-3M5.9 10l6.2 3" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+                  <path
+                    d="M5.9 8l6.2-3M5.9 10l6.2 3"
+                    stroke="white"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
                 </svg>
                 공유하기
               </button>

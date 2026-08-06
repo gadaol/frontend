@@ -87,11 +87,7 @@ export type UserSearchResult = {
   alreadyInvited: boolean
 }
 
-
-export async function searchUsers(
-  tripId: string,
-  query: string,
-): Promise<UserSearchResult[]> {
+export async function searchUsers(tripId: string, query: string): Promise<UserSearchResult[]> {
   if (!query.trim()) return []
   const supabase = await createClient()
   const {
@@ -119,7 +115,9 @@ export async function searchUsers(
 
   const memberIds = new Set((members ?? []).map((m) => m.user_id))
   const pendingIds = new Set(
-    (pendingNotifs ?? []).map((n) => (n.payload as Record<string, unknown>).invited_user_id as string),
+    (pendingNotifs ?? []).map(
+      (n) => (n.payload as Record<string, unknown>).invited_user_id as string,
+    ),
   )
 
   return (profiles ?? [])

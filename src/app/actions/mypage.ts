@@ -14,15 +14,10 @@ export async function deleteAvatar() {
 
   const exts = ['jpg', 'jpeg', 'png', 'webp', 'gif']
   await Promise.all(
-    exts.map((ext) =>
-      supabase.storage.from('avatars').remove([`${user.id}/avatar.${ext}`]),
-    ),
+    exts.map((ext) => supabase.storage.from('avatars').remove([`${user.id}/avatar.${ext}`])),
   )
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({ avatar_url: null })
-    .eq('id', user.id)
+  const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
 
   if (error) return { error: error.message }
 

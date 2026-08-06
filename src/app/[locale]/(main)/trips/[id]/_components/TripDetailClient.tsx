@@ -45,7 +45,9 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
     router.push(`/${locale}/trips/${trip.id}/invite`)
   }
 
-  const profileMap = new Map(memberProfiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]))
+  const profileMap = new Map(
+    memberProfiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]),
+  )
 
   const expectedDays = useMemo(() => {
     if (!trip.start_date || !trip.end_date) return []

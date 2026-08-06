@@ -23,10 +23,6 @@ export default async function Page() {
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
   return (
-    <NotificationsClient
-      notifications={notifications}
-      unreadCount={unreadCount}
-      userId={user.id}
-    />
+    <NotificationsClient notifications={notifications} unreadCount={unreadCount} userId={user.id} />
   )
 }

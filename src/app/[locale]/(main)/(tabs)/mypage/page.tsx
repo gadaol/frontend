@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import MypageClient from './_components/MypageClient'
 
 export default async function Page() {
@@ -13,17 +12,9 @@ export default async function Page() {
   const locale = await getLocale()
   if (!user) redirect(`/${locale}`)
 
-  const provider = (user.app_metadata?.provider ?? 'email') as string
-
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-
   const [
     { data: profile },
     { data: subscriptionRow },
-    { data: links },
     { count: tripCount },
     { count: placeCount },
   ] = await Promise.all([
@@ -36,7 +27,6 @@ export default async function Page() {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    adminClient.from('account_links').select('linked_provider').eq('primary_user_id', user.id),
     supabase
       .from('trip_members')
       .select('*', { count: 'exact', head: true })
@@ -46,9 +36,6 @@ export default async function Page() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id),
   ])
-
-  const linkedSet = new Set<string>((links ?? []).map((l) => l.linked_provider as string))
-  linkedSet.add(provider)
 
   const displayName = profile?.name ?? user.email?.split('@')[0] ?? ''
   const email = user.email ?? ''

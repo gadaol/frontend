@@ -16,7 +16,7 @@ export default function BottomNav() {
   const t = useTranslations('common.nav')
   const locale = useLocale()
   const pathname = usePathname()
-  const unreadCount = useUnreadCount()
+  useUnreadCount()
 
   const tabs: Tab[] = [
     {
@@ -64,9 +64,7 @@ export default function BottomNav() {
               href={tab.href}
               className="flex flex-1 flex-col items-center gap-1 py-2.5"
             >
-              <span className="relative inline-flex">
-                {tab.icon(active)}
-              </span>
+              <span className="relative inline-flex">{tab.icon(active)}</span>
               <span
                 className={`text-[10px] leading-none font-medium ${active ? 'text-primary' : 'text-ink3'}`}
               >

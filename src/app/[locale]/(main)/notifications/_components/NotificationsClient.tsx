@@ -94,7 +94,7 @@ function timeAgo(dateStr: string | null, locale: string): string {
 
 export default function NotificationsClient({
   notifications: initialNotifications,
-  unreadCount: initialUnreadCount,
+  unreadCount: _initialUnreadCount,
   userId,
 }: {
   notifications: Notification[]
@@ -111,9 +111,7 @@ export default function NotificationsClient({
     const supabase = createClient()
     let mounted = true
 
-    const channel = supabase.channel(
-      `notif-list-${Math.random().toString(36).slice(2, 9)}`,
-    )
+    const channel = supabase.channel(`notif-list-${Math.random().toString(36).slice(2, 9)}`)
 
     async function fetchAll() {
       const { data } = await supabase
@@ -159,9 +157,7 @@ export default function NotificationsClient({
   return (
     <div className="min-h-dvh bg-[#F5F6F8]">
       <div className="flex h-[54px] items-center justify-between border-b border-[#E8EAED] bg-white px-5">
-        <span className="text-[22px] font-bold tracking-[-0.4px] text-[#0F1117]">
-          {t('title')}
-        </span>
+        <span className="text-[22px] font-bold tracking-[-0.4px] text-[#0F1117]">{t('title')}</span>
         {unreadCount > 0 && (
           <button onClick={handleMarkAll} className="text-[13px] font-medium text-[#1B6FF0]">
             {t('markAllRead')}

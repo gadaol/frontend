@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ProfileSettingsClient from './_components/ProfileSettingsClient'
 
 export default async function ProfileSettingsPage() {
@@ -15,18 +14,14 @@ export default async function ProfileSettingsPage() {
 
   const provider = (user.app_metadata?.provider ?? 'email') as string
 
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  // linkIdentity로 연동된 계정은 user.identities에 반영됨
+  const linkedProviders = Array.from(new Set(user.identities?.map((i) => i.provider) ?? [provider]))
 
-  const [{ data: profile }, { data: links }] = await Promise.all([
-    supabase.from('profiles').select('name, avatar_url').eq('id', user.id).single(),
-    adminClient.from('account_links').select('linked_provider').eq('primary_user_id', user.id),
-  ])
-
-  const linkedSet = new Set<string>((links ?? []).map((l) => l.linked_provider as string))
-  linkedSet.add(provider)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, avatar_url')
+    .eq('id', user.id)
+    .single()
 
   const displayName = profile?.name ?? user.email?.split('@')[0] ?? ''
   const initials = displayName.trim() ? displayName.trim()[0].toUpperCase() : '?'
@@ -36,7 +31,7 @@ export default async function ProfileSettingsPage() {
       displayName={displayName}
       initials={initials}
       avatarUrl={profile?.avatar_url ?? null}
-      linkedProviders={[...linkedSet]}
+      linkedProviders={linkedProviders}
       currentProvider={provider}
     />
   )

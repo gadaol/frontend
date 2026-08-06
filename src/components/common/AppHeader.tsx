@@ -36,9 +36,7 @@ export default function AppHeader({ title, onBack, right, border = true }: Props
           >
             <ChevronLeftIcon size={24} />
           </button>
-          {title && (
-            <span className="text-ink flex-1 text-[17px] font-bold">{title}</span>
-          )}
+          {title && <span className="text-ink flex-1 text-[17px] font-bold">{title}</span>}
         </>
       ) : (
         <>
