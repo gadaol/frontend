@@ -1,5 +1,8 @@
 {
   "title": "My Page",
+  "editProfile": "Edit Profile",
+  "editName": "Change name",
+  "namePlaceholder": "Enter your name",
   "linkedAccounts": "Linked accounts",
   "connected": "Connected",
   "connect": "Link",
@@ -11,5 +14,13 @@
     "kakao": "Kakao",
     "google": "Google",
     "email": "Email"
-  }
+  },
+  "settings": "Settings",
+  "notifications": "Notification settings",
+  "terms": "Terms of service",
+  "privacy": "Privacy policy",
+  "logout": "Log out",
+  "deleteAccount": "Delete account",
+  "deleteAccountConfirm": "Are you sure? All your data will be deleted and cannot be recovered.",
+  "version": "Version"
 }

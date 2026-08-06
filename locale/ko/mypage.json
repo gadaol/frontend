@@ -1,6 +1,9 @@
 {
   "title": "마이페이지",
-  "linkedAccounts": "연동된 계정",
+  "editProfile": "프로필 편집",
+  "editName": "이름 변경",
+  "namePlaceholder": "이름을 입력하세요",
+  "linkedAccounts": "연동 계정",
   "connected": "연결됨",
   "connect": "연동하기",
   "phoneNumber": "전화번호",
@@ -11,5 +14,13 @@
     "kakao": "카카오",
     "google": "Google",
     "email": "이메일"
-  }
+  },
+  "settings": "앱 설정",
+  "notifications": "알림 설정",
+  "terms": "이용약관",
+  "privacy": "개인정보처리방침",
+  "logout": "로그아웃",
+  "deleteAccount": "회원탈퇴",
+  "deleteAccountConfirm": "정말 탈퇴하시겠어요? 모든 데이터가 삭제되며 복구할 수 없어요.",
+  "version": "버전"
 }
