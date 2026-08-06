@@ -40,6 +40,8 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
         place.displayName.text,
         place.formattedAddress,
         getDbCategory(place.types ?? []),
+        place.location?.latitude ?? null,
+        place.location?.longitude ?? null,
       )
       if (!result.error) {
         setAddedIds((prev) => new Set(prev).add(place.id))
@@ -51,6 +53,8 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
         name: place.displayName.text,
         address: place.formattedAddress,
         categoryName: getDbCategory(place.types ?? []),
+        lat: place.location?.latitude ?? null,
+        lng: place.location?.longitude ?? null,
       })
       if (placeId) {
         const result = await addItineraryItem(tripId, dayDate, dayNumber, placeId)

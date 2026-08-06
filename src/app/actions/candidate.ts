@@ -11,6 +11,8 @@ export async function addCandidatePlace(
   name: string,
   address: string,
   categoryName: string,
+  lat?: number | null,
+  lng?: number | null,
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const {
@@ -18,7 +20,7 @@ export async function addCandidatePlace(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
 
-  const placeId = await getOrCreatePlace({ googlePlaceId, name, address, categoryName })
+  const placeId = await getOrCreatePlace({ googlePlaceId, name, address, categoryName, lat, lng })
   if (!placeId) return { error: 'place_failed' }
 
   const { error } = await supabase

@@ -9,6 +9,8 @@ export type AddToBacklogInput = {
   name: string
   address: string | null
   categoryName: string | null
+  lat?: number | null
+  lng?: number | null
 }
 
 /** places 테이블에서 조회하거나 없으면 생성 후 place ID 반환 */
@@ -28,13 +30,19 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
 
   const { data: existing } = await supabase
     .from('places')
-    .select('id, category_id')
+    .select('id, category_id, lat')
     .eq('google_place_id', input.googlePlaceId)
     .single()
 
   if (existing) {
-    if (!existing.category_id && categoryId) {
+    const needsCategoryUpdate = !existing.category_id && categoryId
+    const needsLatUpdate = !existing.lat && input.lat
+    if (needsCategoryUpdate && needsLatUpdate) {
+      await supabase.from('places').update({ category_id: categoryId, lat: input.lat, lng: input.lng }).eq('id', existing.id)
+    } else if (needsCategoryUpdate) {
       await supabase.from('places').update({ category_id: categoryId }).eq('id', existing.id)
+    } else if (needsLatUpdate) {
+      await supabase.from('places').update({ lat: input.lat, lng: input.lng }).eq('id', existing.id)
     }
     return existing.id
   }
@@ -46,6 +54,8 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
       name: input.name,
       address: input.address,
       category_id: categoryId,
+      lat: input.lat ?? null,
+      lng: input.lng ?? null,
     })
     .select('id')
     .single()

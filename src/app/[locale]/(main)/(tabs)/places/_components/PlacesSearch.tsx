@@ -21,6 +21,8 @@ export default function PlacesSearch() {
       name: place.displayName.text,
       address: place.formattedAddress,
       categoryName: getDbCategory(place.types ?? []),
+      lat: place.location?.latitude ?? null,
+      lng: place.location?.longitude ?? null,
     })
     setSavedIds((prev) => new Set(prev).add(place.id))
     setSavingIds((prev) => {
