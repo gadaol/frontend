@@ -23,5 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ errorCode: 'phoneAlreadyRegistered' }, { status: 409 })
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    await supabase.from('profiles').upsert({ id: user.id, phone })
+  }
+
   return NextResponse.json({ success: true })
 }
