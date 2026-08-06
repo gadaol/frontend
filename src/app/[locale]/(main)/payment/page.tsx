@@ -26,12 +26,7 @@ export default async function PaymentPage({ searchParams }: Props) {
   return (
     <div className="bg-bg2 flex min-h-dvh flex-col">
       <AppHeader title="구독 결제" onBack="router" />
-      <PaymentClient
-        plan={plan}
-        period={validPeriod}
-        userId={user.id}
-        locale={locale}
-      />
+      <PaymentClient plan={plan} period={validPeriod} userId={user.id} locale={locale} />
     </div>
   )
 }

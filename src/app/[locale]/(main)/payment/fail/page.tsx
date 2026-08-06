@@ -16,12 +16,7 @@ export default async function PaymentFailPage({ searchParams }: Props) {
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#FEF2F2]">
           <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <path
-              d="M18 10v10M18 24v2"
-              stroke="#F04438"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
+            <path d="M18 10v10M18 24v2" stroke="#F04438" strokeWidth="2.5" strokeLinecap="round" />
             <circle cx="18" cy="18" r="15" stroke="#F04438" strokeWidth="2" />
           </svg>
         </div>
@@ -31,7 +26,7 @@ export default async function PaymentFailPage({ searchParams }: Props) {
         </p>
         <Link
           href={`/${locale}/mypage`}
-          className="h-[50px] w-full max-w-xs rounded-2xl bg-[#1B6FF0] text-[15px] font-bold text-white flex items-center justify-center"
+          className="flex h-[50px] w-full max-w-xs items-center justify-center rounded-2xl bg-[#1B6FF0] text-[15px] font-bold text-white"
         >
           마이페이지로 돌아가기
         </Link>

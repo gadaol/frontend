@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, startTransition } from 'react'
 import Script from 'next/script'
 
 interface Props {
@@ -17,8 +17,23 @@ const PRICES: Record<string, Record<string, number>> = {
 
 const PLAN_LABEL: Record<string, string> = { pro: 'Pro', plus: 'Plus' }
 const PLAN_FEATURES: Record<string, string[]> = {
-  pro: ['여행 무제한', '메이트 최대 10명', 'AI 추천 월 20회', '백로그 폴더/태그 정리', '팀 권한 관리', '광고 없음'],
-  plus: ['여행 무제한', '메이트 무제한', 'AI 추천 무제한', '백로그 폴더/태그 정리', '팀 권한 관리', '공유 백로그', '광고 없음'],
+  pro: [
+    '여행 무제한',
+    '메이트 최대 10명',
+    'AI 추천 월 20회',
+    '백로그 폴더/태그 정리',
+    '팀 권한 관리',
+    '광고 없음',
+  ],
+  plus: [
+    '여행 무제한',
+    '메이트 무제한',
+    'AI 추천 무제한',
+    '백로그 폴더/태그 정리',
+    '팀 권한 관리',
+    '공유 백로그',
+    '광고 없음',
+  ],
 }
 
 declare global {
@@ -40,7 +55,7 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
     const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY
     if (!clientKey || !window.TossPayments) return
     tossRef.current = window.TossPayments(clientKey)
-    setSdkReady(true)
+    startTransition(() => setSdkReady(true))
   }
 
   useEffect(() => {
@@ -71,11 +86,7 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
 
   return (
     <>
-      <Script
-        src="https://js.tosspayments.com/v1"
-        strategy="afterInteractive"
-        onReady={initToss}
-      />
+      <Script src="https://js.tosspayments.com/v1" strategy="afterInteractive" onReady={initToss} />
 
       <div className="flex flex-1 flex-col">
         {/* 플랜 정보 */}
@@ -97,8 +108,8 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
           </p>
           {period === 'yearly' && (
             <p className="mt-1 text-[13px] text-white/70">
-              월 환산 ₩{Math.round(amount / 12).toLocaleString()} ·{' '}
-              월 {(PRICES[plan].monthly - Math.round(amount / 12)).toLocaleString()}원 절약
+              월 환산 ₩{Math.round(amount / 12).toLocaleString()} · 월{' '}
+              {(PRICES[plan].monthly - Math.round(amount / 12)).toLocaleString()}원 절약
             </p>
           )}
         </div>
