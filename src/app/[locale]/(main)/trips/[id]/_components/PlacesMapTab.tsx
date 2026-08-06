@@ -68,7 +68,6 @@ export default function PlacesMapTab({ trip }: Props) {
     [trip.itinerary_days],
   )
 
-  // Day별 그룹핑
   const dayGroups = useMemo(() => {
     const groups = new Map<number, PlacePin[]>()
     for (const pin of pins) {
@@ -129,83 +128,72 @@ export default function PlacesMapTab({ trip }: Props) {
   }
 
   return (
-    <div
-      className="relative overflow-hidden"
-      style={{ height: 'calc(100dvh - 392px)', minHeight: 300 }}
-    >
-      {/* 지도 (전체 채움) */}
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={center}
-        zoom={13}
-        options={MAP_OPTIONS}
-        onLoad={onLoad}
-      >
-        {pins.map((pin) => (
-          <Marker
-            key={pin.id}
-            position={{ lat: pin.lat, lng: pin.lng }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: selectedPin?.id === pin.id ? 13 : 10,
-              fillColor: pin.color,
-              fillOpacity: 1,
-              strokeColor: '#fff',
-              strokeWeight: 2,
-            }}
-            label={{
-              text: String(pin.orderIndex + 1),
-              color: '#fff',
-              fontSize: '10px',
-              fontWeight: '700',
-            }}
-            onClick={() => handlePinClick(pin)}
-          />
-        ))}
-        {selectedPin && (
-          <InfoWindow
-            position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
-            onCloseClick={() => setSelectedPin(null)}
-          >
-            <div style={{ maxWidth: 160 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 2 }}>
-                {selectedPin.name}
-              </p>
-              {selectedPin.address && (
-                <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
-              )}
-              <p style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}>
-                Day {selectedPin.dayNumber} · {selectedPin.orderIndex + 1}번째
-              </p>
-            </div>
-          </InfoWindow>
-        )}
-      </GoogleMap>
+    <div className="flex flex-col">
+      {/* 지도 — 고정 높이로 항상 표시 */}
+      <div className="h-72 w-full">
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: '100%' }}
+          center={center}
+          zoom={13}
+          options={MAP_OPTIONS}
+          onLoad={onLoad}
+        >
+          {pins.map((pin) => (
+            <Marker
+              key={pin.id}
+              position={{ lat: pin.lat, lng: pin.lng }}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: selectedPin?.id === pin.id ? 13 : 10,
+                fillColor: pin.color,
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 2,
+              }}
+              label={{
+                text: String(pin.orderIndex + 1),
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: '700',
+              }}
+              onClick={() => handlePinClick(pin)}
+            />
+          ))}
+          {selectedPin && (
+            <InfoWindow
+              position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
+              onCloseClick={() => setSelectedPin(null)}
+            >
+              <div style={{ maxWidth: 160 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 2 }}>
+                  {selectedPin.name}
+                </p>
+                {selectedPin.address && (
+                  <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
+                )}
+                <p style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}>
+                  Day {selectedPin.dayNumber} · {selectedPin.orderIndex + 1}번째
+                </p>
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+      </div>
 
-      {/* 하단 장소 목록 패널 */}
-      <div
-        className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out"
-        style={{
-          transform: listOpen ? 'translateY(0)' : 'translateY(calc(100% - 48px))',
-          maxHeight: '65%',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      {/* 장소 목록 패널 */}
+      <div className="bg-white">
         {/* 토글 핸들 */}
         <button
           onClick={() => setListOpen((v) => !v)}
-          className="flex w-full flex-shrink-0 items-center justify-between px-4 py-3"
+          className="flex w-full items-center justify-between border-b border-[#F0F1F3] px-4 py-3"
         >
           <div className="flex items-center gap-2">
-            <span className="text-[14px] font-semibold text-[#0F1117]">
-              장소 목록
-            </span>
+            <span className="text-[14px] font-semibold text-[#0F1117]">장소 목록</span>
             <span className="rounded-full bg-[#EBF2FF] px-2 py-0.5 text-[11px] font-bold text-[#1B6FF0]">
               {pins.length}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Day 색상 범례 */}
             <div className="flex items-center gap-1.5">
               {dayGroups.map(([dayNum, dayPins]) => (
@@ -218,7 +206,6 @@ export default function PlacesMapTab({ trip }: Props) {
                 </div>
               ))}
             </div>
-            {/* 화살표 */}
             <svg
               width="18"
               height="18"
@@ -237,91 +224,86 @@ export default function PlacesMapTab({ trip }: Props) {
           </div>
         </button>
 
-        {/* 구분선 */}
-        <div className="mx-4 h-px flex-shrink-0 bg-[#F0F1F3]" />
+        {/* 리스트 (max-height 토글) */}
+        <div
+          className="overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ maxHeight: listOpen ? 2000 : 0 }}
+        >
+          <div className="px-4 pt-3 pb-6">
+            {dayGroups.map(([dayNum, dayPins]) => (
+              <div key={dayNum} className="mb-4">
+                {/* Day 헤더 */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span
+                    className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
+                    style={{ backgroundColor: dayPins[0].color }}
+                  >
+                    Day {dayNum}
+                  </span>
+                  <span className="text-[11px] text-[#9099A8]">{dayPins[0].dayDate}</span>
+                </div>
 
-        {/* 스크롤 리스트 */}
-        <div className="overflow-y-auto px-4 pt-3 pb-6">
-          {dayGroups.map(([dayNum, dayPins]) => (
-            <div key={dayNum} className="mb-4">
-              {/* Day 헤더 */}
-              <div className="mb-2 flex items-center gap-2">
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
-                  style={{ backgroundColor: dayPins[0].color }}
-                >
-                  Day {dayNum}
-                </span>
-                <span className="text-[11px] text-[#9099A8]">{dayPins[0].dayDate}</span>
-              </div>
+                {/* 장소 카드 */}
+                <div className="flex flex-col gap-2">
+                  {dayPins.map((pin) => {
+                    const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
+                    const Icon = catInfo.icon
+                    const isSelected = selectedPin?.id === pin.id
 
-              {/* 장소 카드 리스트 */}
-              <div className="flex flex-col gap-2">
-                {dayPins.map((pin) => {
-                  const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
-                  const Icon = catInfo.icon
-                  const isSelected = selectedPin?.id === pin.id
-
-                  return (
-                    <button
-                      key={pin.id}
-                      onClick={() => handlePinClick(pin)}
-                      className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
-                        isSelected
-                          ? 'border-[#1B6FF0] bg-[#EBF2FF]'
-                          : 'border-[#E8EAED] bg-white'
-                      }`}
-                    >
-                      {/* 순서 번호 */}
-                      <div
-                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                        style={{ backgroundColor: pin.color }}
+                    return (
+                      <button
+                        key={pin.id}
+                        onClick={() => handlePinClick(pin)}
+                        className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
+                          isSelected
+                            ? 'border-[#1B6FF0] bg-[#EBF2FF]'
+                            : 'border-[#E8EAED] bg-white'
+                        }`}
                       >
-                        {pin.orderIndex + 1}
-                      </div>
-
-                      {/* 카테고리 아이콘 */}
-                      <div
-                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}
-                      >
-                        <Icon size={18} className={catInfo.color} />
-                      </div>
-
-                      {/* 장소 정보 */}
-                      <div className="min-w-0 flex-1">
-                        <p
-                          className={`truncate text-[13px] font-semibold ${isSelected ? 'text-[#1B6FF0]' : 'text-[#0F1117]'}`}
+                        <div
+                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                          style={{ backgroundColor: pin.color }}
                         >
-                          {pin.name}
-                        </p>
-                        {pin.address && (
-                          <p className="mt-0.5 truncate text-[11px] text-[#9099A8]">
-                            {pin.address}
+                          {pin.orderIndex + 1}
+                        </div>
+                        <div
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}
+                        >
+                          <Icon size={18} className={catInfo.color} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`truncate text-[13px] font-semibold ${isSelected ? 'text-[#1B6FF0]' : 'text-[#0F1117]'}`}
+                          >
+                            {pin.name}
                           </p>
-                        )}
-                      </div>
-
-                      {/* 핀 아이콘 */}
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        className="flex-shrink-0 text-[#9099A8]"
-                      >
-                        <path
-                          d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                        />
-                        <circle cx="7" cy="5.5" r="1.3" stroke="currentColor" strokeWidth="1.3" />
-                      </svg>
-                    </button>
-                  )
-                })}
+                          {pin.address && (
+                            <p className="mt-0.5 truncate text-[11px] text-[#9099A8]">
+                              {pin.address}
+                            </p>
+                          )}
+                        </div>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          className="flex-shrink-0 text-[#9099A8]"
+                        >
+                          <path
+                            d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"
+                            stroke="currentColor"
+                            strokeWidth="1.3"
+                          />
+                          <circle cx="7" cy="5.5" r="1.3" stroke="currentColor" strokeWidth="1.3" />
+                        </svg>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

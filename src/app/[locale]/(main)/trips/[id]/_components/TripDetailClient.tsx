@@ -8,6 +8,7 @@ import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
 import BottomNav from '@/components/common/BottomNav'
 import PlacesMapTab from './PlacesMapTab'
+import { isGradient } from '@/utils/uploadCover'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import {
   formatDateRange,
@@ -136,10 +137,18 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
       {/* 커버 */}
       <div
         className="relative h-[220px] flex-shrink-0"
-        style={{
-          background:
-            trip.cover_url ?? 'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)',
-        }}
+        style={
+          trip.cover_url && !isGradient(trip.cover_url)
+            ? {
+                backgroundImage: `url(${trip.cover_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : {
+                background:
+                  trip.cover_url ?? 'linear-gradient(160deg,#070E1A 0%,#1B6FF0 70%,#0F2351 100%)',
+              }
+        }
       >
         <div
           className="absolute inset-0"
