@@ -93,7 +93,7 @@ export default function VoteClient({
   return (
     <div className="flex min-h-dvh flex-col bg-[#F5F7FA]">
       {/* 헤더 */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#E8EAED] bg-white px-4 pt-[52px] pb-3">
+      <div className="sticky top-0 z-20 flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
         <button
           onClick={() => router.back()}
           className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F5F7FA]"
