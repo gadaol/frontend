@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import type { TripDetail } from '../page'
@@ -8,9 +8,9 @@ import type { TripDetail } from '../page'
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
   zoomControl: true,
-  clickableIcons: false,
+  clickableIcons: true,
   styles: [
-    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'simplified' }] },
     { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   ],
 }
@@ -42,6 +42,33 @@ export default function PlacesMapTab({ trip }: Props) {
   const mapRef = useRef<google.maps.Map | null>(null)
   const [selectedPin, setSelectedPin] = useState<PlacePin | null>(null)
   const [listOpen, setListOpen] = useState(true)
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+
+  function handleMyLocation() {
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setMyLocation(loc)
+        mapRef.current?.panTo(loc)
+        mapRef.current?.setZoom(15)
+        setLocating(false)
+      },
+      () => setLocating(false),
+      { timeout: 8000 },
+    )
+  }
+
+  // 마운트 시 현재 위치 마커 자동 표시 (권한 있으면)
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { timeout: 5000 },
+    )
+  }, [])
 
   const pins: PlacePin[] = useMemo(
     () =>
@@ -133,7 +160,7 @@ export default function PlacesMapTab({ trip }: Props) {
   return (
     <div className="flex flex-col">
       {/* 지도 — 고정 높이로 항상 표시 */}
-      <div className="h-72 w-full">
+      <div className="relative h-72 w-full">
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
           center={center}
@@ -147,40 +174,72 @@ export default function PlacesMapTab({ trip }: Props) {
               position={{ lat: pin.lat, lng: pin.lng }}
               icon={{
                 path: google.maps.SymbolPath.CIRCLE,
-                scale: selectedPin?.id === pin.id ? 13 : 10,
+                scale: selectedPin?.id === pin.id ? 11 : 9,
                 fillColor: pin.color,
-                fillOpacity: 1,
+                fillOpacity: 0.9,
                 strokeColor: '#fff',
                 strokeWeight: 2,
               }}
               label={{
                 text: String(pin.orderIndex + 1),
                 color: '#fff',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: '700',
               }}
               onClick={() => handlePinClick(pin)}
             />
           ))}
+          {/* 현재 위치 마커 */}
+          {myLocation && (
+            <Marker
+              position={myLocation}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#4A90E2',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 3,
+              }}
+            />
+          )}
           {selectedPin && (
             <InfoWindow
               position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
               onCloseClick={() => setSelectedPin(null)}
             >
-              <div style={{ maxWidth: 160 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 2 }}>
+              <div style={{ maxWidth: 180, padding: '6px 4px 4px' }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F1117', marginBottom: 4 }}>
                   {selectedPin.name}
                 </p>
                 {selectedPin.address && (
-                  <p style={{ fontSize: 11, color: '#9099A8' }}>{selectedPin.address}</p>
+                  <p style={{ fontSize: 11, color: '#9099A8', marginBottom: 4, lineHeight: 1.4 }}>
+                    {selectedPin.address}
+                  </p>
                 )}
-                <p style={{ fontSize: 11, color: selectedPin.color, marginTop: 4, fontWeight: 600 }}>
+                <p style={{ fontSize: 11, color: selectedPin.color, fontWeight: 600 }}>
                   Day {selectedPin.dayNumber} · {selectedPin.orderIndex + 1}번째
                 </p>
               </div>
             </InfoWindow>
           )}
         </GoogleMap>
+
+        {/* 현재 위치 버튼 */}
+        <button
+          onClick={handleMyLocation}
+          className="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
+        >
+          {locating ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
+              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* 장소 목록 패널 */}
