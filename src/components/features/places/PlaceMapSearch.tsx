@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
-import { ListIcon, SearchIcon, ChevronRightIcon } from '@/components/icons'
+import { SearchIcon, ChevronRightIcon } from '@/components/icons'
 import { getCategoryInfo, getMarkerColor } from '@/utils/placeCategory'
 import type { GooglePlace } from '@/types/place'
 
@@ -26,9 +26,11 @@ interface Props {
   renderListAction: (place: GooglePlace) => React.ReactNode
   /** InfoWindow CTA (없으면 상세보기 링크) */
   renderInfoCta?: (place: GooglePlace) => React.ReactNode
+  /** 하단 고정 바 높이(px) — 리스트 시트가 가려지지 않도록 여백 추가 */
+  bottomOffset?: number
 }
 
-export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Props) {
+export default function PlaceMapSearch({ renderListAction, renderInfoCta, bottomOffset = 0 }: Props) {
   const t = useTranslations('places')
   const locale = useLocale()
   const [query, setQuery] = useState('')
@@ -39,6 +41,8 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null)
   const [mapCenter, setMapCenter] = useState(MAP_DEFAULT_CENTER)
   const [showList, setShowList] = useState(false)
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
@@ -49,6 +53,30 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map
   }, [])
+
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { timeout: 5000 },
+    )
+  }, [])
+
+  function handleMyLocation() {
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setMyLocation(loc)
+        mapRef.current?.panTo(loc)
+        mapRef.current?.setZoom(15)
+        setLocating(false)
+      },
+      () => setLocating(false),
+      { timeout: 8000 },
+    )
+  }
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -123,6 +151,19 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
                   }}
                 />
               ) : null,
+            )}
+            {myLocation && (
+              <Marker
+                position={myLocation}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 8,
+                  fillColor: '#4A90E2',
+                  fillOpacity: 1,
+                  strokeColor: '#fff',
+                  strokeWeight: 3,
+                }}
+              />
             )}
 
             {selectedPlace?.location && (
@@ -199,6 +240,21 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
           </div>
         )}
+        {/* 내 위치 버튼 */}
+        <button
+          onClick={handleMyLocation}
+          className="absolute right-3 bottom-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
+        >
+          {locating ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1B6FF0] border-t-transparent" />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="3.5" fill="#1B6FF0" />
+              <circle cx="10" cy="10" r="6" stroke="#1B6FF0" strokeWidth="1.5" />
+              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="#1B6FF0" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* 검색바 */}
@@ -245,14 +301,28 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
           style={{
             bottom: showList
               ? 'calc(var(--list-height, 240px) + 12px)'
-              : 'calc(env(safe-area-inset-bottom) + 16px)',
+              : 'calc(env(safe-area-inset-bottom) + 72px)',
           }}
         >
           <button
             onClick={() => setShowList((v) => !v)}
             className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2.5 shadow-lg"
           >
-            <ListIcon size={16} className={showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'} />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className={`transition-transform duration-200 ${showList ? 'rotate-180' : ''}`}
+            >
+              <path
+                d="M3.5 10L8 5.5l4.5 4.5"
+                stroke={showList ? '#1B6FF0' : '#9099A8'}
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             <span
               className={`text-[13px] font-semibold ${showList ? 'text-[#1B6FF0]' : 'text-[#9099A8]'}`}
             >
@@ -272,7 +342,7 @@ export default function PlaceMapSearch({ renderListAction, renderInfoCta }: Prop
               </span>
               <div className="h-1 w-8 rounded-full bg-[#E8EAED]" />
             </div>
-            <div className="max-h-56 overflow-y-auto pb-4">
+            <div className="max-h-56 overflow-y-auto" style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}>
               {results.map((place) => {
                 const category = getCategoryInfo(place.types)
                 const Icon = category.icon

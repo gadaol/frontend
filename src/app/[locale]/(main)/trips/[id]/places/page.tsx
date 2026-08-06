@@ -15,6 +15,8 @@ interface Props {
   searchParams: Promise<{ day?: string; date?: string }>
 }
 
+const BOTTOM_BAR_HEIGHT = 72
+
 export default function TripPlacesPage({ params, searchParams }: Props) {
   const { id: tripId } = use(params)
   const { day, date } = use(searchParams)
@@ -24,95 +26,101 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
   const dayNumber = parseInt(day ?? '1', 10)
   const dayDate = date ?? ''
 
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
-  const [addingIds, setAddingIds] = useState<Set<string>>(new Set())
+  // 선택된 장소 Map<googlePlaceId, GooglePlace>
+  const [selected, setSelected] = useState<Map<string, GooglePlace>>(new Map())
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function handleAdd(place: GooglePlace, e: React.MouseEvent) {
-    e.stopPropagation()
-    if (addedIds.has(place.id) || addingIds.has(place.id)) return
-
-    setAddingIds((prev) => new Set(prev).add(place.id))
-
-    if (isCandidate) {
-      const result = await addCandidatePlace(
-        tripId,
-        place.id,
-        place.displayName.text,
-        place.formattedAddress,
-        getDbCategory(place.types ?? []),
-        place.location?.latitude ?? null,
-        place.location?.longitude ?? null,
-      )
-      if (!result.error) {
-        setAddedIds((prev) => new Set(prev).add(place.id))
-        setTimeout(() => router.back(), 600)
-      }
-    } else {
-      const placeId = await getOrCreatePlace({
-        googlePlaceId: place.id,
-        name: place.displayName.text,
-        address: place.formattedAddress,
-        categoryName: getDbCategory(place.types ?? []),
-        lat: place.location?.latitude ?? null,
-        lng: place.location?.longitude ?? null,
-      })
-      if (placeId) {
-        const result = await addItineraryItem(tripId, dayDate, dayNumber, placeId)
-        if (!result.error) {
-          router.back()
-          return
-        }
-        setAddedIds((prev) => new Set(prev).add(place.id))
-      }
-    }
-
-    setAddingIds((prev) => {
-      const next = new Set(prev)
-      next.delete(place.id)
+  function toggleSelect(place: GooglePlace) {
+    setSelected((prev) => {
+      const next = new Map(prev)
+      if (next.has(place.id)) next.delete(place.id)
+      else next.set(place.id, place)
       return next
     })
   }
 
+  async function handleAddAll() {
+    if (selected.size === 0 || isSubmitting) return
+    setIsSubmitting(true)
+
+    const places = Array.from(selected.values())
+
+    await Promise.all(
+      places.map(async (place) => {
+        if (isCandidate) {
+          await addCandidatePlace(
+            tripId,
+            place.id,
+            place.displayName.text,
+            place.formattedAddress,
+            getDbCategory(place.types ?? []),
+            place.location?.latitude ?? null,
+            place.location?.longitude ?? null,
+          )
+        } else {
+          const placeId = await getOrCreatePlace({
+            googlePlaceId: place.id,
+            name: place.displayName.text,
+            address: place.formattedAddress,
+            categoryName: getDbCategory(place.types ?? []),
+            lat: place.location?.latitude ?? null,
+            lng: place.location?.longitude ?? null,
+          })
+          if (placeId) {
+            await addItineraryItem(tripId, dayDate, dayNumber, placeId)
+          }
+        }
+      }),
+    )
+
+    router.back()
+  }
+
   const headerTitle = isCandidate ? '후보 장소 추가' : `Day ${dayNumber} 장소 추가`
-  const addLabel = isCandidate ? '후보 추가' : '추가'
-  const addedLabel = isCandidate ? '추가됨' : '추가됨'
-  const infoCta = isCandidate ? '후보에 추가' : '일정에 추가'
+  const selectedCount = selected.size
 
   return (
     <div className="flex h-dvh flex-col">
       <AppHeader title={headerTitle} onBack="router" />
       <div className="relative flex-1 overflow-hidden">
         <PlaceMapSearch
+          bottomOffset={selectedCount > 0 ? BOTTOM_BAR_HEIGHT : 0}
           renderListAction={(place) => {
-            const isAdded = addedIds.has(place.id)
-            const isAdding = addingIds.has(place.id)
+            const isSelected = selected.has(place.id)
             return (
               <button
-                onClick={(e) => handleAdd(place, e)}
-                disabled={isAdded || isAdding}
-                className={`ml-1 flex h-9 flex-shrink-0 items-center justify-center rounded-full px-3 text-[12px] font-semibold transition-colors ${
-                  isAdded
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-primary text-white disabled:opacity-50'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleSelect(place)
+                }}
+                className={`ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                  isSelected
+                    ? 'border-[#1B6FF0] bg-[#1B6FF0]'
+                    : 'border-[#D8DADF] bg-white'
                 }`}
               >
-                {isAdding ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : isAdded ? (
-                  addedLabel
-                ) : (
-                  addLabel
+                {isSelected && (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M2.5 7l3 3 6-6"
+                      stroke="white"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 )}
               </button>
             )
           }}
           renderInfoCta={(place) => {
-            const isAdded = addedIds.has(place.id)
-            const isAdding = addingIds.has(place.id)
+            const isSelected = selected.has(place.id)
             return (
               <button
-                onClick={(e) => handleAdd(place, e)}
-                disabled={isAdded || isAdding}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleSelect(place)
+                }}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -121,19 +129,45 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
                   textAlign: 'center',
                   fontSize: 13,
                   fontWeight: 700,
-                  color: isAdded ? '#9099A8' : '#1B6FF0',
+                  color: isSelected ? '#059669' : '#1B6FF0',
                   background: 'none',
                   border: 'none',
                   borderTop: '1px solid #EEE',
-                  cursor: isAdded ? 'default' : 'pointer',
+                  cursor: 'pointer',
                 }}
               >
-                {isAdding ? '추가 중...' : isAdded ? '추가됨 ✓' : infoCta}
+                {isSelected ? '✓ 선택됨' : isCandidate ? '후보에 추가' : '일정에 추가'}
               </button>
             )
           }}
         />
       </div>
+
+      {/* 하단 고정 추가 바 */}
+      {selectedCount > 0 && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-[#F0F1F3] bg-white px-4 pt-3 pb-8"
+          style={{ height: BOTTOM_BAR_HEIGHT }}
+        >
+          <button
+            onClick={handleAddAll}
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1B6FF0] py-3 text-[15px] font-bold text-white disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>추가 중...</span>
+              </>
+            ) : (
+              <span>
+                {isCandidate ? '후보' : `Day ${dayNumber}`}에{' '}
+                <span className="rounded-full bg-white/20 px-2">{selectedCount}개</span> 추가
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

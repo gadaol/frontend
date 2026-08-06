@@ -273,7 +273,7 @@ export default function PlacesMapTab({ trip }: Props) {
               height="18"
               viewBox="0 0 18 18"
               fill="none"
-              className={`transition-transform duration-300 ${listOpen ? '' : 'rotate-180'}`}
+              className={`transition-transform duration-300 ${listOpen ? 'rotate-180' : ''}`}
             >
               <path
                 d="M4.5 11L9 6.5l4.5 4.5"
