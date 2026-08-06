@@ -15,21 +15,21 @@ export default async function Page() {
 
   const provider = (user.app_metadata?.provider ?? 'email') as string
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, phone')
-    .eq('id', user.id)
-    .single()
-
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-
-  const { data: links } = await adminClient
-    .from('account_links')
-    .select('linked_provider')
-    .eq('primary_user_id', user.id)
+  const [{ data: profile }, { data: subscriptionRow }, { data: links }] = await Promise.all([
+    supabase.from('profiles').select('name, phone').eq('id', user.id).single(),
+    supabase
+      .from('subscriptions')
+      .select('plan, status, expires_at')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      .from('account_links')
+      .select('linked_provider')
+      .eq('primary_user_id', user.id),
+  ])
 
   const linkedSet = new Set<string>((links ?? []).map((l) => l.linked_provider as string))
   linkedSet.add(provider)
@@ -47,6 +47,11 @@ export default async function Page() {
       initials={initials}
       linkedProviders={[...linkedSet]}
       currentProvider={provider}
+      subscription={
+        subscriptionRow
+          ? { ...subscriptionRow, plan: subscriptionRow.plan as 'free' | 'pro' | 'team' }
+          : null
+      }
     />
   )
 }
