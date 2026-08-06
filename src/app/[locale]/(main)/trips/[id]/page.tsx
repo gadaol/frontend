@@ -22,7 +22,7 @@ export type TripDetail = Tables<'trips'> & {
   itinerary_days: ItineraryDay[]
 }
 
-export type MemberProfile = { id: string; name: string | null }
+export type MemberProfile = { id: string; name: string | null; avatar_url: string | null }
 
 export type VoteEntry = { likes: number; dislikes: number; myVote: 'like' | 'dislike' | null }
 export type VoteRecord = Record<string, VoteEntry>
@@ -58,7 +58,7 @@ export default async function TripDetailPage({
       )
       .eq('id', id)
       .single(),
-    supabase.from('profiles').select('id, name'),
+    supabase.from('profiles').select('id, name, avatar_url'),
   ])
 
   if (!trip) notFound()

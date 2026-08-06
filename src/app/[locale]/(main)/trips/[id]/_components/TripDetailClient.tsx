@@ -21,8 +21,8 @@ import {
   removeItineraryItem,
   updateItineraryItemTime,
   reorderItineraryDay,
+  kickMember,
 } from '@/app/actions/trip'
-import { getOrCreateInviteToken } from '@/app/actions/invite'
 import type { TripDetail, MemberProfile } from '../page'
 
 const AVATAR_COLORS = ['#1B6FF0', '#7C3AED', '#059669', '#DC2626', '#D97706', '#0891B2']
@@ -41,35 +41,11 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<Tab>('일정')
-  const [copyToast, setCopyToast] = useState(false)
-  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  async function handleInvite() {
-    const token = await getOrCreateInviteToken(trip.id)
-    if (!token) return
-    const inviteUrl = `${window.location.origin}/${locale}/trips/${trip.id}/join?token=${token}`
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `${trip.title} 여행에 초대합니다`, url: inviteUrl })
-      } catch (e) {
-        if (e instanceof Error && e.name !== 'AbortError') {
-          await navigator.clipboard.writeText(inviteUrl).catch(() => null)
-          showCopyToast()
-        }
-      }
-    } else {
-      await navigator.clipboard.writeText(inviteUrl).catch(() => null)
-      showCopyToast()
-    }
+  function handleInvite() {
+    router.push(`/${locale}/trips/${trip.id}/invite`)
   }
 
-  function showCopyToast() {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setCopyToast(true)
-    toastTimer.current = setTimeout(() => setCopyToast(false), 2500)
-  }
-
-  const profileMap = new Map(memberProfiles.map((p) => [p.id, p.name]))
+  const profileMap = new Map(memberProfiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]))
 
   const expectedDays = useMemo(() => {
     if (!trip.start_date || !trip.end_date) return []
@@ -128,12 +104,6 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
 
   return (
     <div className="flex min-h-full flex-col bg-[#F5F7FA]">
-      {copyToast && (
-        <div className="fixed top-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#0F1117] px-4 py-2 text-[13px] font-medium text-white shadow-lg">
-          초대 링크가 복사됐어요
-        </div>
-      )}
-
       {/* 커버 */}
       <div
         className="relative h-[220px] flex-shrink-0"
@@ -198,8 +168,23 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
         <div className="flex items-center gap-2.5 px-4 pt-4 pb-0">
           <div className="flex">
             {trip.trip_members.slice(0, 5).map((m, i) => {
-              const name = profileMap.get(m.user_id) ?? '?'
-              return (
+              const profile = profileMap.get(m.user_id)
+              const name = profile?.name ?? '?'
+              const avatarUrl = profile?.avatar_url ?? null
+              return avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={m.user_id}
+                  src={avatarUrl}
+                  alt={name}
+                  className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white object-cover"
+                  style={{
+                    marginLeft: i > 0 ? -8 : 0,
+                    position: 'relative',
+                    zIndex: trip.trip_members.length - i,
+                  }}
+                />
+              ) : (
                 <div
                   key={m.user_id}
                   className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
@@ -307,7 +292,14 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId }
           )}
           {activeTab === '장소' && <PlacesMapTab trip={trip} />}
           {activeTab === '메이트' && (
-            <MateTab members={trip.trip_members} profileMap={profileMap} onInvite={handleInvite} />
+            <MateTab
+              members={trip.trip_members}
+              profileMap={profileMap}
+              onInvite={handleInvite}
+              isOwner={isOwner}
+              currentUserId={currentUserId}
+              tripId={trip.id}
+            />
           )}
         </div>
       </div>
@@ -423,30 +415,75 @@ function MateTab({
   members,
   profileMap,
   onInvite,
+  isOwner,
+  currentUserId,
+  tripId,
 }: {
   members: { user_id: string; role: string }[]
-  profileMap: Map<string, string | null>
+  profileMap: Map<string, { name: string | null; avatar_url: string | null }>
   onInvite: () => void
+  isOwner: boolean
+  currentUserId: string
+  tripId: string
 }) {
+  const [, startTransition] = useTransition()
+  const [kickedIds, setKickedIds] = useState<Set<string>>(new Set())
+
+  function handleKick(userId: string, name: string | null) {
+    if (!confirm(`${name ?? '멤버'}를 내보낼까요?`)) return
+    setKickedIds((prev) => new Set(prev).add(userId))
+    startTransition(async () => {
+      await kickMember(tripId, userId)
+    })
+  }
+
+  const visible = members.filter((m) => !kickedIds.has(m.user_id))
+
   return (
     <div className="px-4 pt-4">
       <div className="flex flex-col gap-3">
-        {members.map((m, i) => {
-          const name = profileMap.get(m.user_id) ?? '알 수 없음'
+        {visible.map((m, i) => {
+          const profile = profileMap.get(m.user_id)
+          const name = profile?.name ?? '알 수 없음'
+          const avatarUrl = profile?.avatar_url ?? null
           return (
             <div key={m.user_id} className="flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
-                style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
-              >
-                {name[0]}
-              </div>
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt={name}
+                  className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
+                  style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                >
+                  {name[0]}
+                </div>
+              )}
               <div className="flex-1">
                 <p className="text-[14px] font-semibold text-[#0F1117]">{name}</p>
                 <p className="text-[12px] text-[#9099A8]">
                   {m.role === 'owner' ? '방장' : '메이트'}
                 </p>
               </div>
+              {isOwner && m.user_id !== currentUserId && m.role !== 'owner' && (
+                <button
+                  onClick={() => handleKick(m.user_id, name)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#9099A8] hover:bg-[#F5F6F8] hover:text-red-500"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M4 4l8 8M12 4l-8 8"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           )
         })}

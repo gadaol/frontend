@@ -293,3 +293,33 @@ export async function updateTrip(
   revalidatePath('/', 'layout')
   return {}
 }
+
+export async function kickMember(
+  tripId: string,
+  targetUserId: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: trip } = await supabase
+    .from('trips')
+    .select('owner_id')
+    .eq('id', tripId)
+    .maybeSingle()
+
+  if (trip?.owner_id !== user.id) return { error: 'forbidden' }
+  if (targetUserId === user.id) return { error: 'cannot_kick_self' }
+
+  const { error } = await supabase
+    .from('trip_members')
+    .delete()
+    .eq('trip_id', tripId)
+    .eq('user_id', targetUserId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/', 'layout')
+  return {}
+}
