@@ -44,13 +44,64 @@ export async function updateNotificationPrefs(prefs: NotificationPrefs) {
     .from('user_preferences')
     .upsert({ user_id: user.id, notification_prefs: prefs }, { onConflict: 'user_id' })
 
-  revalidatePath('/notifications/settings', 'page')
+  revalidatePath('/', 'layout')
+}
+
+export async function acceptTripInvite(
+  notificationId: string,
+  tripId: string,
+): Promise<{ error?: string; tripId?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: existing } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!existing) {
+    const { error } = await supabase
+      .from('trip_members')
+      .insert({ trip_id: tripId, user_id: user.id, role: 'member', status: 'accepted' })
+    if (error) return { error: error.message }
+  }
+
+  await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId)
+  revalidatePath('/', 'layout')
+  return { tripId }
+}
+
+export async function declineTripInvite(
+  notificationId: string,
+  tripId: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  await supabase
+    .from('trip_members')
+    .delete()
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .neq('role', 'owner')
+
+  await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId)
+  revalidatePath('/', 'layout')
+  return {}
 }
 
 export async function markAsRead(notificationId: string) {
   const supabase = await createClient()
   await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId)
-  revalidatePath('/notifications', 'page')
+  revalidatePath('/', 'layout')
 }
 
 export async function markAllAsRead() {
@@ -65,5 +116,5 @@ export async function markAllAsRead() {
     .update({ is_read: true })
     .eq('user_id', user.id)
     .eq('is_read', false)
-  revalidatePath('/notifications', 'page')
+  revalidatePath('/', 'layout')
 }

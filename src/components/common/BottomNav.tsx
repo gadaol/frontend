@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { BacklogIcon, HomeIcon, MypageIcon, PlacesIcon, TripsIcon } from '@/components/icons'
+import { useUnreadCount } from '@/hooks/useUnreadCount'
 
 type Tab = {
   key: 'home' | 'trips' | 'places' | 'backlog' | 'mypage'
@@ -15,6 +16,7 @@ export default function BottomNav() {
   const t = useTranslations('common.nav')
   const locale = useLocale()
   const pathname = usePathname()
+  const unreadCount = useUnreadCount()
 
   const tabs: Tab[] = [
     {
@@ -62,7 +64,12 @@ export default function BottomNav() {
               href={tab.href}
               className="flex flex-1 flex-col items-center gap-1 py-2.5"
             >
-              {tab.icon(active)}
+              <span className="relative inline-flex">
+                {tab.icon(active)}
+                {tab.key === 'mypage' && unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-[7px] w-[7px] items-center justify-center rounded-full bg-red-500" />
+                )}
+              </span>
               <span
                 className={`text-[10px] leading-none font-medium ${active ? 'text-primary' : 'text-ink3'}`}
               >

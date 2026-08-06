@@ -1,0 +1,29 @@
+{
+  "title": "Notifications",
+  "markAllRead": "Mark all read",
+  "emptyTitle": "No notifications",
+  "emptyDesc": "Trip invites and vote notifications will appear here",
+  "groupNew": "New",
+  "groupPrevious": "Earlier",
+  "accept": "Accept",
+  "decline": "Decline",
+  "inviteTitle": "You've been invited to a trip",
+  "inviteDesc": "{actor} invited you to {trip}",
+  "voteTitle": "A new place was added",
+  "voteDesc": "{actor} added {place} to {trip}",
+  "editTitle": "Itinerary updated",
+  "editDesc": "{place} was added to {trip}",
+  "systemTomorrow": "Your trip starts tomorrow!",
+  "systemInDays": "Your trip starts in 3 days",
+  "systemGeneric": "Trip reminder",
+  "systemDesc": "Ready for {trip}? Check your itinerary now",
+  "defaultTitle": "New notification",
+  "settings": {
+    "title": "Notification settings",
+    "footer": "Notifications are stored in your in-app inbox. Disabling a type stops new ones from being created.",
+    "system": { "label": "Upcoming trips", "desc": "Reminders 3 days and 1 day before departure" },
+    "invite": { "label": "Trip invites", "desc": "When someone invites you to a trip" },
+    "vote": { "label": "Voting", "desc": "When a new candidate place is added" },
+    "edit": { "label": "Itinerary changes", "desc": "When a place is added to the itinerary" }
+  }
+}

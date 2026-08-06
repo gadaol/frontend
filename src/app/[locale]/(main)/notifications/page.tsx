@@ -22,5 +22,11 @@ export default async function Page() {
   const notifications: Notification[] = (data ?? []) as Notification[]
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
-  return <NotificationsClient notifications={notifications} unreadCount={unreadCount} />
+  return (
+    <NotificationsClient
+      notifications={notifications}
+      unreadCount={unreadCount}
+      userId={user.id}
+    />
+  )
 }

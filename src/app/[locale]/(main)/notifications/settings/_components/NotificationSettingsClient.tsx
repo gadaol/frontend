@@ -2,19 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { updateNotificationPrefs, type NotificationPrefs } from '@/app/actions/notifications'
 
-const ITEMS: {
-  key: keyof NotificationPrefs
-  label: string
-  desc: string
-  iconBg: string
-  icon: React.ReactNode
-}[] = [
+type PrefKey = keyof NotificationPrefs
+
+const ITEMS: { key: PrefKey; iconBg: string; icon: React.ReactNode }[] = [
   {
     key: 'system',
-    label: '다가오는 여행',
-    desc: '출발 D-3, D-1에 알림을 보내드려요',
     iconBg: '#EBF2FF',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -25,8 +20,6 @@ const ITEMS: {
   },
   {
     key: 'invite',
-    label: '여행 초대',
-    desc: '다른 사람이 나를 여행에 초대할 때',
     iconBg: '#EBF2FF',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -43,8 +36,6 @@ const ITEMS: {
   },
   {
     key: 'vote',
-    label: '투표',
-    desc: '후보 장소가 새로 추가됐을 때',
     iconBg: '#FEF3C7',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -59,8 +50,6 @@ const ITEMS: {
   },
   {
     key: 'edit',
-    label: '일정 변경',
-    desc: '여행 일정에 장소가 추가됐을 때',
     iconBg: '#D1FAE5',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -72,11 +61,12 @@ const ITEMS: {
 ]
 
 export default function NotificationSettingsClient({ prefs }: { prefs: NotificationPrefs }) {
+  const t = useTranslations('notifications.settings')
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [values, setValues] = useState<NotificationPrefs>(prefs)
 
-  function toggle(key: keyof NotificationPrefs) {
+  function toggle(key: PrefKey) {
     const next = { ...values, [key]: !values[key] }
     setValues(next)
     startTransition(async () => {
@@ -86,7 +76,6 @@ export default function NotificationSettingsClient({ prefs }: { prefs: Notificat
 
   return (
     <div className="min-h-dvh bg-[#F5F6F8]">
-      {/* 헤더 */}
       <div className="flex h-[54px] items-center gap-3 border-b border-[#E8EAED] bg-white px-4">
         <button
           onClick={() => router.back()}
@@ -102,17 +91,15 @@ export default function NotificationSettingsClient({ prefs }: { prefs: Notificat
             />
           </svg>
         </button>
-        <h1 className="text-[17px] font-bold text-[#0F1117]">알림 설정</h1>
+        <h1 className="text-[17px] font-bold text-[#0F1117]">{t('title')}</h1>
       </div>
 
-      {/* 토글 목록 */}
       <div className="mx-4 mt-4 overflow-hidden rounded-2xl border border-[#E8EAED] bg-white">
         {ITEMS.map((item, idx) => (
           <div
             key={item.key}
             className={`flex items-center gap-3 px-4 py-3.5 ${idx < ITEMS.length - 1 ? 'border-b border-[#F5F6F8]' : ''}`}
           >
-            {/* 아이콘 */}
             <div
               className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
               style={{ backgroundColor: item.iconBg }}
@@ -120,13 +107,11 @@ export default function NotificationSettingsClient({ prefs }: { prefs: Notificat
               {item.icon}
             </div>
 
-            {/* 텍스트 */}
             <div className="flex-1">
-              <p className="text-[14px] font-medium text-[#0F1117]">{item.label}</p>
-              <p className="mt-0.5 text-[12px] text-[#9099A8]">{item.desc}</p>
+              <p className="text-[14px] font-medium text-[#0F1117]">{t(`${item.key}.label`)}</p>
+              <p className="mt-0.5 text-[12px] text-[#9099A8]">{t(`${item.key}.desc`)}</p>
             </div>
 
-            {/* 토글 */}
             <button
               role="switch"
               aria-checked={values[item.key]}
@@ -164,9 +149,7 @@ export default function NotificationSettingsClient({ prefs }: { prefs: Notificat
         ))}
       </div>
 
-      <p className="mt-3 px-5 text-[12px] text-[#9099A8]">
-        알림은 앱 내 알림함에 저장되며, 설정을 끄면 해당 알림이 생성되지 않아요.
-      </p>
+      <p className="mt-3 px-5 text-[12px] text-[#9099A8]">{t('footer')}</p>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { routing } from '@/i18n/routing'
 import { notFound } from 'next/navigation'
+import { GoogleMapsPatch } from '@/components/common/GoogleMapsPatch'
 
 type Props = {
   children: React.ReactNode
@@ -18,7 +19,16 @@ export default async function LocaleLayout({ children, params }: Props) {
     notFound()
   }
 
-  const namespaces = ['common', 'auth', 'onboarding', 'home', 'trips', 'places', 'mypage']
+  const namespaces = [
+    'common',
+    'auth',
+    'onboarding',
+    'home',
+    'trips',
+    'places',
+    'mypage',
+    'notifications',
+  ]
   const messages = Object.fromEntries(
     await Promise.all(
       namespaces.map(async (ns) => [
@@ -30,6 +40,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
+      <GoogleMapsPatch />
       {children}
     </NextIntlClientProvider>
   )

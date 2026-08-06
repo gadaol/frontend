@@ -167,6 +167,7 @@ export default function PlacesMapTab({ trip }: Props) {
           zoom={13}
           options={MAP_OPTIONS}
           onLoad={onLoad}
+          onClick={() => setSelectedPin(null)}
         >
           {pins.map((pin) => (
             <Marker

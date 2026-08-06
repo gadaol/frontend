@@ -16,6 +16,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'places',
     'mypage',
     'backlog',
+    'notifications',
   ]
   const messages = Object.fromEntries(
     await Promise.all(

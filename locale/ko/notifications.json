@@ -1,0 +1,29 @@
+{
+  "title": "알림",
+  "markAllRead": "모두 읽음",
+  "emptyTitle": "알림이 없어요",
+  "emptyDesc": "여행 초대나 투표 알림이 여기에 표시돼요",
+  "groupNew": "새 알림",
+  "groupPrevious": "이전",
+  "accept": "수락",
+  "decline": "거절",
+  "inviteTitle": "여행 초대가 도착했어요",
+  "inviteDesc": "{actor}님이 {trip}에 초대했어요",
+  "voteTitle": "새 후보 장소가 추가됐어요",
+  "voteDesc": "{actor}님이 {trip}에 {place}을(를) 추가했어요",
+  "editTitle": "일정에 장소가 추가됐어요",
+  "editDesc": "{trip}에 {place}이(가) 일정에 추가됐어요",
+  "systemTomorrow": "내일 여행이 시작돼요!",
+  "systemInDays": "3일 후 여행이 시작돼요",
+  "systemGeneric": "여행 알림",
+  "systemDesc": "{trip} 준비됐나요? 지금 일정을 확인해보세요",
+  "defaultTitle": "새 알림이 있어요",
+  "settings": {
+    "title": "알림 설정",
+    "footer": "알림은 앱 내 알림함에 저장되며, 설정을 끄면 해당 알림이 생성되지 않아요.",
+    "system": { "label": "다가오는 여행", "desc": "출발 D-3, D-1에 알림을 보내드려요" },
+    "invite": { "label": "여행 초대", "desc": "다른 사람이 나를 여행에 초대할 때" },
+    "vote": { "label": "투표", "desc": "후보 장소가 새로 추가됐을 때" },
+    "edit": { "label": "일정 변경", "desc": "여행 일정에 장소가 추가됐을 때" }
+  }
+}
