@@ -5,6 +5,31 @@ import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
+export async function deleteAvatar() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const exts = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+  await Promise.all(
+    exts.map((ext) =>
+      supabase.storage.from('avatars').remove([`${user.id}/avatar.${ext}`]),
+    ),
+  )
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: null })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
 export async function uploadAvatar(formData: FormData) {
   const supabase = await createClient()
   const {

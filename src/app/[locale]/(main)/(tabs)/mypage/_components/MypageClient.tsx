@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { updateName, logout, deleteAccount, uploadAvatar } from '@/app/actions/mypage'
+import { updateName, logout, deleteAccount, uploadAvatar, deleteAvatar } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
 import { BellIcon } from '@/components/icons'
@@ -94,6 +94,13 @@ export default function MypageClient({
     if (res.avatarUrl) setCurrentAvatarUrl(res.avatarUrl)
     setAvatarUploading(false)
     e.target.value = ''
+  }
+
+  async function handleDeleteAvatar() {
+    setAvatarUploading(true)
+    await deleteAvatar()
+    setCurrentAvatarUrl(null)
+    setAvatarUploading(false)
   }
 
   return (
@@ -391,7 +398,19 @@ export default function MypageClient({
                   disabled={avatarUploading}
                 />
               </label>
-              <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] text-[#9099A8]">프로필 사진 변경</span>
+                {currentAvatarUrl && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteAvatar}
+                    disabled={avatarUploading}
+                    className="text-[12px] font-medium text-[#F04438] disabled:opacity-40"
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* 이름 편집 */}
