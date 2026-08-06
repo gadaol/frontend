@@ -21,7 +21,6 @@ export default function ProfileSettingsClient({
   currentProvider,
 }: Props) {
   const router = useRouter()
-  const locale = useLocale()
   const [isPending, startTransition] = useTransition()
 
   const [nameValue, setNameValue] = useState(displayName)
