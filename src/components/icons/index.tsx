@@ -357,118 +357,82 @@ export function CheckIcon({ size = 16, className }: IconProps) {
   )
 }
 
-// ─── 장소 카테고리 아이콘 ─────────────────────────────────────────────────────
+// ─── 장소 카테고리 아이콘 (filled 스타일 — 메뉴 아이콘과 다른 형태) ───────────
 
-// 식당 — 그릇 + 김 (bowl with steam)
 export function PlaceFoodIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      {/* 그릇 */}
-      <path d="M3 13h18c0 5-4 8-9 8s-9-3-9-8z" fill="currentColor" />
-      <rect x="8" y="20.5" width="8" height="1.5" rx=".75" fill="currentColor" opacity=".45" />
-      {/* 김 */}
-      <path d="M9 11.5C9 10 10.2 9.2 9.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M14.5 11.5C14.5 10 13.3 9.2 14 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M12 10.5C12 9.2 13 8.5 12.3 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity=".5" />
+      <path d="M8 3v7a3 3 0 003 3v8h2v-8a3 3 0 003-3V3h-1.5v5.5h-1V3h-2v5.5h-1V3H8z" fill="currentColor" />
     </svg>
   )
 }
 
-// 카페 — 테이크아웃 컵 (trapezoid cup)
 export function PlaceCafeIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      {/* 컵 몸통 */}
-      <path d="M7.5 7h9l-1.8 12.5A1 1 0 0113.7 20h-3.4a1 1 0 01-1-.75L7.5 7z" fill="currentColor" />
-      {/* 컵 뚜껑 */}
-      <rect x="6.5" y="5" width="11" height="2.5" rx="1.25" fill="currentColor" />
-      {/* 컵 슬리브 */}
-      <rect x="7.8" y="12" width="8.4" height="2" rx=".5" fill="white" opacity=".2" />
-      {/* 스트로우 */}
-      <rect x="13" y="2" width="1.5" height="5.5" rx=".75" fill="currentColor" opacity=".6" />
+      <path d="M5 8h14l-1.6 9.4A2 2 0 0115.4 19H8.6a2 2 0 01-2-.6L5 8z" fill="currentColor" />
+      <path d="M15 11h2a2 2 0 010 4h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <path d="M9.5 4c0 0 1 .8 0 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity=".5" />
+      <path d="M12.5 4c0 0 1 .8 0 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity=".5" />
     </svg>
   )
 }
 
-// 관광지 — 아치 게이트 (arch gate)
 export function PlaceLandmarkIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      {/* 상단 아치 */}
-      <path d="M3 11C3 6.6 7 3 12 3s9 3.6 9 8v1H3v-1z" fill="currentColor" />
-      {/* 왼쪽 기둥 */}
-      <rect x="3" y="11" width="4.5" height="10" rx="1" fill="currentColor" />
-      {/* 오른쪽 기둥 */}
-      <rect x="16.5" y="11" width="4.5" height="10" rx="1" fill="currentColor" />
-      {/* 아치 안 빈 공간 */}
-      <path d="M7.5 11C7.5 8.5 9.5 7 12 7s4.5 1.5 4.5 4v1H7.5v-1z" fill="white" opacity=".85" />
+      <rect x="2" y="8" width="20" height="14" rx="2.5" fill="currentColor" />
+      <rect x="8" y="5" width="8" height="4" rx="1.5" fill="currentColor" />
+      <circle cx="12" cy="15" r="3.5" fill="white" opacity=".9" />
+      <circle cx="12" cy="15" r="1.8" fill="currentColor" />
+      <circle cx="18.5" cy="10" r="1.5" fill="white" opacity=".6" />
     </svg>
   )
 }
 
-// 숙소 — 초승달 (crescent moon)
 export function PlaceHotelIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor" />
-      <circle cx="17" cy="6" r="1.2" fill="currentColor" opacity=".45" />
-      <circle cx="20" cy="9.5" r=".8" fill="currentColor" opacity=".3" />
+      <rect x="2" y="13" width="20" height="8" rx="2" fill="currentColor" />
+      <path d="M2 14V9a2 2 0 012-2h4.5a2 2 0 012 2v5" fill="currentColor" />
+      <path d="M13.5 14V9a2 2 0 012-2H20a2 2 0 012 2v5" fill="currentColor" />
+      <rect x="5" y="9" width="2.5" height="2" rx=".5" fill="white" opacity=".8" />
+      <rect x="9" y="17" width="6" height="4" rx="1" fill="white" opacity=".5" />
     </svg>
   )
 }
 
-// 쇼핑 — 가격 태그 (price tag)
 export function PlaceShoppingIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M21.7 13.4l-9.1 9.1a1 1 0 01-1.4 0L2.5 13.8A1 1 0 012 13V4a2 2 0 012-2h9a1 1 0 01.7.3l8 8a1 1 0 010 1.4-.3.1z" fill="currentColor" />
-      <circle cx="8" cy="8" r="2" fill="white" opacity=".85" />
+      <path d="M4 8h16l-2 12a1 1 0 01-1 .9H7a1 1 0 01-1-.9L4 8z" fill="currentColor" />
+      <path d="M9 8V6a3 3 0 016 0v2" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".8" />
     </svg>
   )
 }
 
-// 자연 — 겹친 산봉우리 (layered mountains)
 export function PlaceNatureIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      {/* 뒷 산 */}
-      <path d="M1 21L9.5 7 18 21H1z" fill="currentColor" opacity=".45" />
-      {/* 앞 산 */}
-      <path d="M7 21L15.5 8 24 21H7z" fill="currentColor" />
-      {/* 눈 */}
-      <path d="M15.5 8l2 3.8-4 0z" fill="white" opacity=".75" />
+      <path d="M12 3C7.5 3 4 6.7 4 11.2c0 3.5 2.1 6.5 5.1 7.9L12 11l2.9 8.1C17.9 17.7 20 14.7 20 11.2 20 6.7 16.5 3 12 3z" fill="currentColor" />
+      <rect x="11" y="17" width="2" height="5" rx="1" fill="currentColor" opacity=".6" />
     </svg>
   )
 }
 
-// 액티비티 — 트로피 (trophy)
 export function PlaceActivityIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      {/* 컵 몸통 */}
-      <path d="M7 3h10l-1.5 9A5 5 0 0112 16a5 5 0 01-7.5-4L7 3z" fill="currentColor" />
-      {/* 왼쪽 손잡이 */}
-      <path d="M7 5.5H4.5A1.5 1.5 0 003 7v1A2 2 0 007 8" fill="currentColor" opacity=".5" />
-      {/* 오른쪽 손잡이 */}
-      <path d="M17 5.5h2.5A1.5 1.5 0 0121 7v1A2 2 0 0117 8" fill="currentColor" opacity=".5" />
-      {/* 받침대 */}
-      <rect x="10" y="16" width="4" height="3" rx=".5" fill="currentColor" />
-      <rect x="7.5" y="19" width="9" height="2" rx="1" fill="currentColor" />
+      <path d="M13 2L4 14h7.5l-2.5 8L21 10h-8z" fill="currentColor" />
     </svg>
   )
 }
 
-// 기타 — 나침반 (compass)
 export function PlacePinIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="12" cy="12" r="9" fill="currentColor" opacity=".15" />
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      {/* 북 방향 (밝음) */}
-      <path d="M12 4l2.5 7H12 9.5L12 4z" fill="currentColor" />
-      {/* 남 방향 (어두움) */}
-      <path d="M12 20l-2.5-7H12h2.5L12 20z" fill="currentColor" opacity=".35" />
-      <circle cx="12" cy="12" r="1.5" fill="white" />
+      <path d="M12 2C8.1 2 5 5.1 5 9c0 5.5 7 13 7 13s7-7.5 7-13c0-3.9-3.1-7-7-7z" fill="currentColor" />
+      <circle cx="12" cy="9" r="2.5" fill="white" opacity=".85" />
     </svg>
   )
 }
