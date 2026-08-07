@@ -58,6 +58,7 @@ export default function PlaceMapSearch({
   const [selectedPlace, setSelectedPlace] = useState<GooglePlace | null>(null)
   const [mapCenter, setMapCenter] = useState(MAP_DEFAULT_CENTER)
   const [showList, setShowList] = useState(false)
+  const [showRecommendations, setShowRecommendations] = useState(true)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locating, setLocating] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -302,57 +303,78 @@ export default function PlaceMapSearch({
         <div className="relative z-10 mt-auto min-h-0">
           <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
 
-            {/* 카테고리 칩 */}
-            <div className="border-border overflow-x-auto border-b" style={{ scrollbarWidth: 'none' }}>
-              <div className="flex gap-2 px-4 py-3">
-                {CATEGORY_CHIPS.map((cat) => {
+            {/* 헤더 (항상 노출 — 토글) */}
+            <button
+              onClick={() => setShowRecommendations((v) => !v)}
+              className="border-border flex w-full items-center justify-between border-b px-5 py-3"
+            >
+              <span className="text-ink text-[14px] font-semibold">추천 장소</span>
+              <svg
+                width="18" height="18" viewBox="0 0 18 18" fill="none"
+                className={`transition-transform duration-300 ${showRecommendations ? 'rotate-180' : ''}`}
+              >
+                <path d="M4.5 11L9 6.5l4.5 4.5" stroke="var(--color-ink3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* 접히는 영역 */}
+            <div
+              className="overflow-hidden transition-all duration-300 ease-in-out"
+              style={{ maxHeight: showRecommendations ? 600 : 0 }}
+            >
+              {/* 카테고리 칩 */}
+              <div className="relative border-border border-b">
+                <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex gap-2 px-4 py-3 pr-10">
+                    {CATEGORY_CHIPS.map((cat) => {
+                      const CatIcon = cat.icon
+                      return (
+                        <button
+                          key={cat.label}
+                          onClick={() => setQuery(cat.label)}
+                          className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold active:opacity-70"
+                          style={{ borderColor: cat.hex + '50', color: cat.hex, backgroundColor: cat.hex + '14' }}
+                        >
+                          <CatIcon size={13} className="flex-shrink-0" />
+                          {cat.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                {/* 우측 페이드 */}
+                <div className="pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-white to-transparent" />
+              </div>
+
+              {/* 추천 장소 목록 (TODO: API 연동) */}
+              <div
+                className="overflow-y-auto"
+                style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
+              >
+                {MOCK_RECOMMENDATIONS.map((item) => {
+                  const cat = getCategoryStyle(item.categoryName)
                   const CatIcon = cat.icon
                   return (
-                    <button
-                      key={cat.label}
-                      onClick={() => setQuery(cat.label)}
-                      className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold active:opacity-70"
-                      style={{ borderColor: cat.hex + '40', color: cat.hex, backgroundColor: cat.hex + '12' }}
-                    >
-                      <CatIcon size={13} className="flex-shrink-0" />
-                      {cat.label}
-                    </button>
+                    <div key={item.id} className="active:bg-bg2 flex items-center px-4 py-2.5">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}>
+                          <CatIcon size={18} className={cat.color} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-ink truncate text-[14px] font-semibold">{item.name}</p>
+                          <p className="text-ink3 truncate text-[11px]">{item.address}</p>
+                          <p className="mt-0.5 text-[11px] font-semibold" style={{ color: cat.hex }}>
+                            {cat.hashLabel}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center">
+                        <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
+                      </div>
+                    </div>
                   )
                 })}
               </div>
-            </div>
-
-            {/* 추천 장소 목록 (TODO: API 연동) */}
-            <div
-              className="overflow-y-auto"
-              style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
-            >
-              <p className="text-ink2 px-4 pt-3 pb-2 text-[12px] font-semibold uppercase tracking-wider">
-                추천 장소
-              </p>
-              {MOCK_RECOMMENDATIONS.map((item) => {
-                const cat = getCategoryStyle(item.categoryName)
-                const CatIcon = cat.icon
-                return (
-                  <div key={item.id} className="active:bg-bg2 flex items-center gap-0 px-4 py-2.5">
-                    <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}>
-                        <CatIcon size={18} className={cat.color} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-ink truncate text-[14px] font-semibold">{item.name}</p>
-                        <p className="text-ink3 truncate text-[11px]">{item.address}</p>
-                        <p className="mt-0.5 text-[11px] font-semibold" style={{ color: cat.hex }}>
-                          {cat.hashLabel}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full">
-                      <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
-                    </div>
-                  </div>
-                )
-              })}
             </div>
 
           </div>
