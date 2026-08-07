@@ -66,11 +66,13 @@ export default function AuthPage() {
       if (event === 'PASSWORD_RECOVERY') goToReset()
     })
 
-    // Supabase SSR 클라이언트는 URL의 ?code= 자동 교환 안 함 → 직접 처리
-    // exchangeCodeForSession이 PASSWORD_RECOVERY 이벤트를 트리거함
+    // auth 페이지에 ?code=가 있으면 무조건 비밀번호 재설정 흐름
+    // (일반 로그인은 /auth/callback으로 처리되므로 여기엔 오지 않음)
     const code = new URLSearchParams(window.location.search).get('code')
     if (code) {
-      supabase.auth.exchangeCodeForSession(code)
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) goToReset()
+      })
     }
 
     return () => subscription.unsubscribe()
