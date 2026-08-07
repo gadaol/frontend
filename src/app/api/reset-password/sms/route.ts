@@ -1,37 +1,49 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { toE164, verifyOtp } from '@/lib/otp'
+import { toE164 } from '@/lib/otp'
 
 export async function POST(request: Request) {
-  const { phone, code, newPassword } = await request.json()
+  const { phone, email, newPassword } = await request.json()
 
-  if (!phone || !code || !newPassword) {
-    return NextResponse.json({ error: 'phone, code, newPassword required' }, { status: 400 })
+  if (!phone || !email || !newPassword) {
+    return NextResponse.json({ error: 'phone, email, newPassword required' }, { status: 400 })
   }
 
-  const { error } = await verifyOtp(phone, code)
-  if (error) return error
-
+  const phoneRaw = phone.replace(/-/g, '')
   const e164 = toE164(phone)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  // 전화번호로 프로필 조회 후 이메일 일치하는 계정 찾기
   const { data: profiles, error: profileError } = await supabase
     .from('profiles')
     .select('id')
-    .or(`phone.eq.${phone},phone.eq.${e164}`)
-    .limit(1)
+    .or(`phone.eq.${phone},phone.eq.${phoneRaw},phone.eq.${e164}`)
 
   if (profileError || !profiles || profiles.length === 0) {
     return NextResponse.json({ errorCode: 'accountNotFound' }, { status: 404 })
   }
 
-  const { data: userData } = await supabase.auth.admin.getUserById(profiles[0].id)
-  const email = userData?.user?.email
+  const targetUser = (
+    await Promise.all(
+      profiles.map(async (p) => {
+        const { data } = await supabase.auth.admin.getUserById(p.id)
+        const u = data?.user
+        if (!u) return null
+        if (u.email !== email) return null
+        if (u.app_metadata?.provider !== 'email') return null
+        return u
+      }),
+    )
+  ).find(Boolean)
 
-  const { error: updateError } = await supabase.auth.admin.updateUserById(profiles[0].id, {
+  if (!targetUser) {
+    return NextResponse.json({ errorCode: 'accountNotFound' }, { status: 404 })
+  }
+
+  const { error: updateError } = await supabase.auth.admin.updateUserById(targetUser.id, {
     password: newPassword,
   })
 
@@ -39,5 +51,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ errorCode: 'passwordUpdateFailed' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, email })
+  return NextResponse.json({ success: true })
 }

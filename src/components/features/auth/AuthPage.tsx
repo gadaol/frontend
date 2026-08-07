@@ -58,7 +58,9 @@ export default function AuthPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        router.replace(`/${locale}/reset-password`)
+        fetch('/api/set-reset-cookie', { method: 'POST' }).finally(() => {
+          router.replace(`/${locale}/reset-password`)
+        })
       }
     })
     return () => subscription.unsubscribe()
@@ -70,6 +72,8 @@ export default function AuthPage() {
       {view === 'social' && (
         <SocialLoginView
           onEmailClick={() => setView('email')}
+          onFindAccount={() => setView('find-account')}
+          onForgotPassword={() => setView('forgot-password')}
           errorMessage={socialError}
           redirectTo={searchParams.get('redirectTo')}
         />
@@ -78,8 +82,6 @@ export default function AuthPage() {
         <EmailLoginView
           onBack={() => setView('social')}
           onSignUp={() => setView('signup')}
-          onForgotPassword={() => setView('forgot-password')}
-          onFindAccount={() => setView('find-account')}
           onVerificationSent={(email) => {
             setVerificationEmail(email)
             setView('email-verification')
@@ -98,9 +100,9 @@ export default function AuthPage() {
       {view === 'email-verification' && (
         <EmailVerificationView email={verificationEmail} onBack={() => setView('signup')} />
       )}
-      {view === 'forgot-password' && <ForgotPasswordView onBack={() => setView('email')} />}
+      {view === 'forgot-password' && <ForgotPasswordView onBack={() => setView('social')} />}
       {view === 'find-account' && (
-        <FindAccountView onBack={() => setView('email')} onGoToLogin={() => setView('email')} />
+        <FindAccountView onBack={() => setView('social')} onGoToLogin={() => setView('social')} />
       )}
     </div>
   )

@@ -76,6 +76,7 @@ export default function ResetPasswordPage() {
     setServerError(null)
     const { error } = await supabase.auth.updateUser({ password })
     if (error) return setServerError(error.message)
+    await fetch('/api/clear-reset-cookie', { method: 'POST' })
     await supabase.auth.signOut()
     router.replace(`/${locale}`)
   }

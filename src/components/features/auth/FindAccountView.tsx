@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import api, { isApiError } from '@/lib/axios/client'
 import Button from '@/components/ui/Button'
@@ -14,10 +14,14 @@ function formatPhone(value: string): string {
 
 type Step = 'input' | 'otp' | 'result'
 
+interface AccountEntry {
+  maskedEmail: string | null
+  providers: string[]
+}
+
 interface AccountResult {
   found: boolean
-  maskedEmail?: string
-  providers?: string[]
+  accounts?: AccountEntry[]
 }
 
 interface Props {
@@ -35,6 +39,24 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AccountResult | null>(null)
+  const [timeLeft, setTimeLeft] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const formatTime = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setTimeLeft(180)
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) { clearInterval(timerRef.current!); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
 
   const handleSendOtp = async () => {
     if (!phone.trim()) return
@@ -43,6 +65,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
     try {
       await api.post('/api/find-account/send', { phone })
       setStep('otp')
+      startTimer()
     } catch (err) {
       setError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
@@ -123,7 +146,14 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
               {t('otpSentDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
+                {timeLeft > 0 ? (
+                  <span className="text-primary text-[13px] font-medium tabular-nums">{formatTime(timeLeft)}</span>
+                ) : (
+                  <span className="text-error text-[13px]">{t('otpExpired')}</span>
+                )}
+              </div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -131,23 +161,23 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder={t('otpPlaceholder')}
-                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2"
+                disabled={timeLeft === 0}
+                className={`text-ink h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2 disabled:text-ink3 ${timeLeft > 0 ? 'border-primary focus:border-primary focus:ring-primary/10' : 'border-red-300'}`}
               />
+              {timeLeft === 0 && (
+                <p className="text-error text-[12px]">{t('otpExpiredDesc')}</p>
+              )}
             </div>
             {error && <span className="text-error mt-2 text-[13px]">{error}</span>}
             <button
-              onClick={async () => {
-                setOtp('')
-                setError(null)
-                await handleSendOtp()
-              }}
+              onClick={async () => { setOtp(''); setError(null); await handleSendOtp() }}
               disabled={sending}
               className="text-primary mt-3 self-start text-[13px] font-medium disabled:opacity-50"
             >
               {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
-              <Button onClick={handleVerify} disabled={verifying || otp.length < 6} fullWidth>
+              <Button onClick={handleVerify} disabled={verifying || otp.length < 6 || timeLeft === 0} fullWidth>
                 {verifying ? t('processing') : t('verifyOtp')}
               </Button>
             </div>
@@ -156,26 +186,30 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
 
         {step === 'result' && result && (
           <div className="flex flex-1 flex-col">
-            {result.found ? (
+            {result.found && result.accounts && result.accounts.length > 0 ? (
               <>
                 <h2 className="text-ink mb-6 text-[18px] font-bold">
                   {t('findAccountResultTitle')}
                 </h2>
-                <div className="border-border rounded-2xl border p-5">
-                  <ResultRow label={t('maskedEmailLabel')} value={result.maskedEmail ?? '-'} />
-                  <ResultRow
-                    label={t('loginMethodLabel')}
-                    value={
-                      result.providers
-                        ?.map((p) => {
-                          if (p === 'google') return t('methodGoogle')
-                          if (p === 'kakao') return t('methodKakao')
-                          return t('methodEmail')
-                        })
-                        .join(', ') ?? '-'
-                    }
-                    last
-                  />
+                <div className="flex flex-col gap-3">
+                  {result.accounts.map((account, i) => (
+                    <div key={i} className="border-border rounded-2xl border p-5">
+                      <ResultRow label={t('maskedEmailLabel')} value={account.maskedEmail ?? '-'} />
+                      <ResultRow
+                        label={t('loginMethodLabel')}
+                        value={
+                          account.providers
+                            .map((p) => {
+                              if (p === 'google') return t('methodGoogle')
+                              if (p === 'kakao') return t('methodKakao')
+                              return t('methodEmail')
+                            })
+                            .join(', ')
+                        }
+                        last
+                      />
+                    </div>
+                  ))}
                 </div>
               </>
             ) : (

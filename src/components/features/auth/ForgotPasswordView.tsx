@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ function formatPhone(value: string): string {
 }
 
 type Method = 'email' | 'sms'
-type SmsStep = 'phone' | 'otp' | 'password'
+type SmsStep = 'phone' | 'otp' | 'password' | 'done'
 type EmailFormValues = { email: string }
 type PasswordFormValues = { password: string; confirmPassword: string }
 
@@ -44,11 +44,30 @@ export default function ForgotPasswordView({ onBack }: Props) {
   // SMS 상태
   const [smsStep, setSmsStep] = useState<SmsStep>('phone')
   const [phone, setPhone] = useState('')
+  const [smsEmail, setSmsEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [sending, setSending] = useState(false)
   const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [smsError, setSmsError] = useState<string | null>(null)
   const [pwServerError, setPwServerError] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const formatTime = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    setTimeLeft(180)
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) { clearInterval(timerRef.current!); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
 
   // 이메일 폼
   const emailSchema = z.object({ email: z.string().email(t('emailError')) })
@@ -95,12 +114,13 @@ export default function ForgotPasswordView({ onBack }: Props) {
   }
 
   const handleSendOtp = async () => {
-    if (!phone.trim()) return
+    if (!phone.trim() || !smsEmail.trim()) return
     setSending(true)
     setSmsError(null)
     try {
       await api.post('/api/find-account/send', { phone })
       setSmsStep('otp')
+      startTimer()
     } catch (err) {
       setSmsError(isApiError(err) ? t(err.code as never) : tc('error'))
     } finally {
@@ -125,15 +145,12 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const onPasswordSubmit = async ({ password }: PasswordFormValues) => {
     setPwServerError(null)
     try {
-      const { data } = await api.post('/api/reset-password/sms', {
+      await api.post('/api/reset-password/sms', {
         phone,
-        code: otp,
+        email: smsEmail,
         newPassword: password,
       })
-      if (data.email) {
-        await supabase.auth.signInWithPassword({ email: data.email, password })
-      }
-      router.replace(`/${locale}/home`)
+      setSmsStep('done')
     } catch (err) {
       setPwServerError(isApiError(err) ? t(err.code as never) : tc('error'))
     }
@@ -146,6 +163,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
     setSmsError(null)
     setEmailServerError(null)
     setOtp('')
+    setSmsEmail('')
   }
 
   const isEmailSent = method === 'email' && !!sentEmail
@@ -155,6 +173,7 @@ export default function ForgotPasswordView({ onBack }: Props) {
     if (method === 'sms') {
       if (smsStep === 'otp') return setSmsStep('phone')
       if (smsStep === 'password') return setSmsStep('otp')
+      if (smsStep === 'done') return onBack()
     }
     onBack()
   }
@@ -279,20 +298,32 @@ export default function ForgotPasswordView({ onBack }: Props) {
             <p className="text-ink3 mb-6 text-[14px] leading-relaxed">
               {t('forgotPasswordSmsDesc')}
             </p>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-ink text-[13px] font-medium">{t('phoneLabel')}</label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                value={phone}
-                onChange={(e) => setPhone(formatPhone(e.target.value))}
-                placeholder={t('phonePlaceholder')}
-                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2"
-              />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-ink text-[13px] font-medium">{t('emailLabel')}</label>
+                <input
+                  type="email"
+                  value={smsEmail}
+                  onChange={(e) => setSmsEmail(e.target.value)}
+                  placeholder="hello@gadaol.com"
+                  className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-ink text-[13px] font-medium">{t('phoneLabel')}</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder={t('phonePlaceholder')}
+                  className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2"
+                />
+              </div>
             </div>
             {smsError && <span className="text-error mt-2 text-[13px]">{smsError}</span>}
             <div className="mt-auto pt-8">
-              <Button onClick={handleSendOtp} disabled={sending || !phone.trim()} fullWidth>
+              <Button onClick={handleSendOtp} disabled={sending || !phone.trim() || !smsEmail.trim()} fullWidth>
                 {sending ? t('otpSending') : t('sendOtp')}
               </Button>
             </div>
@@ -307,7 +338,14 @@ export default function ForgotPasswordView({ onBack }: Props) {
               {t('otpSentDesc')}
             </p>
             <div className="flex flex-col gap-1.5">
-              <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-ink text-[13px] font-medium">{t('otpLabel')}</label>
+                {timeLeft > 0 ? (
+                  <span className="text-primary text-[13px] font-medium tabular-nums">{formatTime(timeLeft)}</span>
+                ) : (
+                  <span className="text-error text-[13px]">{t('otpExpired')}</span>
+                )}
+              </div>
               <input
                 type="text"
                 inputMode="numeric"
@@ -315,23 +353,23 @@ export default function ForgotPasswordView({ onBack }: Props) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder={t('otpPlaceholder')}
-                className="border-border text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2"
+                disabled={timeLeft === 0}
+                className={`text-ink h-12 rounded-xl border px-3.5 text-[15px] tracking-widest outline-none focus:ring-2 disabled:text-ink3 ${timeLeft > 0 ? 'border-primary focus:border-primary focus:ring-primary/10' : 'border-red-300'}`}
               />
+              {timeLeft === 0 && (
+                <p className="text-error text-[12px]">{t('otpExpiredDesc')}</p>
+              )}
             </div>
             {smsError && <span className="text-error mt-2 text-[13px]">{smsError}</span>}
             <button
-              onClick={async () => {
-                setOtp('')
-                setSmsError(null)
-                await handleSendOtp()
-              }}
+              onClick={async () => { setOtp(''); setSmsError(null); await handleSendOtp() }}
               disabled={sending}
               className="text-primary mt-3 self-start text-[13px] font-medium disabled:opacity-50"
             >
               {sending ? t('otpSending') : t('resendOtp')}
             </button>
             <div className="mt-auto pt-8">
-              <Button onClick={handleVerifyOtp} disabled={otp.length < 6 || verifyingOtp} fullWidth>
+              <Button onClick={handleVerifyOtp} disabled={otp.length < 6 || verifyingOtp || timeLeft === 0} fullWidth>
                 {verifyingOtp ? t('processing') : t('verifyOtp')}
               </Button>
             </div>
@@ -381,6 +419,23 @@ export default function ForgotPasswordView({ onBack }: Props) {
               </Button>
             </div>
           </form>
+        )}
+
+        {/* SMS - 변경 완료 */}
+        {method === 'sms' && smsStep === 'done' && (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <div className="bg-primary-light mb-6 flex h-16 w-16 items-center justify-center rounded-full">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="13" stroke="var(--color-primary)" strokeWidth="2" />
+                <path d="M10 16l4 4 8-8" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h2 className="text-ink mb-2 text-[20px] font-bold">{t('resetPasswordDoneTitle')}</h2>
+            <p className="text-ink3 text-[14px]">{t('resetPasswordSuccessDesc')}</p>
+            <div className="mt-auto w-full pt-8">
+              <Button onClick={onBack} fullWidth>{t('goToLogin')}</Button>
+            </div>
+          </div>
         )}
       </div>
     </div>

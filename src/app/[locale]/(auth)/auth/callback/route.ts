@@ -11,9 +11,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // 비밀번호 재설정 흐름: 재설정 완료 전까지 앱 진입 차단 쿠키 설정
       const next = searchParams.get('next')
       if (next === 'reset-password') {
-        return NextResponse.redirect(`${origin}/${locale}/reset-password`)
+        const res = NextResponse.redirect(`${origin}/${locale}/reset-password`)
+        res.cookies.set('pwd_reset_pending', '1', {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 900, // 15분
+        })
+        return res
       }
 
       const {
@@ -73,5 +81,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     }
   }
 
+  const supabase = await createClient()
+  await supabase.auth.signOut()
   return NextResponse.redirect(`${origin}/${locale}?error=auth`)
 }
