@@ -11,19 +11,27 @@ import {
   reorderItineraryDay,
   updateTrip,
   deleteOutOfRangeDays,
+  addMemoItem,
 } from '@/app/actions/trip'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
+import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import Button from '@/components/ui/Button'
 import { COVER_PRESETS } from '@/utils/coverPresets'
-import type { TripDetail } from '../../page'
+import type { TripDetail, TripExpense } from '../../page'
 
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
 
 type EditTab = 'info' | 'day'
 
-export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
+export default function ScheduleEditClient({
+  trip,
+  expenses,
+}: {
+  trip: TripDetail
+  expenses: TripExpense[]
+}) {
   const locale = useLocale()
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -60,6 +68,19 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
     () => new Map(trip.itinerary_days.map((d) => [d.day_date, d])),
     [trip.itinerary_days],
   )
+
+  // 경비 집계
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const memberCount = trip.trip_members.length
+  const perPerson = memberCount > 1 ? Math.ceil(totalExpenses / memberCount) : 0
+
+  const expensesByDay = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const e of expenses) {
+      if (e.day_id) map.set(e.day_id, (map.get(e.day_id) ?? 0) + e.amount)
+    }
+    return map
+  }, [expenses])
 
   const selectedDay = typeof activeTab === 'number' ? expectedDays[activeTab] : undefined
   const selectedDayDB = selectedDay ? dayMap.get(selectedDay.dayDate) : undefined
@@ -99,7 +120,6 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
       return
     }
 
-    // 범위 밖으로 잘리는 날짜 확인
     if (startDate && endDate) {
       const affected = trip.itinerary_days
         .filter((d) => d.day_date < startDate || d.day_date > endDate)
@@ -160,6 +180,14 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
     })
   }
 
+  function handleAddMemo() {
+    if (!selectedDay) return
+    startTransition(async () => {
+      await addMemoItem(trip.id, selectedDay.dayDate, selectedDay.dayNumber, '')
+      router.refresh()
+    })
+  }
+
   return (
     <div className="bg-bg2 relative flex h-[100dvh] flex-col">
       {/* 헤더 */}
@@ -190,9 +218,8 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
         )}
       </div>
 
-      {/* 탭 — DAY별 날짜 2줄 표기 + 아이콘이 있어 공통 Tabs 컴포넌트로는 표현이 안 돼 구조는 유지하고 토큰만 통일 */}
-      <div className="border-border flex flex-shrink-0 [scrollbar-width:none] overflow-x-auto border-b bg-white px-3 [&::-webkit-scrollbar]:hidden">
-        {/* 정보 탭 */}
+      {/* 탭 */}
+      <div className="border-border flex flex-shrink-0 overflow-x-auto border-b bg-white px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           onClick={() => setActiveTab('info')}
           className={`flex flex-shrink-0 items-center gap-1 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
@@ -201,30 +228,36 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.3" />
-            <path
-              d="M7 6v4M7 4.5v.5"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
+            <path d="M7 6v4M7 4.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
           정보
         </button>
-        {/* 구분선 */}
         <div className="bg-border mx-1 my-3 w-px flex-shrink-0" />
-        {/* Day 탭들 */}
-        {expectedDays.map((day, idx) => (
-          <button
-            key={day.dayDate}
-            onClick={() => setActiveTab(idx)}
-            className={`flex flex-shrink-0 flex-col items-center gap-0.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-              activeTab === idx ? 'border-primary text-primary' : 'text-ink3 border-transparent'
-            }`}
-          >
-            <span>DAY {day.dayNumber}</span>
-            <span className="text-[10px]">{dayjs(day.dayDate).format('M/D')}</span>
-          </button>
-        ))}
+        {expectedDays.map((day, idx) => {
+          const db = dayMap.get(day.dayDate)
+          const dayTotal = db ? (expensesByDay.get(db.id) ?? 0) : 0
+          return (
+            <button
+              key={day.dayDate}
+              onClick={() => setActiveTab(idx)}
+              className={`flex flex-shrink-0 flex-col items-center gap-0.5 border-b-2 px-4 py-2.5 text-[13px] font-medium transition-colors ${
+                activeTab === idx ? 'border-primary text-primary' : 'text-ink3 border-transparent'
+              }`}
+            >
+              <span>DAY {day.dayNumber}</span>
+              <span className="text-[10px]">{dayjs(day.dayDate).format('M/D')}</span>
+              {dayTotal > 0 && (
+                <span
+                  className={`text-[9px] font-semibold ${activeTab === idx ? 'text-primary' : 'text-ink3'}`}
+                >
+                  {dayTotal >= 10000
+                    ? `${Math.round(dayTotal / 1000)}k`
+                    : `${dayTotal.toLocaleString()}`}원
+                </span>
+              )}
+            </button>
+          )
+        })}
         {expectedDays.length === 0 && (
           <span className="text-ink3 flex items-center px-2 py-3 text-[12px]">
             날짜 설정 후 일정 편집 가능
@@ -233,7 +266,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
       </div>
 
       {/* 컨텐츠 */}
-      <div className="flex-1 [scrollbar-width:none] overflow-y-auto [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* ── 기본 정보 탭 ── */}
         {activeTab === 'info' && (
           <div className="flex flex-col gap-4 p-4 pb-12">
@@ -243,9 +276,33 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
               </div>
             )}
 
+            {/* 총 경비 카드 */}
+            {totalExpenses > 0 && (
+              <div className="bg-primary-light rounded-2xl px-4 py-4">
+                <p className="text-primary mb-2 text-[11px] font-semibold uppercase tracking-wide">
+                  총 경비
+                </p>
+                <div className="flex items-end justify-between">
+                  <p className="text-primary text-[24px] font-extrabold leading-none">
+                    {totalExpenses.toLocaleString()}
+                    <span className="text-[14px] font-semibold">원</span>
+                  </p>
+                  {perPerson > 0 && (
+                    <div className="text-right">
+                      <p className="text-ink3 mb-0.5 text-[10px]">
+                        더치페이 ({memberCount}명)
+                      </p>
+                      <p className="text-ink text-[16px] font-bold">
+                        {perPerson.toLocaleString()}원
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 커버 */}
             <div>
-              {/* 미리보기 */}
               <div className="mb-3 h-[120px] w-full overflow-hidden rounded-2xl">
                 {isGradient(coverUrl) ? (
                   <div className="h-full w-full" style={{ background: coverUrl }} />
@@ -256,7 +313,6 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
               </div>
               <p className="text-ink2 mb-2 text-[12px] font-semibold">커버</p>
               <div className="grid grid-cols-5 gap-2">
-                {/* 이미지 업로드 */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
@@ -266,12 +322,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
                     <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                   ) : (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M9 4v10M4 9h10"
-                        stroke="var(--color-ink3)"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
+                      <path d="M9 4v10M4 9h10" stroke="var(--color-ink3)" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   )}
                   {!isGradient(coverUrl) && (
@@ -365,19 +416,33 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
 
         {/* ── Day 탭 컨텐츠 ── */}
         {typeof activeTab === 'number' && selectedDay && (
-          <div className="p-3 pb-24">
-            {/* Day 요약 */}
-            <div className="border-border mb-3 flex gap-5 rounded-2xl border bg-white px-4 py-3.5">
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-ink text-[18px] font-bold">{visibleItems.length}</span>
-                <span className="text-ink3 text-[11px]">장소</span>
+          <div className="p-3 pb-28">
+            {/* Day 요약 카드 */}
+            <div className="border-border mb-3 flex gap-4 rounded-2xl border bg-white px-4 py-3.5">
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-ink text-[18px] font-bold">{visibleItems.filter(i => i.item_type !== 'memo').length}</span>
+                <span className="text-ink3 text-[10px]">장소</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
+              {visibleItems.some(i => i.item_type === 'memo') && (
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[18px] font-bold text-amber-500">{visibleItems.filter(i => i.item_type === 'memo').length}</span>
+                  <span className="text-ink3 text-[10px]">메모</span>
+                </div>
+              )}
+              <div className="flex flex-col items-center gap-0.5">
                 <span className="text-ink text-[18px] font-bold">
                   {dayjs(selectedDay.dayDate).format('M/D')}
                 </span>
-                <span className="text-ink3 text-[11px]">날짜</span>
+                <span className="text-ink3 text-[10px]">날짜</span>
               </div>
+              {selectedDayDB && (expensesByDay.get(selectedDayDB.id) ?? 0) > 0 && (
+                <div className="ml-auto flex flex-col items-end gap-0.5">
+                  <span className="text-primary text-[15px] font-bold">
+                    {(expensesByDay.get(selectedDayDB.id) ?? 0).toLocaleString()}원
+                  </span>
+                  <span className="text-ink3 text-[10px]">경비</span>
+                </div>
+              )}
             </div>
 
             {selectedDayDB?.id && (
@@ -391,21 +456,23 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
               />
             )}
 
-            <div className="pl-[64px]">
+            {/* 장소/메모 추가 버튼 */}
+            <div className="flex gap-2 pl-[64px]">
               <Link
                 href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
-                className="border-border text-ink3 flex items-center justify-center gap-1.5 rounded-xl border border-dashed py-3 text-[13px]"
+                className="border-border text-ink3 flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dashed py-3 text-[13px]"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M8 3v10M3 8h10"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
                 장소 추가
               </Link>
+              <button
+                onClick={handleAddMemo}
+                className="border-border text-ink3 flex items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-3 text-[13px]"
+              >
+                📝 메모
+              </button>
             </div>
           </div>
         )}
@@ -446,7 +513,7 @@ export default function ScheduleEditClient({ trip }: { trip: TripDetail }) {
         </div>
       )}
 
-      {/* FAB — 일정 탭에서만 */}
+      {/* FAB */}
       {typeof activeTab === 'number' && selectedDay && (
         <Link
           href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
@@ -549,7 +616,7 @@ function DraggableTimelineList({
   }
 
   return (
-    <div ref={listRef} className="mb-2 flex flex-col">
+    <div ref={listRef} className="mb-2 flex flex-col gap-2">
       {displayItems.map((item, idx) => {
         const isDragging = item.id === draggingId
         return (
@@ -609,7 +676,10 @@ function TimelineItemRow({
     if (isDragging) setSwiped(false)
   }, [isDragging])
 
+  const isMemo = item.item_type === 'memo'
   const catLabel = item.places?.place_categories?.name ?? '기타'
+  const category = getCategoryInfoByLabel(catLabel)
+  const Icon = category.icon
   const placeHref = item.places?.google_place_id
     ? `/${locale}/places/${item.places.google_place_id}`
     : null
@@ -637,33 +707,45 @@ function TimelineItemRow({
 
   return (
     <div className="flex items-start gap-2.5">
-      <div className="w-11 flex-shrink-0 pt-[14px] text-right">
-        <button
-          onClick={openTimePicker}
-          className="w-full text-right text-[11px] leading-tight font-medium"
-        >
-          {item.visit_time ? (
-            <span className="text-ink3">{item.visit_time.slice(0, 5)}</span>
-          ) : (
-            <span className="text-ink3">--:--</span>
-          )}
-        </button>
-        <input
-          ref={timeRef}
-          type="time"
-          className="sr-only"
-          defaultValue={item.visit_time ? item.visit_time.slice(0, 5) : ''}
-          onChange={(e) => onTimeChange(item.id, e.target.value)}
-        />
+      {/* 시간 */}
+      <div className="w-11 flex-shrink-0 pt-3.5 text-right">
+        {!isMemo ? (
+          <>
+            <button
+              onClick={openTimePicker}
+              className="w-full text-right text-[11px] leading-tight font-medium"
+            >
+              {item.visit_time ? (
+                <span className="text-primary">{item.visit_time.slice(0, 5)}</span>
+              ) : (
+                <span className="text-ink3">--:--</span>
+              )}
+            </button>
+            <input
+              ref={timeRef}
+              type="time"
+              className="sr-only"
+              defaultValue={item.visit_time ? item.visit_time.slice(0, 5) : ''}
+              onChange={(e) => onTimeChange(item.id, e.target.value)}
+            />
+          </>
+        ) : null}
       </div>
 
+      {/* Dot + line */}
       <div className="mt-[6px] flex w-5 flex-shrink-0 flex-col items-center">
-        <div className="bg-primary h-2.5 w-2.5 flex-shrink-0 rounded-full" />
+        {isMemo ? (
+          <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full border-2 border-dashed border-amber-400 bg-amber-50" />
+        ) : (
+          <div className="bg-primary h-2.5 w-2.5 flex-shrink-0 rounded-full" />
+        )}
         {!isLast && <div className="bg-border mt-1 w-0.5 flex-1" style={{ minHeight: 32 }} />}
       </div>
 
+      {/* 카드 영역 */}
       <div className="mb-2 flex flex-1 items-start gap-1">
         <div className="relative flex-1 overflow-hidden rounded-xl">
+          {/* 삭제 버튼 */}
           <button
             onClick={() => onRemove(item.id)}
             className="absolute top-0 right-0 flex h-full items-center justify-center rounded-r-xl bg-red-500 text-[12px] font-semibold text-white active:bg-red-600"
@@ -673,49 +755,76 @@ function TimelineItemRow({
             삭제
           </button>
 
-          <div
-            className="border-border border bg-white"
-            style={{
-              transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
-              transition: 'transform 0.2s ease',
-              borderRadius: 12,
-            }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onClick={() => swiped && setSwiped(false)}
-          >
-            <div className="px-3.5 py-3">
-              <p className="text-ink text-[14px] font-semibold">
-                {item.places?.name ?? '알 수 없는 장소'}
+          {/* 슬라이드 카드 */}
+          {isMemo ? (
+            /* 메모 카드 */
+            <div
+              className="flex min-h-[52px] items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5"
+              style={{
+                transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
+                transition: 'transform 0.2s ease',
+              }}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+              onClick={() => swiped && setSwiped(false)}
+            >
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="mt-0.5 flex-shrink-0">
+                <path d="M2 12l1.5-4.5L10 1l3 3-6.5 6.5L2 12z" stroke="#F59E0B" strokeWidth="1.3" strokeLinejoin="round" />
+                <path d="M8.5 2.5l3 3" stroke="#F59E0B" strokeWidth="1.3" />
+              </svg>
+              <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-amber-900">
+                {item.memo || <span className="text-amber-400 italic">메모 없음</span>}
               </p>
-              {item.places?.address && (
-                <p className="text-ink3 mt-0.5 truncate text-[12px]">{item.places.address}</p>
-              )}
-              {item.memo && (
-                <p className="border-border text-ink2 mt-1.5 border-t pt-1.5 text-[12px]">
-                  {item.memo}
-                </p>
-              )}
-              <div className="mt-2 flex items-center gap-1.5">
-                {catLabel !== '기타' && (
-                  <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
-                    {catLabel}
-                  </span>
-                )}
-                {placeHref && (
-                  <Link
-                    href={placeHref}
-                    onClick={(e) => e.stopPropagation()}
-                    className="border-border text-ink3 rounded-full border px-2 py-0.5 text-[11px]"
-                  >
-                    상세 보기
-                  </Link>
-                )}
+            </div>
+          ) : (
+            /* 장소 카드 */
+            <div
+              className="flex overflow-hidden rounded-xl"
+              style={{
+                transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
+                transition: 'transform 0.2s ease',
+              }}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+              onClick={() => swiped && setSwiped(false)}
+            >
+              {/* 카테고리 아이콘 컬럼 */}
+              <div className={`flex w-14 flex-shrink-0 items-center justify-center ${category.bg}`}>
+                <Icon size={22} className={category.color} />
+              </div>
+              {/* 텍스트 바디 */}
+              <div className="border-border flex min-w-0 flex-1 flex-col justify-between border border-l-0 bg-white px-3 py-2.5" style={{ borderRadius: '0 12px 12px 0' }}>
+                <div>
+                  <p className="text-ink text-[13px] font-semibold leading-snug">
+                    {item.places?.name ?? '알 수 없는 장소'}
+                  </p>
+                  {item.places?.address && (
+                    <p className="text-ink3 mt-0.5 truncate text-[11px]">{item.places.address}</p>
+                  )}
+                  {item.memo && (
+                    <p className="text-ink2 mt-1 text-[11px] italic">&ldquo;{item.memo}&rdquo;</p>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <p className="text-[11px] font-semibold" style={{ color: category.hex }}>
+                    {category.hashLabel}
+                  </p>
+                  {placeHref && (
+                    <Link
+                      href={placeHref}
+                      onClick={(e) => e.stopPropagation()}
+                      className="border-border text-ink3 rounded-full border px-2 py-0.5 text-[10px]"
+                    >
+                      상세
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
+        {/* 드래그 핸들 */}
         <button
           className="flex flex-shrink-0 touch-none items-center self-stretch px-1 pb-2 select-none"
           onTouchStart={onDragHandleTouchStart}

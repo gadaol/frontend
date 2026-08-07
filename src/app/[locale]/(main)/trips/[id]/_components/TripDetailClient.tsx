@@ -351,6 +351,8 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId, 
               locale={locale}
               isOwner={isOwner}
               expensesByDay={expensesByDay}
+              totalExpenses={localExpenses.reduce((s, e) => s + e.amount, 0)}
+              memberCount={trip.trip_members.length}
             />
           )}
           {activeTab === '장소' && <PlacesMapTab trip={trip} />}
@@ -402,6 +404,8 @@ function ItineraryTab({
   locale,
   isOwner,
   expensesByDay,
+  totalExpenses,
+  memberCount,
 }: {
   expectedDays: ExpectedDay[]
   dayMap: Map<string, DayDB>
@@ -415,7 +419,11 @@ function ItineraryTab({
   locale: string
   isOwner: boolean
   expensesByDay: Map<string, TripExpense[]>
+  totalExpenses: number
+  memberCount: number
 }) {
+  const perPerson = memberCount > 1 ? Math.ceil(totalExpenses / memberCount) : 0
+
   if (expectedDays.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
@@ -442,6 +450,28 @@ function ItineraryTab({
 
   return (
     <div>
+      {/* 총 경비 카드 */}
+      {totalExpenses > 0 && (
+        <div className="mx-4 mt-4 rounded-2xl bg-primary-light px-4 py-4">
+          <p className="text-primary mb-1.5 text-[11px] font-semibold uppercase tracking-wide">
+            총 경비
+          </p>
+          <div className="flex items-end justify-between">
+            <p className="text-primary text-[26px] font-extrabold leading-none">
+              {totalExpenses.toLocaleString()}
+              <span className="text-[15px] font-semibold">원</span>
+            </p>
+            {perPerson > 0 && (
+              <div className="text-right">
+                <p className="text-ink3 mb-0.5 text-[10px]">더치페이 ({memberCount}명)</p>
+                <p className="text-ink text-[17px] font-bold">
+                  {perPerson.toLocaleString()}원
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {expectedDays.map((day) => {
         const dayDB = dayMap.get(day.dayDate)
         const dayExpenses = dayDB ? (expensesByDay.get(dayDB.id) ?? []) : []

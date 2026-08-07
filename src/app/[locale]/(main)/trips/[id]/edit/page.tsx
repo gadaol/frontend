@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import ScheduleEditClient from './_components/ScheduleEditClient'
-import type { TripDetail } from '../page'
+import type { TripDetail, TripExpense } from '../page'
 
 export default async function EditPage({
   params,
@@ -18,27 +18,38 @@ export default async function EditPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: trip } = await supabase
-    .from('trips')
-    .select(
-      `*,
-      trip_members(user_id, role),
-      trip_tags(tag),
-      itinerary_days(
-        id, day_number, day_date,
-        itinerary_items(
-          id, order_index, visit_time, memo, place_id,
-          places(id, google_place_id, name, address, lat, lng, place_categories(name))
-        )
-      )`,
-    )
-    .eq('id', id)
-    .single()
+  const [{ data: trip }, { data: expenseRows }] = await Promise.all([
+    supabase
+      .from('trips')
+      .select(
+        `*,
+        trip_members(user_id, role),
+        trip_tags(tag),
+        itinerary_days(
+          id, day_number, day_date,
+          itinerary_items(
+            id, order_index, visit_time, memo, place_id, item_type,
+            places(id, google_place_id, name, address, lat, lng, place_categories(name))
+          )
+        )`,
+      )
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('trip_expenses')
+      .select('id, amount, category, note, item_id, day_id')
+      .eq('trip_id', id),
+  ])
 
   if (!trip) notFound()
 
   const isMember = trip.trip_members.some((m) => m.user_id === user.id)
   if (!isMember) redirect(`/${locale}`)
 
-  return <ScheduleEditClient trip={trip as TripDetail} />
+  return (
+    <ScheduleEditClient
+      trip={trip as TripDetail}
+      expenses={(expenseRows ?? []) as TripExpense[]}
+    />
+  )
 }
