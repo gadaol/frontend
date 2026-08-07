@@ -5,10 +5,23 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
 import { SearchIcon, ChevronRightIcon } from '@/components/icons'
-import { getCategoryInfo, getMarkerColor } from '@/utils/placeCategory'
+import { getCategoryInfo, getCategoryStyle, getMarkerColor } from '@/utils/placeCategory'
 import type { GooglePlace } from '@/types/place'
 
 export type { GooglePlace }
+
+// ─── 카테고리 칩 (8개 DB 카테고리) ──────────────────────────────────────────
+const CATEGORY_CHIPS = (['식당', '카페', '관광지', '숙소', '쇼핑', '자연', '액티비티', '기타'] as const).map(
+  getCategoryStyle
+)
+
+// ─── 추천 장소 목 데이터 (TODO: API 연동) ─────────────────────────────────────
+type RecommendationItem = { id: string; name: string; address: string; categoryName: string }
+const MOCK_RECOMMENDATIONS: RecommendationItem[] = [
+  { id: 'r1', name: '추천 장소 이름', address: '서울시 강남구 어딘가', categoryName: '식당' },
+  { id: 'r2', name: '추천 카페 이름', address: '서울시 마포구 어딘가', categoryName: '카페' },
+  { id: 'r3', name: '추천 관광지 이름', address: '서울시 종로구 어딘가', categoryName: '관광지' },
+]
 
 const MAP_DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 }
 const MAP_OPTIONS: google.maps.MapOptions = {
@@ -284,12 +297,64 @@ export default function PlaceMapSearch({
         </button>
       </div>
 
-      {/* 초기 안내 */}
+      {/* 초기 추천 패널 */}
       {!hasSearched && query.length < 2 && (
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-20 text-center">
-          <div className="mx-4 rounded-3xl bg-white/90 px-6 py-5 shadow-lg backdrop-blur-sm">
-            <p className="text-ink text-[14px] font-semibold">{t('searchHint')}</p>
-            <p className="text-ink3 mt-0.5 text-[12px]">{t('searchHintDesc')}</p>
+        <div className="relative z-10 mt-auto min-h-0">
+          <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
+
+            {/* 카테고리 칩 */}
+            <div className="border-border overflow-x-auto border-b" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-2 px-4 py-3">
+                {CATEGORY_CHIPS.map((cat) => {
+                  const CatIcon = cat.icon
+                  return (
+                    <button
+                      key={cat.label}
+                      onClick={() => setQuery(cat.label)}
+                      className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold active:opacity-70"
+                      style={{ borderColor: cat.hex + '40', color: cat.hex, backgroundColor: cat.hex + '12' }}
+                    >
+                      <CatIcon size={13} className="flex-shrink-0" />
+                      {cat.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 추천 장소 목록 (TODO: API 연동) */}
+            <div
+              className="overflow-y-auto"
+              style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
+            >
+              <p className="text-ink2 px-4 pt-3 pb-2 text-[12px] font-semibold uppercase tracking-wider">
+                추천 장소
+              </p>
+              {MOCK_RECOMMENDATIONS.map((item) => {
+                const cat = getCategoryStyle(item.categoryName)
+                const CatIcon = cat.icon
+                return (
+                  <div key={item.id} className="active:bg-bg2 flex items-center gap-0 px-4 py-2.5">
+                    <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}>
+                        <CatIcon size={18} className={cat.color} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-ink truncate text-[14px] font-semibold">{item.name}</p>
+                        <p className="text-ink3 truncate text-[11px]">{item.address}</p>
+                        <p className="mt-0.5 text-[11px] font-semibold" style={{ color: cat.hex }}>
+                          {cat.hashLabel}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full">
+                      <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
           </div>
         </div>
       )}
