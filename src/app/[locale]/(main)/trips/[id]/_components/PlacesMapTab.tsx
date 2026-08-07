@@ -371,6 +371,9 @@ export default function PlacesMapTab({ trip }: Props) {
                           {pin.address && (
                             <p className="text-ink3 mt-0.5 truncate text-[11px]">{pin.address}</p>
                           )}
+                          <p className="mt-0.5 text-[11px] font-semibold" style={{ color: catInfo.hex }}>
+                            {catInfo.hashLabel}
+                          </p>
                         </div>
                         <svg
                           width="14"

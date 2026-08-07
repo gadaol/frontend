@@ -363,11 +363,11 @@ export default function PlaceMapSearch({
                           <p className="text-ink truncate text-[14px] font-semibold">
                             {place.displayName.text}
                           </p>
+                          <p className="text-ink3 mt-0.5 truncate text-[11px]">
+                            {place.formattedAddress}
+                          </p>
                           <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: category.hex }}>
                             {category.hashLabel}
-                          </p>
-                          <p className="text-ink3 truncate text-[11px]">
-                            {place.formattedAddress}
                           </p>
                         </div>
                       </button>

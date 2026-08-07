@@ -152,9 +152,6 @@ export default function BacklogList({ items: initialItems }: { items: BacklogIte
                 {/* 바디 */}
                 <div className="flex min-w-0 flex-1 flex-col justify-between px-3.5 py-3">
                   <div>
-                    <span className={`mb-1.5 inline-block text-[11px] font-semibold ${category.color}`}>
-                      {category.hashLabel}
-                    </span>
                     <p className="text-ink truncate text-[14px] leading-tight font-bold">
                       {item.places?.name ?? '알 수 없는 장소'}
                     </p>
@@ -162,11 +159,16 @@ export default function BacklogList({ items: initialItems }: { items: BacklogIte
                       <p className="text-ink3 mt-0.5 truncate text-[11px]">{item.places.address}</p>
                     )}
                   </div>
-                  {item.memo && (
-                    <p className="text-ink2 mt-2 truncate text-[11px] italic">
-                      &ldquo;{item.memo}&rdquo;
-                    </p>
-                  )}
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className={`text-[11px] font-semibold ${category.color}`}>
+                      {category.hashLabel}
+                    </span>
+                    {item.memo && (
+                      <p className="text-ink2 ml-2 max-w-[120px] truncate text-[11px] italic">
+                        &ldquo;{item.memo}&rdquo;
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {removeButton}
               </>

@@ -722,17 +722,19 @@ function ItineraryItemRow({
           onTouchEnd={onTouchEnd}
           onClick={() => swiped && setSwiped(false)}
         >
-          <div className={`flex w-12 flex-shrink-0 items-center justify-center ${category.bg}`}>
-            <Icon size={20} className={category.color} />
+          <div className={`flex w-14 flex-shrink-0 items-center justify-center ${category.bg}`}>
+            <Icon size={22} className={category.color} />
           </div>
-          <div className="min-w-0 flex-1 px-3 py-2.5">
-            <p className="text-ink text-[13px] leading-snug font-semibold">
-              {item.places?.name ?? '알 수 없는 장소'}
-            </p>
-            {item.places?.address && (
-              <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
-            )}
-            <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
+          <div className="flex min-w-0 flex-1 flex-col justify-between px-3 py-2.5">
+            <div>
+              <p className="text-ink text-[13px] leading-snug font-semibold">
+                {item.places?.name ?? '알 수 없는 장소'}
+              </p>
+              {item.places?.address && (
+                <p className="text-ink3 mt-0.5 truncate text-[11px]">{item.places.address}</p>
+              )}
+            </div>
+            <p className="mt-1.5 text-[11px] font-semibold" style={{ color: category.hex }}>
               {category.hashLabel}
             </p>
           </div>
