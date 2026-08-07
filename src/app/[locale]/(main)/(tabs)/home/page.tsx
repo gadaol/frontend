@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import dayjs from '@/lib/dayjs'
 import { daysUntil, formatDateRange, isTripOngoing, isTripUpcoming } from '@/utils/date'
 import {
+  BacklogIcon,
   BellIcon,
   ExploreIcon,
   ListIcon,
@@ -88,6 +89,11 @@ export default async function HomePage() {
       label: t('quickItinerary'),
       href: `/${locale}/trips`,
       icon: <ListIcon className="text-ink2" />,
+    },
+    {
+      label: t('quickBacklog'),
+      href: `/${locale}/backlog`,
+      icon: <BacklogIcon className="text-ink2" />,
     },
   ]
 
@@ -243,7 +249,7 @@ export default async function HomePage() {
         {/* 빠른 메뉴 */}
         <div>
           <p className="text-ink mb-3 text-[15px] font-semibold">{t('quickActions')}</p>
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-4 gap-2.5">
             {quickMenus.map((item) => (
               <Link
                 key={item.label}
