@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale, useTranslations } from 'next-intl'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/common/Logo'
+import PageLoading from '@/components/ui/PageLoading'
 
 interface Props {
   onEmailClick: () => void
@@ -17,6 +19,7 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
+  const [redirecting, setRedirecting] = useState(false)
 
   function callbackUrl() {
     const base = `${location.origin}/${locale}/auth/callback`
@@ -24,6 +27,7 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
   }
 
   const signInWithKakao = async () => {
+    setRedirecting(true)
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
@@ -34,6 +38,7 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
   }
 
   const signInWithGoogle = async () => {
+    setRedirecting(true)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: callbackUrl() },
@@ -90,21 +95,8 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
           </button>
         </div>
 
-        <p className="text-ink3 mt-4 text-center text-[12px] leading-relaxed">
-          {t.rich('termsNotice', {
-            termsLink: (chunks) => (
-              <button type="button" className="text-primary">
-                {chunks}
-              </button>
-            ),
-            privacyLink: (chunks) => (
-              <button type="button" className="text-primary">
-                {chunks}
-              </button>
-            ),
-          })}
-        </p>
       </div>
+      <PageLoading visible={redirecting} />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import api, { isApiError } from '@/lib/axios/client'
 import Button from '@/components/ui/Button'
+import PageLoading from '@/components/ui/PageLoading'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11)
@@ -225,6 +226,7 @@ export default function FindAccountView({ onBack, onGoToLogin }: Props) {
           </div>
         )}
       </div>
+      <PageLoading visible={sending || verifying} />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import Button from '@/components/ui/Button'
+import PageLoading from '@/components/ui/PageLoading'
 
 type FormValues = { email: string; password: string }
 
@@ -123,6 +124,7 @@ export default function EmailLoginView({ onBack, onSignUp, onVerificationSent }:
           </p>
         </div>
       </form>
+      <PageLoading visible={isSubmitting} />
     </div>
   )
 }
