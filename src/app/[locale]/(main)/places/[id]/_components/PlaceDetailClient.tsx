@@ -98,7 +98,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
         <div className="absolute right-0 bottom-0 left-0 z-10 px-4 pb-4">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-2.5 py-1 backdrop-blur-sm">
             <Icon size={12} className="text-white" />
-            <span className="text-[11px] font-semibold text-white">{category.label}</span>
+            <span className="text-[11px] font-semibold text-white">{category.hashLabel}</span>
           </div>
           <h1 className="mb-1 text-[22px] leading-tight font-bold tracking-tight text-white">
             {place.displayName.text}

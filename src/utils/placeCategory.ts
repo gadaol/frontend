@@ -1,241 +1,136 @@
 import {
-  RestaurantIcon,
-  CafeIcon,
-  HotelIcon,
-  AttractionIcon,
-  ShoppingIcon,
-  ParkIcon,
-  NightlifeIcon,
-  TransitIcon,
-  MedicalIcon,
-  MapPinIcon,
+  PlaceFoodIcon,
+  PlaceCafeIcon,
+  PlaceLandmarkIcon,
+  PlaceHotelIcon,
+  PlaceShoppingIcon,
+  PlaceNatureIcon,
+  PlaceActivityIcon,
+  PlacePinIcon,
 } from '@/components/icons'
 
-type IconComponent = typeof MapPinIcon
+type IconComponent = typeof PlacePinIcon
 
-type Category = {
+export type CategoryStyle = {
   icon: IconComponent
-  color: string // text color
-  bg: string // background color
-  label: string
+  color: string      // text color (tailwind)
+  bg: string         // background color (tailwind)
+  hex: string        // hex for map markers etc.
+  label: string      // 한국어 명칭
+  hashLabel: string  // #명칭 형태
 }
 
-const CATEGORY_MAP: Record<string, Category> = {
-  restaurant: {
-    icon: RestaurantIcon,
-    color: 'text-[#E85D04]',
-    bg: 'bg-[#FFF0E6]',
-    label: '음식점',
+// DB place_categories.name 기반 (8개)
+const CATEGORY_STYLES: Record<string, CategoryStyle> = {
+  식당: {
+    icon: PlaceFoodIcon,
+    color: 'text-[#EA6000]',
+    bg: 'bg-[#FFF3EA]',
+    hex: '#EA6000',
+    label: '식당',
+    hashLabel: '#식당',
   },
-  food: { icon: RestaurantIcon, color: 'text-[#E85D04]', bg: 'bg-[#FFF0E6]', label: '음식점' },
-  meal_takeaway: {
-    icon: RestaurantIcon,
-    color: 'text-[#E85D04]',
-    bg: 'bg-[#FFF0E6]',
-    label: '테이크아웃',
+  카페: {
+    icon: PlaceCafeIcon,
+    color: 'text-[#7C4A1E]',
+    bg: 'bg-[#FEF3C7]',
+    hex: '#92400E',
+    label: '카페',
+    hashLabel: '#카페',
   },
-  meal_delivery: {
-    icon: RestaurantIcon,
-    color: 'text-[#E85D04]',
-    bg: 'bg-[#FFF0E6]',
-    label: '배달',
-  },
-  bakery: { icon: CafeIcon, color: 'text-[#92400E]', bg: 'bg-warning-light', label: '베이커리' },
-  cafe: { icon: CafeIcon, color: 'text-[#92400E]', bg: 'bg-warning-light', label: '카페' },
-  coffee: { icon: CafeIcon, color: 'text-[#92400E]', bg: 'bg-warning-light', label: '카페' },
-  lodging: { icon: HotelIcon, color: 'text-primary', bg: 'bg-[#EBF1FE]', label: '숙소' },
-  hotel: { icon: HotelIcon, color: 'text-primary', bg: 'bg-[#EBF1FE]', label: '호텔' },
-  motel: { icon: HotelIcon, color: 'text-primary', bg: 'bg-[#EBF1FE]', label: '모텔' },
-  tourist_attraction: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
+  관광지: {
+    icon: PlaceLandmarkIcon,
+    color: 'text-[#C07A00]',
+    bg: 'bg-[#FFFBEB]',
+    hex: '#D97706',
     label: '관광지',
+    hashLabel: '#관광지',
   },
-  point_of_interest: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
-    label: '관광지',
+  숙소: {
+    icon: PlaceHotelIcon,
+    color: 'text-[#1D5CE8]',
+    bg: 'bg-[#EEF4FF]',
+    hex: '#2563EB',
+    label: '숙소',
+    hashLabel: '#숙소',
   },
-  landmark: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
-    label: '관광지',
+  쇼핑: {
+    icon: PlaceShoppingIcon,
+    color: 'text-[#6D28D9]',
+    bg: 'bg-[#F3F0FF]',
+    hex: '#7C3AED',
+    label: '쇼핑',
+    hashLabel: '#쇼핑',
   },
-  museum: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
-    label: '박물관',
-  },
-  art_gallery: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
-    label: '갤러리',
-  },
-  amusement_park: {
-    icon: AttractionIcon,
-    color: 'text-[#D97706]',
-    bg: 'bg-warning-light',
-    label: '테마파크',
-  },
-  shopping_mall: {
-    icon: ShoppingIcon,
-    color: 'text-[#7C3AED]',
-    bg: 'bg-[#EDE9FE]',
-    label: '쇼핑몰',
-  },
-  store: { icon: ShoppingIcon, color: 'text-[#7C3AED]', bg: 'bg-[#EDE9FE]', label: '상점' },
-  clothing_store: {
-    icon: ShoppingIcon,
-    color: 'text-[#7C3AED]',
-    bg: 'bg-[#EDE9FE]',
-    label: '의류',
-  },
-  department_store: {
-    icon: ShoppingIcon,
-    color: 'text-[#7C3AED]',
-    bg: 'bg-[#EDE9FE]',
-    label: '백화점',
-  },
-  park: { icon: ParkIcon, color: 'text-[#059669]', bg: 'bg-success-light', label: '공원' },
-  natural_feature: {
-    icon: ParkIcon,
-    color: 'text-[#059669]',
-    bg: 'bg-success-light',
+  자연: {
+    icon: PlaceNatureIcon,
+    color: 'text-[#15803D]',
+    bg: 'bg-[#F0FDF4]',
+    hex: '#16A34A',
     label: '자연',
+    hashLabel: '#자연',
   },
-  campground: { icon: ParkIcon, color: 'text-[#059669]', bg: 'bg-success-light', label: '캠핑' },
-  night_club: { icon: NightlifeIcon, color: 'text-[#DB2777]', bg: 'bg-[#FCE7F3]', label: '나이트' },
-  bar: { icon: NightlifeIcon, color: 'text-[#DB2777]', bg: 'bg-[#FCE7F3]', label: '바' },
-  subway_station: {
-    icon: TransitIcon,
-    color: 'text-[#0891B2]',
-    bg: 'bg-[#CFFAFE]',
-    label: '지하철',
+  액티비티: {
+    icon: PlaceActivityIcon,
+    color: 'text-[#C81E32]',
+    bg: 'bg-[#FFF1F2]',
+    hex: '#DC2626',
+    label: '액티비티',
+    hashLabel: '#액티비티',
   },
-  train_station: {
-    icon: TransitIcon,
-    color: 'text-[#0891B2]',
-    bg: 'bg-[#CFFAFE]',
-    label: '기차역',
+  기타: {
+    icon: PlacePinIcon,
+    color: 'text-[#475569]',
+    bg: 'bg-[#F3F6F9]',
+    hex: '#64748B',
+    label: '기타',
+    hashLabel: '#기타',
   },
-  bus_station: { icon: TransitIcon, color: 'text-[#0891B2]', bg: 'bg-[#CFFAFE]', label: '버스' },
-  airport: { icon: TransitIcon, color: 'text-[#0891B2]', bg: 'bg-[#CFFAFE]', label: '공항' },
-  hospital: { icon: MedicalIcon, color: 'text-[#DC2626]', bg: 'bg-[#FEE2E2]', label: '병원' },
-  pharmacy: { icon: MedicalIcon, color: 'text-[#DC2626]', bg: 'bg-[#FEE2E2]', label: '약국' },
 }
 
-const DEFAULT_CATEGORY: Category = {
-  icon: MapPinIcon,
-  color: 'text-primary',
-  bg: 'bg-[#EBF1FE]',
-  label: '장소',
+const DEFAULT_STYLE: CategoryStyle = CATEGORY_STYLES['기타']
+
+/** DB category name(한국어) → CategoryStyle */
+export function getCategoryStyle(name: string | null | undefined): CategoryStyle {
+  return CATEGORY_STYLES[name ?? ''] ?? DEFAULT_STYLE
 }
 
-export function getCategoryInfo(types: string[]): Category {
-  for (const type of types) {
-    if (CATEGORY_MAP[type]) return CATEGORY_MAP[type]
-  }
-  return DEFAULT_CATEGORY
-}
-
-// DB place_categories.name (한국어) 기반 조회
-const KO_LABEL_MAP: Record<string, string> = {
-  식당: 'restaurant',
-  테이크아웃: 'meal_takeaway',
-  배달: 'meal_delivery',
-  베이커리: 'bakery',
-  카페: 'cafe',
-  숙소: 'lodging',
-  호텔: 'hotel',
-  모텔: 'motel',
-  관광지: 'tourist_attraction',
-  박물관: 'museum',
-  갤러리: 'art_gallery',
-  테마파크: 'amusement_park',
-  액티비티: 'amusement_park',
-  쇼핑: 'shopping_mall',
-  쇼핑몰: 'shopping_mall',
-  상점: 'store',
-  의류: 'clothing_store',
-  백화점: 'department_store',
-  공원: 'park',
-  자연: 'natural_feature',
-  캠핑: 'campground',
-  나이트: 'night_club',
-  바: 'bar',
-  지하철: 'subway_station',
-  기차역: 'train_station',
-  버스: 'bus_station',
-  공항: 'airport',
-  병원: 'hospital',
-  약국: 'pharmacy',
-}
-
-export function getCategoryInfoByLabel(label: string): Category {
-  if (CATEGORY_MAP[label]) return CATEGORY_MAP[label]
-  const googleType = KO_LABEL_MAP[label]
-  return googleType ? (CATEGORY_MAP[googleType] ?? DEFAULT_CATEGORY) : DEFAULT_CATEGORY
-}
-
-// Google Places API types → DB place_categories.name 변환
+// 하위호환: 기존 Google type 배열 기반 조회
 const GOOGLE_TYPE_TO_DB: Record<string, string> = {
-  restaurant: '식당',
-  food: '식당',
-  meal_takeaway: '식당',
-  meal_delivery: '식당',
-  fast_food_restaurant: '식당',
-  korean_restaurant: '식당',
-  chinese_restaurant: '식당',
-  japanese_restaurant: '식당',
-  american_restaurant: '식당',
-  seafood_restaurant: '식당',
-  cafe: '카페',
-  bakery: '카페',
-  coffee: '카페',
-  coffee_shop: '카페',
-  tourist_attraction: '관광지',
-  museum: '관광지',
-  art_gallery: '관광지',
-  point_of_interest: '관광지',
-  landmark: '관광지',
-  historical_place: '관광지',
-  cultural_landmark: '관광지',
-  monument: '관광지',
-  palace: '관광지',
-  castle: '관광지',
-  shrine: '관광지',
-  temple: '관광지',
-  church: '관광지',
-  zoo: '관광지',
-  aquarium: '관광지',
-  lodging: '숙소',
-  hotel: '숙소',
-  motel: '숙소',
-  shopping_mall: '쇼핑',
-  store: '쇼핑',
-  clothing_store: '쇼핑',
-  department_store: '쇼핑',
-  convenience_store: '쇼핑',
-  supermarket: '쇼핑',
+  restaurant: '식당', food: '식당', meal_takeaway: '식당', meal_delivery: '식당',
+  fast_food_restaurant: '식당', korean_restaurant: '식당', chinese_restaurant: '식당',
+  japanese_restaurant: '식당', american_restaurant: '식당', seafood_restaurant: '식당',
+  cafe: '카페', bakery: '카페', coffee: '카페', coffee_shop: '카페',
+  tourist_attraction: '관광지', museum: '관광지', art_gallery: '관광지',
+  point_of_interest: '관광지', landmark: '관광지', historical_place: '관광지',
+  cultural_landmark: '관광지', monument: '관광지', palace: '관광지',
+  castle: '관광지', shrine: '관광지', temple: '관광지', church: '관광지',
+  zoo: '관광지', aquarium: '관광지',
+  lodging: '숙소', hotel: '숙소', motel: '숙소',
+  shopping_mall: '쇼핑', store: '쇼핑', clothing_store: '쇼핑',
+  department_store: '쇼핑', convenience_store: '쇼핑', supermarket: '쇼핑',
   grocery_store: '쇼핑',
-  park: '자연',
-  natural_feature: '자연',
-  campground: '자연',
-  national_park: '자연',
-  beach: '자연',
-  forest: '자연',
-  amusement_park: '액티비티',
-  sports_complex: '액티비티',
-  stadium: '액티비티',
-  golf_course: '액티비티',
-  bowling_alley: '액티비티',
+  park: '자연', natural_feature: '자연', campground: '자연',
+  national_park: '자연', beach: '자연', forest: '자연',
+  amusement_park: '액티비티', sports_complex: '액티비티', stadium: '액티비티',
+  golf_course: '액티비티', bowling_alley: '액티비티',
 }
 
+/** Google Places API types 배열 → CategoryStyle */
+export function getCategoryInfo(types: string[]): CategoryStyle {
+  for (const type of types) {
+    const dbName = GOOGLE_TYPE_TO_DB[type]
+    if (dbName) return CATEGORY_STYLES[dbName] ?? DEFAULT_STYLE
+  }
+  return DEFAULT_STYLE
+}
+
+/** DB category name(한국어) → CategoryStyle (하위호환) */
+export function getCategoryInfoByLabel(label: string): CategoryStyle {
+  return getCategoryStyle(label)
+}
+
+/** Google Types → DB category name */
 export function getDbCategory(types: string[]): string {
   for (const type of types) {
     if (GOOGLE_TYPE_TO_DB[type]) return GOOGLE_TYPE_TO_DB[type]
@@ -243,32 +138,7 @@ export function getDbCategory(types: string[]): string {
   return '기타'
 }
 
-// 지도 마커 색상 (hex)
+/** 지도 마커 hex 색상 */
 export function getMarkerColor(types: string[]): string {
-  const colorMap: Record<string, string> = {
-    restaurant: '#E85D04',
-    food: '#E85D04',
-    meal_takeaway: '#E85D04',
-    cafe: '#92400E',
-    bakery: '#92400E',
-    coffee: '#92400E',
-    lodging: '#1B6FF0',
-    hotel: '#1B6FF0',
-    tourist_attraction: '#D97706',
-    museum: '#D97706',
-    amusement_park: '#D97706',
-    shopping_mall: '#7C3AED',
-    store: '#7C3AED',
-    park: '#059669',
-    natural_feature: '#059669',
-    night_club: '#DB2777',
-    bar: '#DB2777',
-    subway_station: '#0891B2',
-    airport: '#0891B2',
-    hospital: '#DC2626',
-  }
-  for (const type of types) {
-    if (colorMap[type]) return colorMap[type]
-  }
-  return '#1B6FF0'
+  return getCategoryInfo(types).hex
 }

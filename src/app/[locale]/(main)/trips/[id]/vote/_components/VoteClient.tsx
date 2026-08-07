@@ -187,9 +187,9 @@ export default function VoteClient({
                       {place.address && (
                         <p className="text-ink3 mt-0.5 truncate text-[12px]">{place.address}</p>
                       )}
-                      <span className="bg-bg2 text-ink2 mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                        {category.label}
-                      </span>
+                      <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
+                        {category.hashLabel}
+                      </p>
                     </div>
                     <button
                       onClick={() => handleRemove(candidate.id, candidate.place_id)}

@@ -201,8 +201,8 @@ export default function PlaceMapSearch({
                   >
                     {selectedPlace.displayName.text}
                   </p>
-                  <p style={{ fontSize: 12, color: '#888', margin: '3px 0 0', lineHeight: 1.4 }}>
-                    {getCategoryInfo(selectedPlace.types).label}
+                  <p style={{ fontSize: 12, color: getCategoryInfo(selectedPlace.types).hex, fontWeight: 600, margin: '3px 0 0', lineHeight: 1.4 }}>
+                    {getCategoryInfo(selectedPlace.types).hashLabel}
                   </p>
                   {selectedPlace.rating && (
                     <p style={{ fontSize: 12, color: '#555', margin: '3px 0 0' }}>
@@ -363,14 +363,12 @@ export default function PlaceMapSearch({
                           <p className="text-ink truncate text-[14px] font-semibold">
                             {place.displayName.text}
                           </p>
-                          <p className="text-ink3 mt-0.5 truncate text-[12px]">
+                          <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: category.hex }}>
+                            {category.hashLabel}
+                          </p>
+                          <p className="text-ink3 truncate text-[11px]">
                             {place.formattedAddress}
                           </p>
-                          {place.rating && (
-                            <p className="text-ink3 mt-0.5 text-[11px]">
-                              ★ {place.rating.toFixed(1)}
-                            </p>
-                          )}
                         </div>
                       </button>
                       {renderListAction(place)}

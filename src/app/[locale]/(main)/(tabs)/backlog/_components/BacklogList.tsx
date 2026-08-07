@@ -152,10 +152,8 @@ export default function BacklogList({ items: initialItems }: { items: BacklogIte
                 {/* 바디 */}
                 <div className="flex min-w-0 flex-1 flex-col justify-between px-3.5 py-3">
                   <div>
-                    <span
-                      className={`mb-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${category.bg} ${category.color}`}
-                    >
-                      {catLabel}
+                    <span className={`mb-1.5 inline-block text-[11px] font-semibold ${category.color}`}>
+                      {category.hashLabel}
                     </span>
                     <p className="text-ink truncate text-[14px] leading-tight font-bold">
                       {item.places?.name ?? '알 수 없는 장소'}

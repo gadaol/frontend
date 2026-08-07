@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
-import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import { getCategoryStyle } from '@/utils/placeCategory'
 
 type BacklogCardProps = {
   id: string
@@ -23,25 +23,23 @@ export default function BacklogCard({
   memo,
 }: BacklogCardProps) {
   const locale = useLocale()
-  const category = getCategoryInfoByLabel(categoryName ?? '')
-  const Icon = category.icon
+  const cat = getCategoryStyle(categoryName)
+  const Icon = cat.icon
 
   const inner = (
     <div className="border-border bg-bg flex overflow-hidden rounded-2xl border active:opacity-80">
-      {/* 썸네일 */}
-      <div className={`flex w-20 flex-shrink-0 items-center justify-center ${category.bg}`}>
-        <Icon size={28} className={category.color} />
+      {/* 카테고리 썸네일 */}
+      <div className={`flex w-[72px] flex-shrink-0 items-center justify-center ${cat.bg}`}>
+        <Icon size={26} className={cat.color} />
       </div>
 
       {/* 바디 */}
       <div className="flex min-w-0 flex-1 flex-col justify-between px-3.5 py-3">
         <div>
-          <span
-            className={`mb-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${category.bg} ${category.color}`}
-          >
-            {category.label}
+          <span className={`mb-1.5 inline-block text-[11px] font-semibold ${cat.color}`}>
+            {cat.hashLabel}
           </span>
-          <p className="text-ink truncate text-[14px] leading-tight font-bold">{placeName}</p>
+          <p className="text-ink truncate text-[14px] font-bold leading-tight">{placeName}</p>
           {address && <p className="text-ink3 mt-0.5 truncate text-[11px]">{address}</p>}
         </div>
 

@@ -732,13 +732,9 @@ function ItineraryItemRow({
             {item.places?.address && (
               <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
             )}
-            {category.label !== '장소' && (
-              <div className="mt-1.5">
-                <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                  {category.label}
-                </span>
-              </div>
-            )}
+            <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
+              {category.hashLabel}
+            </p>
           </div>
           {placeHref && (
             <Link
