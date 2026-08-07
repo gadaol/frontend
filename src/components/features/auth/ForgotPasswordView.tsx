@@ -105,12 +105,17 @@ export default function ForgotPasswordView({ onBack }: Props) {
   const handleResend = async () => {
     if (!sentEmail || resending) return
     setResending(true)
-    await supabase.auth.resetPasswordForEmail(sentEmail, {
+    setEmailServerError(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(sentEmail, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? location.origin}/${locale}/auth/callback?next=reset-password`,
     })
     setResending(false)
-    setResent(true)
-    setTimeout(() => setResent(false), 3000)
+    if (error) {
+      setEmailServerError(error.message)
+    } else {
+      setResent(true)
+      setTimeout(() => setResent(false), 3000)
+    }
   }
 
   const handleSendOtp = async () => {

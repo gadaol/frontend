@@ -54,15 +54,25 @@ export default function AuthPage() {
   const socialError = initialError
 
   useEffect(() => {
+    const goToReset = () => {
+      fetch('/api/set-reset-cookie', { method: 'POST' }).finally(() => {
+        router.replace(`/${locale}/reset-password`)
+      })
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        fetch('/api/set-reset-cookie', { method: 'POST' }).finally(() => {
-          router.replace(`/${locale}/reset-password`)
-        })
-      }
+      if (event === 'PASSWORD_RECOVERY') goToReset()
     })
+
+    // Supabase SSR 클라이언트는 URL의 ?code= 자동 교환 안 함 → 직접 처리
+    // exchangeCodeForSession이 PASSWORD_RECOVERY 이벤트를 트리거함
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code)
+    }
+
     return () => subscription.unsubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
