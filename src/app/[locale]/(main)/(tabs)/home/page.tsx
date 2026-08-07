@@ -5,17 +5,14 @@ import { createClient } from '@/lib/supabase/server'
 import dayjs from '@/lib/dayjs'
 import { daysUntil, formatDateRange, isTripOngoing, isTripUpcoming } from '@/utils/date'
 import {
-  BacklogIcon,
   BellIcon,
-  ChevronRightIcon,
   ExploreIcon,
   ListIcon,
   PlusIcon,
 } from '@/components/icons'
-import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { isGradient } from '@/utils/uploadCover'
 import { AVATAR_COLORS } from '@/utils/avatarColors'
-import type { BacklogItemWithPlace, TripWithMembers } from '@/types/trip'
+import type { TripWithMembers } from '@/types/trip'
 
 function greetingSubKey():
   | 'greetingMorning'
@@ -39,17 +36,11 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const [tripsResult, backlogResult, notifResult, profileResult] = await Promise.all([
+  const [tripsResult, notifResult, profileResult] = await Promise.all([
     supabase
       .from('trips')
       .select('*, trip_members(user_id, role), trip_tags(tag)')
       .order('start_date', { ascending: true }),
-    supabase
-      .from('backlog_items')
-      .select('*, places(google_place_id, name, address, place_categories(name))')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(3),
     supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
@@ -59,7 +50,6 @@ export default async function HomePage() {
   ])
 
   const allTrips = (tripsResult.data ?? []) as TripWithMembers[]
-  const backlogItems = (backlogResult.data ?? []) as BacklogItemWithPlace[]
   const unreadCount = notifResult.count ?? 0
   const displayName = profileResult.data?.name ?? ''
 
@@ -98,11 +88,6 @@ export default async function HomePage() {
       label: t('quickItinerary'),
       href: `/${locale}/trips`,
       icon: <ListIcon className="text-ink2" />,
-    },
-    {
-      label: t('quickBacklog'),
-      href: `/${locale}/backlog`,
-      icon: <BacklogIcon className="text-ink2" />,
     },
   ]
 
@@ -258,7 +243,7 @@ export default async function HomePage() {
         {/* 빠른 메뉴 */}
         <div>
           <p className="text-ink mb-3 text-[15px] font-semibold">{t('quickActions')}</p>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-3 gap-2.5">
             {quickMenus.map((item) => (
               <Link
                 key={item.label}
@@ -275,60 +260,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* 저장한 장소 */}
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-ink text-[15px] font-semibold">{t('backlogSection')}</span>
-            {backlogItems.length > 0 && (
-              <Link href={`/${locale}/backlog`} className="text-primary text-[13px] font-medium">
-                {t('viewAll')}
-              </Link>
-            )}
-          </div>
-
-          {backlogItems.length === 0 ? (
-            <div className="border-border bg-bg flex flex-col items-center gap-3 rounded-3xl border py-8">
-              <p className="text-ink3 text-[14px]">{t('noBacklog')}</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {backlogItems.map((item) => {
-                const catLabel = item.places?.place_categories?.name ?? '기타'
-                const category = getCategoryInfoByLabel(catLabel)
-                const Icon = category.icon
-                return (
-                  <Link
-                    key={item.id}
-                    href={
-                      item.places?.google_place_id
-                        ? `/${locale}/places/${item.places.google_place_id}`
-                        : `/${locale}/backlog`
-                    }
-                    className="border-border bg-bg flex items-center gap-3 rounded-2xl border px-4 py-3.5 active:opacity-80"
-                  >
-                    <div
-                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
-                    >
-                      <Icon size={24} className={category.color} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-ink truncate text-[14px] font-semibold">
-                        {item.places?.name ?? '알 수 없는 장소'}
-                      </p>
-                      {item.places?.address && (
-                        <p className="text-ink3 truncate text-[12px]">{item.places.address}</p>
-                      )}
-                      <p className={`mt-0.5 text-[11px] font-medium ${category.color}`}>
-                        # {catLabel}
-                      </p>
-                    </div>
-                    <ChevronRightIcon className="text-ink3" />
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )
