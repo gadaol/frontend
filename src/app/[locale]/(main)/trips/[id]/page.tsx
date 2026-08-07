@@ -22,6 +22,11 @@ export type TripDetail = Tables<'trips'> & {
   itinerary_days: ItineraryDay[]
 }
 
+export type TripExpense = Pick<
+  Tables<'trip_expenses'>,
+  'id' | 'amount' | 'category' | 'note' | 'item_id' | 'day_id'
+>
+
 export type MemberProfile = { id: string; name: string | null; avatar_url: string | null }
 
 export type VoteEntry = { likes: number; dislikes: number; myVote: 'like' | 'dislike' | null }
@@ -41,7 +46,7 @@ export default async function TripDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const [{ data: trip }, { data: profileRows }] = await Promise.all([
+  const [{ data: trip }, { data: profileRows }, { data: expenseRows }] = await Promise.all([
     supabase
       .from('trips')
       .select(
@@ -51,7 +56,7 @@ export default async function TripDetailPage({
         itinerary_days(
           id, day_number, day_date,
           itinerary_items(
-            id, order_index, visit_time, memo, place_id,
+            id, order_index, visit_time, memo, place_id, item_type,
             places(id, google_place_id, name, address, lat, lng, place_categories(name))
           )
         )`,
@@ -59,6 +64,10 @@ export default async function TripDetailPage({
       .eq('id', id)
       .single(),
     supabase.from('profiles').select('id, name, avatar_url'),
+    supabase
+      .from('trip_expenses')
+      .select('id, amount, category, note, item_id, day_id')
+      .eq('trip_id', id),
   ])
 
   if (!trip) notFound()
@@ -73,6 +82,7 @@ export default async function TripDetailPage({
       trip={trip as TripDetail}
       memberProfiles={memberProfiles}
       currentUserId={user.id}
+      expenses={(expenseRows ?? []) as TripExpense[]}
     />
   )
 }

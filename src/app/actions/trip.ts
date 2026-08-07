@@ -294,6 +294,160 @@ export async function updateTrip(
   return {}
 }
 
+export async function addMemoItem(
+  tripId: string,
+  dayDate: string,
+  dayNumber: number,
+  memo: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
+  const dayId = await ensureItineraryDay(tripId, dayDate, dayNumber)
+  if (!dayId) return { error: 'day_create_failed' }
+
+  const { data: existing } = await supabase
+    .from('itinerary_items')
+    .select('order_index')
+    .eq('day_id', dayId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const nextOrder = (existing?.order_index ?? -1) + 1
+
+  const { error } = await supabase.from('itinerary_items').insert({
+    day_id: dayId,
+    place_id: null,
+    item_type: 'memo',
+    memo: memo.trim() || null,
+    order_index: nextOrder,
+  })
+
+  if (error) return { error: error.message }
+
+  const locale = await getLocale()
+  revalidatePath(`/${locale}/trips/${tripId}`)
+  return {}
+}
+
+export async function updateItineraryItemMemo(
+  itemId: string,
+  memo: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: item } = await supabase
+    .from('itinerary_items')
+    .select('itinerary_days(trip_id)')
+    .eq('id', itemId)
+    .maybeSingle()
+
+  const tripId = (item?.itinerary_days as { trip_id: string } | null)?.trip_id
+  if (!tripId) return { error: 'not_found' }
+
+  const { data: memberCheck } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!memberCheck) return { error: 'forbidden' }
+
+  const { error } = await supabase
+    .from('itinerary_items')
+    .update({ memo: memo.trim() || null })
+    .eq('id', itemId)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function addExpense(data: {
+  tripId: string
+  dayId: string | null
+  itemId: string | null
+  amount: number
+  category: string
+  note?: string
+}): Promise<{ error?: string; id?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', data.tripId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
+  const { data: inserted, error } = await supabase
+    .from('trip_expenses')
+    .insert({
+      trip_id: data.tripId,
+      day_id: data.dayId,
+      item_id: data.itemId,
+      amount: data.amount,
+      category: data.category,
+      note: data.note?.trim() || null,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+  return { id: inserted.id }
+}
+
+export async function removeExpense(expenseId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: expense } = await supabase
+    .from('trip_expenses')
+    .select('trip_id')
+    .eq('id', expenseId)
+    .maybeSingle()
+
+  if (!expense) return { error: 'not_found' }
+
+  const { data: member } = await supabase
+    .from('trip_members')
+    .select('id')
+    .eq('trip_id', expense.trip_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!member) return { error: 'forbidden' }
+
+  const { error } = await supabase.from('trip_expenses').delete().eq('id', expenseId)
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function kickMember(
   tripId: string,
   targetUserId: string,

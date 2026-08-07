@@ -232,6 +232,7 @@ export type Database = {
         Row: {
           day_id: string
           id: string
+          item_type: string
           memo: string | null
           order_index: number
           place_id: string | null
@@ -240,6 +241,7 @@ export type Database = {
         Insert: {
           day_id: string
           id?: string
+          item_type?: string
           memo?: string | null
           order_index?: number
           place_id?: string | null
@@ -248,6 +250,7 @@ export type Database = {
         Update: {
           day_id?: string
           id?: string
+          item_type?: string
           memo?: string | null
           order_index?: number
           place_id?: string | null
@@ -734,6 +737,61 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'trip_tags_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      trip_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          day_id: string | null
+          id: string
+          item_id: string | null
+          note: string | null
+          trip_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          day_id?: string | null
+          id?: string
+          item_id?: string | null
+          note?: string | null
+          trip_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          day_id?: string | null
+          id?: string
+          item_id?: string | null
+          note?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'trip_expenses_day_id_fkey'
+            columns: ['day_id']
+            isOneToOne: false
+            referencedRelation: 'itinerary_days'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'trip_expenses_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'itinerary_items'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'trip_expenses_trip_id_fkey'
             columns: ['trip_id']
             isOneToOne: false
             referencedRelation: 'trips'
