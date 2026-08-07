@@ -68,7 +68,7 @@ export default function AuthPage() {
   }, [])
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col">
       {view === 'social' && (
         <SocialLoginView
           onEmailClick={() => setView('email')}

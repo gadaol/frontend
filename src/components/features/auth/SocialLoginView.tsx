@@ -41,14 +41,14 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[linear-gradient(170deg,var(--color-hero-top)_0%,var(--color-hero-bot)_100%)]">
+    <div className="flex flex-1 flex-col bg-[linear-gradient(170deg,var(--color-hero-top)_0%,var(--color-hero-bot)_100%)]">
       <div className="flex flex-col items-center px-7 pt-12 pb-8 text-center">
         <Logo size={48} variant="dark" className="mb-3" />
         <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">gadaol</div>
         <div className="text-sm text-white/45">{t('tagline')}</div>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto rounded-t-[28px] bg-white px-6 pt-8 pb-10">
+      <div className="flex flex-1 flex-col rounded-t-[28px] bg-white px-6 pt-8 pb-10">
         <div className="text-ink mb-1 text-[22px] font-bold tracking-tight">{t('title')}</div>
         <div className="text-ink3 mb-4 text-sm">{t('subtitle')}</div>
         {errorMessage && (

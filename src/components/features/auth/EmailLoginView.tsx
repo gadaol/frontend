@@ -81,7 +81,7 @@ export default function EmailLoginView({ onBack, onSignUp, onVerificationSent }:
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-1 flex-col overflow-y-auto px-5 py-6"
+        className="flex flex-1 flex-col px-5 py-6"
       >
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
