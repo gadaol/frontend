@@ -18,6 +18,7 @@ export async function POST(request: Request) {
   const { error } = await verifyOtp(phone, code)
   if (error) return error
 
+  const phoneRaw = phone.replace(/-/g, '')
   const e164 = toE164(phone)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,25 +28,25 @@ export async function POST(request: Request) {
   const { data: profiles, error: dbError } = await supabase
     .from('profiles')
     .select('id, phone')
-    .or(`phone.eq.${phone},phone.eq.${e164}`)
-    .limit(1)
+    .or(`phone.eq.${phone},phone.eq.${phoneRaw},phone.eq.${e164}`)
 
   if (dbError || !profiles || profiles.length === 0) {
     return NextResponse.json({ found: false })
   }
 
-  const { data: userData } = await supabase.auth.admin.getUserById(profiles[0].id)
+  const accounts = (
+    await Promise.all(
+      profiles.map(async (p) => {
+        const { data } = await supabase.auth.admin.getUserById(p.id)
+        if (!data?.user) return null
+        const { email, app_metadata } = data.user
+        const providers: string[] = app_metadata?.providers ?? [app_metadata?.provider ?? 'email']
+        return { maskedEmail: email ? maskEmail(email) : null, providers }
+      }),
+    )
+  ).filter(Boolean)
 
-  if (!userData?.user) {
-    return NextResponse.json({ found: false })
-  }
+  if (accounts.length === 0) return NextResponse.json({ found: false })
 
-  const { email, app_metadata } = userData.user
-  const providers: string[] = app_metadata?.providers ?? [app_metadata?.provider ?? 'email']
-
-  return NextResponse.json({
-    found: true,
-    maskedEmail: email ? maskEmail(email) : null,
-    providers,
-  })
+  return NextResponse.json({ found: true, accounts })
 }

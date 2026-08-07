@@ -14,18 +14,10 @@ type FormValues = { email: string; password: string }
 interface Props {
   onBack: () => void
   onSignUp: () => void
-  onForgotPassword: () => void
-  onFindAccount: () => void
   onVerificationSent: (email: string) => void
 }
 
-export default function EmailLoginView({
-  onBack,
-  onSignUp,
-  onForgotPassword,
-  onFindAccount,
-  onVerificationSent,
-}: Props) {
+export default function EmailLoginView({ onBack, onSignUp, onVerificationSent }: Props) {
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const router = useRouter()
@@ -114,19 +106,6 @@ export default function EmailLoginView({
             {errors.password && (
               <span className="text-error text-[12px]">{errors.password.message}</span>
             )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <button type="button" onClick={onFindAccount} className="text-ink3 text-[13px]">
-              {t('findAccount')}
-            </button>
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              className="text-primary text-[13px] font-medium"
-            >
-              {t('forgotPassword')}
-            </button>
           </div>
 
           {serverError && <span className="text-error text-[13px]">{serverError}</span>}

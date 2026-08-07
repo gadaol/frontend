@@ -7,11 +7,13 @@ import Logo from '@/components/common/Logo'
 
 interface Props {
   onEmailClick: () => void
+  onFindAccount: () => void
+  onForgotPassword: () => void
   errorMessage?: string | null
   redirectTo?: string | null
 }
 
-export default function SocialLoginView({ onEmailClick, errorMessage, redirectTo }: Props) {
+export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotPassword, errorMessage, redirectTo }: Props) {
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
@@ -78,7 +80,17 @@ export default function SocialLoginView({ onEmailClick, errorMessage, redirectTo
           </Button>
         </div>
 
-        <p className="text-ink3 mt-5 text-center text-[12px] leading-relaxed">
+        <div className="mt-5 flex items-center justify-center gap-4">
+          <button type="button" onClick={onFindAccount} className="text-ink3 text-[13px]">
+            {t('findAccount')}
+          </button>
+          <span className="text-border text-[13px]">·</span>
+          <button type="button" onClick={onForgotPassword} className="text-ink3 text-[13px]">
+            {t('forgotPassword')}
+          </button>
+        </div>
+
+        <p className="text-ink3 mt-4 text-center text-[12px] leading-relaxed">
           {t.rich('termsNotice', {
             termsLink: (chunks) => (
               <button type="button" className="text-primary">

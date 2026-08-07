@@ -95,30 +95,6 @@ export type Database = {
         }
         Relationships: []
       }
-      account_links: {
-        Row: {
-          created_at: string
-          id: string
-          linked_provider: string
-          linked_user_id: string
-          primary_user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          linked_provider: string
-          linked_user_id: string
-          primary_user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          linked_provider?: string
-          linked_user_id?: string
-          primary_user_id?: string
-        }
-        Relationships: []
-      }
       backlog_items: {
         Row: {
           created_at: string | null

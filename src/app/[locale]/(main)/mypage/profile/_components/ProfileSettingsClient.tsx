@@ -11,6 +11,7 @@ interface Props {
   displayName: string
   initials: string
   avatarUrl: string | null
+  phone: string | null
   provider: string
 }
 
@@ -18,6 +19,7 @@ export default function ProfileSettingsClient({
   displayName,
   initials,
   avatarUrl,
+  phone,
   provider,
 }: Props) {
   const router = useRouter()
@@ -134,6 +136,18 @@ export default function ProfileSettingsClient({
             {nameError && <p className="mt-1 text-[12px] text-red-500">{nameError}</p>}
           </div>
         </div>
+
+        {/* 전화번호 */}
+        {phone && (
+          <>
+            <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">전화번호</p>
+            <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white">
+              <div className="px-4 py-3.5">
+                <p className="text-ink text-[15px]">{phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}</p>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* 로그인 계정 */}
         <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">로그인 계정</p>

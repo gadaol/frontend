@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import StepIndicator from './StepIndicator'
@@ -17,11 +18,13 @@ const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends']
 interface Props {
   nickname: string
   onBack: () => void
-  onNext: () => void
+  redirectTo?: string | null
 }
 
-export default function TravelStyleStep({ onBack, onNext }: Props) {
+export default function TravelStyleStep({ nickname, onBack, redirectTo }: Props) {
   const t = useTranslations('onboarding')
+  const router = useRouter()
+  const locale = useLocale()
   const [pace, setPace] = useState<PaceKey[]>([])
   const [places, setPlaces] = useState<PlaceKey[]>([])
   const [companion, setCompanion] = useState<CompanionKey[]>([])
@@ -31,9 +34,7 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
     setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
   }
 
-  const handleSkip = () => onNext()
-
-  const handleSubmit = async () => {
+  const finish = async (withStyle = true) => {
     setSaving(true)
     try {
       const supabase = createClient()
@@ -44,15 +45,15 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
         await supabase
           .from('profiles')
           .update({
-            travel_pace: pace,
-            travel_places: places,
-            travel_companion: companion,
+            ...(nickname.trim() ? { name: nickname.trim() } : {}),
+            ...(withStyle ? { travel_pace: pace, travel_places: places, travel_companion: companion } : {}),
+            onboarding_completed: true,
           })
           .eq('id', user.id)
       }
     } finally {
       setSaving(false)
-      onNext()
+      router.push(redirectTo ?? `/${locale}/home`)
     }
   }
 
@@ -71,16 +72,16 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
               />
             </svg>
           </button>
-          <StepIndicator current={2} total={3} />
+          <StepIndicator current={3} total={3} />
         </div>
-        <button onClick={handleSkip} className="text-ink3 text-[14px] font-medium">
+        <button onClick={() => finish(false)} className="text-ink3 text-[14px] font-medium">
           {t('skip')}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-8">
         <div className="mb-8">
-          <div className="text-primary mb-1.5 text-[13px] font-medium">{t('step2Label')}</div>
+          <div className="text-primary mb-1.5 text-[13px] font-medium">{t('step3Label')}</div>
           <h1 className="text-ink mb-2 text-[24px] leading-snug font-bold">{t('step2Title')}</h1>
           <p className="text-ink3 text-[14px] leading-relaxed">
             {t('step2Subtitle')
@@ -117,8 +118,8 @@ export default function TravelStyleStep({ onBack, onNext }: Props) {
         />
 
         <div className="pt-4">
-          <Button onClick={handleSubmit} disabled={saving} fullWidth>
-            {t('next')}
+          <Button onClick={() => finish(true)} disabled={saving} fullWidth>
+            {saving ? t('saving') : t('finish')}
           </Button>
         </div>
       </div>

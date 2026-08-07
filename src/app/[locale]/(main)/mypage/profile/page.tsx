@@ -16,7 +16,7 @@ export default async function ProfileSettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, avatar_url')
+    .select('name, avatar_url, phone')
     .eq('id', user.id)
     .single()
 
@@ -28,6 +28,7 @@ export default async function ProfileSettingsPage() {
       displayName={displayName}
       initials={initials}
       avatarUrl={profile?.avatar_url ?? null}
+      phone={profile?.phone ?? null}
       provider={provider}
     />
   )

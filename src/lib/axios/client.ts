@@ -22,8 +22,12 @@ const client = axios.create({
 client.interceptors.response.use(
   (res) => res,
   (err: AxiosError<{ errorCode?: string } & Record<string, unknown>>) => {
-    const code = err.response?.data?.errorCode ?? 'unknown'
     const status = err.response?.status ?? 500
+    if (status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+      return
+    }
+    const code = err.response?.data?.errorCode ?? 'unknown'
     const data = (err.response?.data ?? {}) as Record<string, unknown>
     throw new ApiError(code, status, data)
   },
