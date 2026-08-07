@@ -7,7 +7,7 @@ import { useLocale } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
 import BottomNav from '@/components/common/BottomNav'
-import Tabs, { type TabItem } from '@/components/ui/Tabs'
+import Tabs from '@/components/ui/Tabs'
 import PlacesMapTab from './PlacesMapTab'
 import ItemDetailSheet from './ItemDetailSheet'
 import { isGradient } from '@/utils/uploadCover'
@@ -32,7 +32,7 @@ import {
 } from '@/app/actions/trip'
 import type { TripDetail, MemberProfile, TripExpense } from '../page'
 
-type Tab = '일정' | '장소' | '메이트'
+type Tab = '일정' | '비용' | '장소' | '메이트'
 
 interface Props {
   trip: TripDetail
@@ -41,7 +41,12 @@ interface Props {
   expenses: TripExpense[]
 }
 
-export default function TripDetailClient({ trip, memberProfiles, currentUserId, expenses: initialExpenses }: Props) {
+export default function TripDetailClient({
+  trip,
+  memberProfiles,
+  currentUserId,
+  expenses: initialExpenses,
+}: Props) {
   const locale = useLocale()
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -131,13 +136,16 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId, 
     })
   }
 
-  async function handleAddExpense(amount: number, category: string, note: string): Promise<string | null> {
+  async function handleAddExpense(
+    amount: number,
+    category: string,
+    note: string,
+  ): Promise<string | null> {
     const item = activeSheetItem
     if (!item) return null
 
-    const dayId = trip.itinerary_days.find((d) =>
-      d.itinerary_items.some((i) => i.id === item.id),
-    )?.id ?? null
+    const dayId =
+      trip.itinerary_days.find((d) => d.itinerary_items.some((i) => i.id === item.id))?.id ?? null
 
     const result = await addExpense({
       tripId: trip.id,
@@ -326,10 +334,12 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId, 
 
         {/* 탭 */}
         <Tabs
-          items={(['일정', '장소', '메이트'] as Tab[]).map<TabItem<Tab>>((tab) => ({
-            key: tab,
-            label: tab,
-          }))}
+          items={[
+            { key: '일정' as Tab, label: '일정' },
+            { key: '비용' as Tab, label: '💰 비용' },
+            { key: '장소' as Tab, label: '장소' },
+            { key: '메이트' as Tab, label: '메이트' },
+          ]}
           value={activeTab}
           onChange={setActiveTab}
           className="px-4"
@@ -351,8 +361,16 @@ export default function TripDetailClient({ trip, memberProfiles, currentUserId, 
               locale={locale}
               isOwner={isOwner}
               expensesByDay={expensesByDay}
-              totalExpenses={localExpenses.reduce((s, e) => s + e.amount, 0)}
+            />
+          )}
+          {activeTab === '비용' && (
+            <ExpenseTab
+              expenses={localExpenses}
+              expectedDays={expectedDays}
+              dayMap={dayMap}
+              expensesByDay={expensesByDay}
               memberCount={trip.trip_members.length}
+              locale={locale}
             />
           )}
           {activeTab === '장소' && <PlacesMapTab trip={trip} />}
@@ -404,8 +422,6 @@ function ItineraryTab({
   locale,
   isOwner,
   expensesByDay,
-  totalExpenses,
-  memberCount,
 }: {
   expectedDays: ExpectedDay[]
   dayMap: Map<string, DayDB>
@@ -419,11 +435,7 @@ function ItineraryTab({
   locale: string
   isOwner: boolean
   expensesByDay: Map<string, TripExpense[]>
-  totalExpenses: number
-  memberCount: number
 }) {
-  const perPerson = memberCount > 1 ? Math.ceil(totalExpenses / memberCount) : 0
-
   if (expectedDays.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
@@ -450,28 +462,6 @@ function ItineraryTab({
 
   return (
     <div>
-      {/* 총 경비 카드 */}
-      {totalExpenses > 0 && (
-        <div className="mx-4 mt-4 rounded-2xl bg-primary-light px-4 py-4">
-          <p className="text-primary mb-1.5 text-[11px] font-semibold uppercase tracking-wide">
-            총 경비
-          </p>
-          <div className="flex items-end justify-between">
-            <p className="text-primary text-[26px] font-extrabold leading-none">
-              {totalExpenses.toLocaleString()}
-              <span className="text-[15px] font-semibold">원</span>
-            </p>
-            {perPerson > 0 && (
-              <div className="text-right">
-                <p className="text-ink3 mb-0.5 text-[10px]">더치페이 ({memberCount}명)</p>
-                <p className="text-ink text-[17px] font-bold">
-                  {perPerson.toLocaleString()}원
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
       {expectedDays.map((day) => {
         const dayDB = dayMap.get(day.dayDate)
         const dayExpenses = dayDB ? (expensesByDay.get(dayDB.id) ?? []) : []
@@ -531,6 +521,144 @@ function ItineraryTab({
                 </div>
               </div>
             </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── 비용 탭 ── */
+function ExpenseTab({
+  expenses,
+  expectedDays,
+  dayMap,
+  expensesByDay,
+  memberCount,
+  locale,
+}: {
+  expenses: TripExpense[]
+  expectedDays: ExpectedDay[]
+  dayMap: Map<string, DayDB>
+  expensesByDay: Map<string, TripExpense[]>
+  memberCount: number
+  locale: string
+}) {
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
+  const perPerson = memberCount > 1 ? Math.ceil(totalExpenses / memberCount) : 0
+
+  // 카테고리별 집계
+  const categoryTotals = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const e of expenses) {
+      map.set(e.category, (map.get(e.category) ?? 0) + e.amount)
+    }
+    return [...map.entries()].sort((a, b) => b[1] - a[1])
+  }, [expenses])
+
+  if (totalExpenses === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+        <span className="text-5xl">💸</span>
+        <div>
+          <p className="text-ink mb-1 text-[16px] font-semibold">등록된 경비가 없어요</p>
+          <p className="text-ink3 text-[13px]">일정 탭에서 장소나 메모를 탭해 경비를 추가하세요</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-4 pt-4 pb-8">
+      {/* 총경비 카드 */}
+      <div className="bg-primary-light mb-4 rounded-2xl px-4 py-4">
+        <p className="text-primary mb-1.5 text-[11px] font-semibold tracking-wide uppercase">
+          총 경비
+        </p>
+        <div className="flex items-end justify-between">
+          <p className="text-primary text-[26px] leading-none font-extrabold">
+            {totalExpenses.toLocaleString()}
+            <span className="text-[15px] font-semibold">원</span>
+          </p>
+          {perPerson > 0 && (
+            <div className="text-right">
+              <p className="text-ink3 mb-0.5 text-[10px]">더치페이 ({memberCount}명)</p>
+              <p className="text-ink text-[17px] font-bold">{perPerson.toLocaleString()}원</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 카테고리별 */}
+      {categoryTotals.length > 0 && (
+        <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white">
+          <p className="text-ink2 border-border border-b px-4 py-2.5 text-[12px] font-semibold">
+            카테고리별
+          </p>
+          {categoryTotals.map(([cat, amount], i) => (
+            <div
+              key={cat}
+              className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-border border-t' : ''}`}
+            >
+              <span className="text-ink text-[13px] font-semibold">{cat}</span>
+              <div className="bg-border mx-1 h-px flex-1" />
+              <span className="text-ink2 text-[13px] font-bold">{amount.toLocaleString()}원</span>
+              <span className="text-ink3 w-10 text-right text-[11px]">
+                {Math.round((amount / totalExpenses) * 100)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 날짜별 */}
+      <p className="text-ink2 mb-2 text-[12px] font-semibold">날짜별</p>
+      {expectedDays.map((day) => {
+        const db = dayMap.get(day.dayDate)
+        const dayExpenses = db ? (expensesByDay.get(db.id) ?? []) : []
+        const dayTotal = dayExpenses.reduce((s, e) => s + e.amount, 0)
+        return (
+          <div
+            key={day.dayDate}
+            className="border-border mb-3 overflow-hidden rounded-2xl border bg-white"
+          >
+            <div className="flex items-center gap-2 px-4 py-3">
+              <span className="bg-primary rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white">
+                DAY {day.dayNumber}
+              </span>
+              <span className="text-ink3 text-[11px]">
+                {dayjs(day.dayDate).locale(locale).format('M/D (ddd)')}
+              </span>
+              {dayTotal > 0 && (
+                <span className="text-primary ml-auto text-[13px] font-bold">
+                  {dayTotal.toLocaleString()}원
+                </span>
+              )}
+            </div>
+            {dayExpenses.length > 0 ? (
+              <div className="border-border border-t">
+                {dayExpenses.map((e, i) => (
+                  <div
+                    key={e.id}
+                    className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-border border-t' : ''}`}
+                  >
+                    <span className="text-ink3 text-[11px] font-semibold">{e.category}</span>
+                    {e.note && (
+                      <span className="text-ink3 min-w-0 flex-1 truncate text-[11px]">
+                        {e.note}
+                      </span>
+                    )}
+                    <span className="text-ink ml-auto flex-shrink-0 text-[13px] font-bold">
+                      {e.amount.toLocaleString()}원
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-border border-t px-4 py-2.5">
+                <p className="text-ink3 text-[12px]">경비 없음</p>
+              </div>
+            )}
           </div>
         )
       })}
@@ -798,10 +926,6 @@ function ItineraryItemRow({
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
   const Icon = category.icon
-  const placeHref = item.places?.google_place_id
-    ? `/${locale}/places/${item.places.google_place_id}`
-    : null
-
   function openTimePicker() {
     const el = timeRef.current
     if (!el) return
@@ -909,15 +1033,13 @@ function ItineraryItemRow({
               <path d="M8.5 2.5l3 3" stroke="#F59E0B" strokeWidth="1.3" />
             </svg>
             <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-amber-900">
-              {item.memo || (
-                <span className="text-amber-400 italic">탭해서 메모 입력...</span>
-              )}
+              {item.memo || <span className="text-amber-400 italic">탭해서 메모 입력...</span>}
             </p>
           </div>
         ) : (
           /* 장소 카드 */
           <div
-            className="bg-bg2 flex"
+            className="border-border flex overflow-hidden rounded-[10px] border"
             style={{
               transform: swiped ? `translateX(-${SWIPE_DELETE_WIDTH}px)` : 'translateX(0)',
               transition: 'transform 0.2s ease',
@@ -926,39 +1048,22 @@ function ItineraryItemRow({
             onTouchEnd={onTouchEnd}
             onClick={handleCardClick}
           >
-            <div className={`flex w-14 flex-shrink-0 items-center justify-center ${category.bg}`}>
+            <div
+              className={`flex w-14 flex-shrink-0 items-center justify-center self-stretch ${category.bg}`}
+            >
               <Icon size={22} className={category.color} />
             </div>
-            <div className="flex min-w-0 flex-1 flex-col justify-between px-3 py-2.5">
-              <div>
-                <p className="text-ink text-[13px] leading-snug font-semibold">
-                  {item.places?.name ?? '알 수 없는 장소'}
-                </p>
-                {item.places?.address && (
-                  <p className="text-ink3 mt-0.5 truncate text-[11px]">{item.places.address}</p>
-                )}
-              </div>
-              <p className="mt-1.5 text-[11px] font-semibold" style={{ color: category.hex }}>
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5 bg-white px-3 py-2.5">
+              <p className="text-ink text-[13px] leading-snug font-semibold break-keep">
+                {item.places?.name ?? '알 수 없는 장소'}
+              </p>
+              {item.places?.address && (
+                <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
+              )}
+              <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
                 {category.hashLabel}
               </p>
             </div>
-            {placeHref && (
-              <Link
-                href={placeHref}
-                className="text-ink3 flex w-8 flex-shrink-0 items-center justify-center self-stretch"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M5.5 3.5l3.5 3.5-3.5 3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
-            )}
           </div>
         )}
       </div>

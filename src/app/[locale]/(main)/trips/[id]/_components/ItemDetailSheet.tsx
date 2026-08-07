@@ -67,6 +67,7 @@ export default function ItemDetailSheet({
   const totalAmount = allExpenses.reduce((sum, e) => sum + e.amount, 0)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMemo(item.memo ?? '')
     memoSavedRef.current = item.memo ?? ''
   }, [item.id, item.memo])
@@ -83,7 +84,12 @@ export default function ItemDetailSheet({
     if (!amount || amount <= 0) return
 
     const tempId = `pending-${Date.now()}`
-    const pending: PendingExpense = { tempId, amount, category: expenseCategory, note: expenseNote || null }
+    const pending: PendingExpense = {
+      tempId,
+      amount,
+      category: expenseCategory,
+      note: expenseNote || null,
+    }
 
     // 옵티미스틱 업데이트: 즉시 UI에 반영
     setPendingExpenses((prev) => [...prev, pending])
@@ -129,7 +135,9 @@ export default function ItemDetailSheet({
         {/* 헤더 */}
         {isPlace ? (
           <div className="flex items-center gap-3 px-4 pt-3 pb-4">
-            <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${category.bg}`}>
+            <div
+              className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${category.bg}`}
+            >
               <Icon size={24} className={category.color} />
             </div>
             <div className="min-w-0 flex-1">
@@ -142,7 +150,12 @@ export default function ItemDetailSheet({
             </div>
             <button onClick={onClose} className="text-ink3 p-2">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <path
+                  d="M4 4l10 10M14 4L4 14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -150,14 +163,32 @@ export default function ItemDetailSheet({
           <div className="flex items-center gap-3 px-4 pt-3 pb-4">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <rect x="3" y="3" width="16" height="16" rx="3" stroke="#F59E0B" strokeWidth="1.6" />
-                <path d="M7 8h8M7 11h6M7 14h4" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" />
+                <rect
+                  x="3"
+                  y="3"
+                  width="16"
+                  height="16"
+                  rx="3"
+                  stroke="#F59E0B"
+                  strokeWidth="1.6"
+                />
+                <path
+                  d="M7 8h8M7 11h6M7 14h4"
+                  stroke="#F59E0B"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
             <p className="text-ink flex-1 text-[16px] font-bold">메모</p>
             <button onClick={onClose} className="text-ink3 p-2">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <path
+                  d="M4 4l10 10M14 4L4 14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
@@ -168,9 +199,9 @@ export default function ItemDetailSheet({
 
         {/* 메모 섹션 */}
         <div className="px-4 pt-4">
-          <p className="text-ink3 mb-2 text-[12px] font-semibold uppercase tracking-wide">메모</p>
+          <p className="text-ink3 mb-2 text-[12px] font-semibold tracking-wide uppercase">메모</p>
           <textarea
-            className="border-border text-ink focus:border-primary w-full resize-none rounded-xl border bg-gray-50 px-3 py-2.5 text-[14px] outline-none transition-colors"
+            className="border-border text-ink focus:border-primary w-full resize-none rounded-xl border bg-gray-50 px-3 py-2.5 text-[14px] transition-colors outline-none"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             onBlur={handleMemoBlur}
@@ -183,7 +214,7 @@ export default function ItemDetailSheet({
         <div className="mt-4 px-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <p className="text-ink3 text-[12px] font-semibold uppercase tracking-wide">경비</p>
+              <p className="text-ink3 text-[12px] font-semibold tracking-wide uppercase">경비</p>
               {totalAmount > 0 && (
                 <span className="text-ink2 text-[12px] font-bold">
                   {totalAmount.toLocaleString()}원
@@ -211,7 +242,9 @@ export default function ItemDetailSheet({
                     } ${isPending ? 'opacity-60' : ''} bg-white`}
                   >
                     <div className="min-w-0 flex-1">
-                      <span className="text-ink2 text-[12px] font-semibold">{expense.category}</span>
+                      <span className="text-ink2 text-[12px] font-semibold">
+                        {expense.category}
+                      </span>
                       {expense.note && (
                         <span className="text-ink3 ml-1.5 text-[11px]">{expense.note}</span>
                       )}
@@ -253,7 +286,7 @@ export default function ItemDetailSheet({
                     className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${
                       expenseCategory === cat
                         ? 'bg-primary text-white'
-                        : 'border-border border bg-white text-ink2'
+                        : 'border-border text-ink2 border bg-white'
                     }`}
                   >
                     {cat}
