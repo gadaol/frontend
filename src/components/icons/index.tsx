@@ -362,7 +362,10 @@ export function CheckIcon({ size = 16, className }: IconProps) {
 export function PlaceFoodIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M8 3v7a3 3 0 003 3v8h2v-8a3 3 0 003-3V3h-1.5v5.5h-1V3h-2v5.5h-1V3H8z" fill="currentColor" />
+      {/* 포크 (왼쪽) */}
+      <path d="M4 3v7a3 3 0 003 3v8h2v-8a3 3 0 003-3V3h-1.5v5.5h-1V3h-2v5.5h-1V3H4z" fill="currentColor" />
+      {/* 나이프 (오른쪽) */}
+      <path d="M16 3c-1 1-2 3-2 6v12h4V9c0-3-1-5-2-6z" fill="currentColor" />
     </svg>
   )
 }
