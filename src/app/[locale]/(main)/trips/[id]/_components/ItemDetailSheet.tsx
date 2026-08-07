@@ -19,6 +19,8 @@ type ItineraryItemDB = {
 const EXPENSE_CATEGORIES = ['식비', '카페', '숙박', '교통', '입장료', '쇼핑', '기타'] as const
 type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 
+type PendingExpense = { tempId: string; amount: number; category: string; note: string | null }
+
 interface Props {
   item: ItineraryItemDB
   expenses: TripExpense[]
@@ -42,6 +44,7 @@ export default function ItemDetailSheet({
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>('기타')
   const [expenseNote, setExpenseNote] = useState('')
   const [addingExpense, setAddingExpense] = useState(false)
+  const [pendingExpenses, setPendingExpenses] = useState<PendingExpense[]>([])
   const memoSavedRef = useRef(item.memo ?? '')
   const sheetRef = useRef<HTMLDivElement>(null)
 
@@ -50,7 +53,18 @@ export default function ItemDetailSheet({
   const category = getCategoryInfoByLabel(catLabel)
   const Icon = category.icon
 
-  const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const allExpenses = [
+    ...expenses,
+    ...pendingExpenses.map((p) => ({
+      id: p.tempId,
+      amount: p.amount,
+      category: p.category,
+      note: p.note,
+      item_id: item.id,
+      day_id: null,
+    })),
+  ]
+  const totalAmount = allExpenses.reduce((sum, e) => sum + e.amount, 0)
 
   useEffect(() => {
     setMemo(item.memo ?? '')
@@ -67,12 +81,26 @@ export default function ItemDetailSheet({
   async function handleAddExpense() {
     const amount = parseInt(expenseAmount.replace(/[^0-9]/g, ''), 10)
     if (!amount || amount <= 0) return
-    setAddingExpense(true)
-    await onAddExpense(amount, expenseCategory, expenseNote)
+
+    const tempId = `pending-${Date.now()}`
+    const pending: PendingExpense = { tempId, amount, category: expenseCategory, note: expenseNote || null }
+
+    // 옵티미스틱 업데이트: 즉시 UI에 반영
+    setPendingExpenses((prev) => [...prev, pending])
     setExpenseAmount('')
     setExpenseNote('')
     setExpenseCategory('기타')
     setShowExpenseForm(false)
+    setAddingExpense(true)
+
+    const id = await onAddExpense(amount, expenseCategory, expenseNote)
+
+    // 서버 응답 후 pending 제거 (성공이면 parent expenses에 이미 반영됨)
+    setPendingExpenses((prev) => prev.filter((p) => p.tempId !== tempId))
+    if (!id) {
+      // 실패 시 롤백
+      setPendingExpenses((prev) => prev.filter((p) => p.tempId !== tempId))
+    }
     setAddingExpense(false)
   }
 
@@ -90,7 +118,7 @@ export default function ItemDetailSheet({
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-white pb-safe"
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-white"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
       >
         {/* Handle */}
@@ -140,7 +168,7 @@ export default function ItemDetailSheet({
 
         {/* 메모 섹션 */}
         <div className="px-4 pt-4">
-          <p className="text-ink3 mb-2 text-[12px] font-semibold tracking-wide uppercase">메모</p>
+          <p className="text-ink3 mb-2 text-[12px] font-semibold uppercase tracking-wide">메모</p>
           <textarea
             className="border-border text-ink focus:border-primary w-full resize-none rounded-xl border bg-gray-50 px-3 py-2.5 text-[14px] outline-none transition-colors"
             value={memo}
@@ -155,7 +183,7 @@ export default function ItemDetailSheet({
         <div className="mt-4 px-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <p className="text-ink3 text-[12px] font-semibold tracking-wide uppercase">경비</p>
+              <p className="text-ink3 text-[12px] font-semibold uppercase tracking-wide">경비</p>
               {totalAmount > 0 && (
                 <span className="text-ink2 text-[12px] font-bold">
                   {totalAmount.toLocaleString()}원
@@ -164,42 +192,52 @@ export default function ItemDetailSheet({
             </div>
             <button
               onClick={() => setShowExpenseForm((v) => !v)}
-              className="text-primary text-[13px] font-semibold"
+              className={`text-[13px] font-semibold transition-colors ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
             >
-              + 추가
+              {showExpenseForm ? '− 숨기기' : '+ 추가'}
             </button>
           </div>
 
           {/* 경비 목록 */}
-          {expenses.length > 0 && (
-            <div className="border-border mb-3 divide-y rounded-xl border overflow-hidden">
-              {expenses.map((expense) => (
-                <div key={expense.id} className="flex items-center gap-3 bg-white px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <span className="text-ink2 text-[12px] font-semibold">{expense.category}</span>
-                    {expense.note && (
-                      <span className="text-ink3 ml-1.5 text-[11px]">{expense.note}</span>
+          {allExpenses.length > 0 && (
+            <div className="border-border mb-3 overflow-hidden rounded-xl border">
+              {allExpenses.map((expense, i) => {
+                const isPending = expense.id.startsWith('pending-')
+                return (
+                  <div
+                    key={expense.id}
+                    className={`flex items-center gap-3 px-3 py-2.5 ${
+                      i > 0 ? 'border-border border-t' : ''
+                    } ${isPending ? 'opacity-60' : ''} bg-white`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="text-ink2 text-[12px] font-semibold">{expense.category}</span>
+                      {expense.note && (
+                        <span className="text-ink3 ml-1.5 text-[11px]">{expense.note}</span>
+                      )}
+                    </div>
+                    <span className="text-ink flex-shrink-0 text-[13px] font-bold">
+                      {expense.amount.toLocaleString()}원
+                    </span>
+                    {!isPending && (
+                      <button
+                        onClick={() => onRemoveExpense(expense.id)}
+                        className="text-ink3 flex-shrink-0 p-1 hover:text-red-500"
+                        aria-label="경비 삭제"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M3 3l8 8M11 3L3 11"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </button>
                     )}
                   </div>
-                  <span className="text-ink flex-shrink-0 text-[13px] font-bold">
-                    {expense.amount.toLocaleString()}원
-                  </span>
-                  <button
-                    onClick={() => onRemoveExpense(expense.id)}
-                    className="text-ink3 flex-shrink-0 p-1 hover:text-red-500"
-                    aria-label="경비 삭제"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M3 3l8 8M11 3L3 11"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
@@ -207,7 +245,7 @@ export default function ItemDetailSheet({
           {showExpenseForm && (
             <div className="border-border mb-4 rounded-xl border bg-gray-50 p-3">
               {/* 카테고리 */}
-              <div className="mb-2 flex flex-wrap gap-1.5">
+              <div className="mb-2.5 flex flex-wrap gap-1.5">
                 {EXPENSE_CATEGORIES.map((cat) => (
                   <button
                     key={cat}
@@ -215,7 +253,7 @@ export default function ItemDetailSheet({
                     className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${
                       expenseCategory === cat
                         ? 'bg-primary text-white'
-                        : 'bg-white text-ink2 border border-border'
+                        : 'border-border border bg-white text-ink2'
                     }`}
                   >
                     {cat}
@@ -224,7 +262,7 @@ export default function ItemDetailSheet({
               </div>
 
               {/* 금액 입력 */}
-              <div className="mb-2 flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-2">
+              <div className="border-border mb-2 flex items-center gap-1 rounded-xl border bg-white px-3 py-2">
                 <input
                   type="number"
                   inputMode="numeric"
@@ -232,12 +270,13 @@ export default function ItemDetailSheet({
                   onChange={(e) => setExpenseAmount(e.target.value)}
                   placeholder="금액"
                   className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
+                  autoFocus
                 />
                 <span className="text-ink3 flex-shrink-0 text-[13px]">원</span>
               </div>
 
               {/* 메모 입력 */}
-              <div className="mb-3 flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-2">
+              <div className="border-border mb-3 flex items-center gap-1 rounded-xl border bg-white px-3 py-2">
                 <input
                   type="text"
                   value={expenseNote}
@@ -252,7 +291,7 @@ export default function ItemDetailSheet({
                 disabled={addingExpense || !expenseAmount}
                 className="bg-primary w-full rounded-xl py-2.5 text-[14px] font-semibold text-white disabled:opacity-50"
               >
-                {addingExpense ? '추가 중...' : '경비 추가'}
+                경비 추가
               </button>
             </div>
           )}
