@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -51,6 +52,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
               `${origin}/${locale}?error=email_exists&provider=${existingProvider}`,
             )
           }
+        }
+
+        // 약관 동의 쿠키가 있으면 terms_agreed_at 업데이트
+        const cookieStore = await cookies()
+        const termsPending = cookieStore.get('terms_pending')?.value
+        if (termsPending) {
+          await supabase
+            .from('profiles')
+            .update({ terms_agreed_at: new Date().toISOString() })
+            .eq('id', user.id)
+            .is('terms_agreed_at', null)
         }
 
         const { data: profile } = await supabase

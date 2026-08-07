@@ -488,6 +488,7 @@ export type Database = {
           name: string | null
           onboarding_completed: boolean
           phone: string | null
+          terms_agreed_at: string | null
           travel_companion: string[] | null
           travel_pace: string[] | null
           travel_places: string[] | null
@@ -500,6 +501,7 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
+          terms_agreed_at?: string | null
           travel_companion?: string[] | null
           travel_pace?: string[] | null
           travel_places?: string[] | null
@@ -512,6 +514,7 @@ export type Database = {
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
+          terms_agreed_at?: string | null
           travel_companion?: string[] | null
           travel_pace?: string[] | null
           travel_places?: string[] | null

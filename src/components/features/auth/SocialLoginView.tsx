@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/common/Logo'
 import PageLoading from '@/components/ui/PageLoading'
+import TermsSheet from './TermsSheet'
 
 interface Props {
   onEmailClick: () => void
@@ -15,34 +16,37 @@ interface Props {
   redirectTo?: string | null
 }
 
+type PendingAction = 'kakao' | 'google' | null
+
 export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotPassword, errorMessage, redirectTo }: Props) {
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
   const [redirecting, setRedirecting] = useState(false)
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
 
   function callbackUrl() {
     const base = `${location.origin}/${locale}/auth/callback`
     return redirectTo ? `${base}?redirect_to=${encodeURIComponent(redirectTo)}` : base
   }
 
-  const signInWithKakao = async () => {
+  const handleAgree = async () => {
+    // 동의 쿠키 설정 (callback에서 terms_agreed_at 업데이트에 사용)
+    await fetch('/api/set-terms-cookie', { method: 'POST' })
+    setPendingAction(null)
     setRedirecting(true)
-    await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: {
-        redirectTo: callbackUrl(),
-        scopes: 'profile_nickname profile_image',
-      },
-    })
-  }
 
-  const signInWithGoogle = async () => {
-    setRedirecting(true)
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: callbackUrl() },
-    })
+    if (pendingAction === 'kakao') {
+      await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: callbackUrl(), scopes: 'profile_nickname profile_image' },
+      })
+    } else if (pendingAction === 'google') {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: callbackUrl() },
+      })
+    }
   }
 
   return (
@@ -63,12 +67,12 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
         )}
 
         <div className="flex flex-col gap-3">
-          <Button variant="kakao" onClick={signInWithKakao} fullWidth>
+          <Button variant="kakao" onClick={() => setPendingAction('kakao')} fullWidth>
             <KakaoIcon />
             {t('kakao')}
           </Button>
 
-          <Button variant="google" onClick={signInWithGoogle} fullWidth>
+          <Button variant="google" onClick={() => setPendingAction('google')} fullWidth>
             <GoogleIcon />
             {t('google')}
           </Button>
@@ -94,8 +98,11 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
             {t('forgotPassword')}
           </button>
         </div>
-
       </div>
+
+      {pendingAction && (
+        <TermsSheet onAgree={handleAgree} onCancel={() => setPendingAction(null)} />
+      )}
       <PageLoading visible={redirecting} />
     </div>
   )
