@@ -111,7 +111,9 @@ export default function ForgotPasswordView({ onBack }: Props) {
     })
     setResending(false)
     if (error) {
-      setEmailServerError(error.message)
+      // rate limit 에러: 메시지에서 남은 시간 파싱
+      const seconds = error.message.match(/after (\d+) seconds/)?.[1]
+      setEmailServerError(seconds ? `${seconds}초 후에 다시 시도해주세요.` : error.message)
     } else {
       setResent(true)
       setTimeout(() => setResent(false), 3000)
