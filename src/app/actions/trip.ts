@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
 /** 여행 생성 후 redirect 없이 ID 반환 — AI 일정 저장 플로우에서 사용 */
@@ -23,7 +23,7 @@ export async function createTripReturnId(
   const destination = (formData.get('destination') as string)?.trim() || null
   const coverUrl = (formData.get('cover_url') as string) || null
 
-  if (!title) return { error: '여행 제목을 입력해주세요' }
+  if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
 
   const { data: trip, error } = await supabase
     .from('trips')
@@ -38,7 +38,8 @@ export async function createTripReturnId(
     .select('id')
     .single()
 
-  if (error || !trip) return { error: error?.message ?? '여행 생성에 실패했어요' }
+  if (error || !trip)
+    return { error: error?.message ?? (await getTranslations('trips'))('createFailed') }
 
   await supabase.from('trip_members').insert({ trip_id: trip.id, user_id: user.id, role: 'owner' })
 
@@ -61,7 +62,7 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const coverUrl = (formData.get('cover_url') as string) || null
   const invitedIds = (formData.getAll('invited_user_ids') as string[]).filter(Boolean)
 
-  if (!title) return { error: '여행 제목을 입력해주세요' }
+  if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
 
   const { data: trip, error } = await supabase
     .from('trips')
@@ -78,7 +79,7 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
 
   if (error || !trip) {
     console.error('[createTrip] insert error:', error)
-    return { error: error?.message ?? '여행 생성에 실패했어요' }
+    return { error: error?.message ?? (await getTranslations('trips'))('createFailed') }
   }
 
   const membersToInsert = [

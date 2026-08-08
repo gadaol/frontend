@@ -1,0 +1,27 @@
+{
+  "close": "닫기",
+  "pastChats": "지난 대화",
+  "newChat": "새 대화",
+  "send": "전송",
+  "voiceChat": "음성 대화",
+  "inputPlaceholder": "무엇이든 물어보세요",
+  "tryAsking": "이런 걸 물어보세요",
+  "talkOutLoud": "목소리로 대화하기",
+  "talkOutLoudDesc": "말하면 내용은 알아서 정리해둘게요",
+  "suggest": {
+    "nearbyEyebrow": "가까운 곳",
+    "nearbyText": "주말에 갈 만한 국내 여행지",
+    "planEyebrow": "일정 짜기",
+    "planText": "제주도 3박 4일 코스 만들어줘",
+    "soloEyebrow": "혼자 여행",
+    "soloText": "조용히 쉬다 올 만한 곳 추천해줘"
+  },
+  "askAi": "AI에게 물어보기",
+  "nearbyPrompt": "이 근처 가볼만한 장소를 추천해줘",
+  "backToChat": "채팅으로",
+  "notes": "정리한 내용",
+  "micUnavailable": "마이크를 사용할 수 없어요",
+  "micOff": "마이크 끄기",
+  "micOn": "마이크 켜기",
+  "openAssistant": "AI 비서 열기"
+}

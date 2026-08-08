@@ -140,13 +140,15 @@ function TripCard({
                 strokeLinecap="round"
               />
             </svg>
-            <span className="text-ink3 text-[12px]">{memberCount}명</span>
+            <span className="text-ink3 text-[12px]">
+              {t('memberCount', { count: memberCount })}
+            </span>
           </div>
 
           {/* 기간 */}
           {nights !== null && (
             <span className="text-ink3 text-[12px]">
-              {nights === 0 ? '당일치기' : `${nights}박 ${nights + 1}일`}
+              {nights === 0 ? t('dayTrip') : t('nights', { nights, days: nights + 1 })}
             </span>
           )}
         </div>

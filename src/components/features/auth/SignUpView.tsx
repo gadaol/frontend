@@ -24,6 +24,7 @@ interface Props {
 }
 
 export default function SignUpView({ onBack, onVerificationSent }: Props) {
+  const ta = useTranslations('auth')
   const t = useTranslations('auth')
   const tc = useTranslations('common')
   const locale = useLocale()
@@ -171,7 +172,7 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
               className="mb-3 flex w-full items-center gap-3"
             >
               <CheckCircle checked={allChecked} />
-              <span className="text-ink text-[14px] font-semibold">전체 동의</span>
+              <span className="text-ink text-[14px] font-semibold">{ta('agreeAll')}</span>
             </button>
             <div className="border-border flex flex-col gap-3 border-t pt-3">
               <button

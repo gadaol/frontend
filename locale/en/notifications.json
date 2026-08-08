@@ -21,9 +21,22 @@
   "settings": {
     "title": "Notification settings",
     "footer": "Notifications are stored in your in-app inbox. Disabling a type stops new ones from being created.",
-    "system": { "label": "Upcoming trips", "desc": "Reminders 3 days and 1 day before departure" },
-    "invite": { "label": "Trip invites", "desc": "When someone invites you to a trip" },
-    "vote": { "label": "Voting", "desc": "When a new candidate place is added" },
-    "edit": { "label": "Itinerary changes", "desc": "When a place is added to the itinerary" }
-  }
+    "system": {
+      "label": "Upcoming trips",
+      "desc": "Reminders 3 days and 1 day before departure"
+    },
+    "invite": {
+      "label": "Trip invites",
+      "desc": "When someone invites you to a trip"
+    },
+    "vote": {
+      "label": "Voting",
+      "desc": "When a new candidate place is added"
+    },
+    "edit": {
+      "label": "Itinerary changes",
+      "desc": "When a place is added to the itinerary"
+    }
+  },
+  "someone": "Someone"
 }

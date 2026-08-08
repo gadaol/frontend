@@ -15,5 +15,7 @@
     "places": "장소",
     "backlog": "백로그",
     "mypage": "마이페이지"
-  }
+  },
+  "appName": "가다로그",
+  "appDescription": "나만의 여행 로그를 기록하다"
 }

@@ -15,5 +15,7 @@
     "places": "Places",
     "backlog": "Saved",
     "mypage": "Profile"
-  }
+  },
+  "appName": "Gadarog",
+  "appDescription": "Keep your own travel log"
 }

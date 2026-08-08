@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) {
+  const t = useTranslations('trips')
   const router = useRouter()
   const [copyToast, setCopyToast] = useState(false)
   const inviteUrl =
@@ -22,7 +25,10 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
     if (!inviteUrl) return
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${tripTitle} 여행에 초대합니다`, url: inviteUrl })
+        await navigator.share({
+          title: t('inviteShareTitle', { title: tripTitle }),
+          url: inviteUrl,
+        })
       } catch (e) {
         if (e instanceof Error && e.name !== 'AbortError') handleCopy()
       }
@@ -42,7 +48,7 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
     <div className="flex min-h-dvh flex-col bg-white">
       {copyToast && (
         <div className="bg-ink fixed top-14 left-1/2 z-50 -translate-x-1/2 rounded-full px-4 py-2 text-[13px] font-medium text-white shadow-lg">
-          초대 링크가 복사됐어요
+          {t('inviteCopied')}
         </div>
       )}
 
@@ -62,7 +68,7 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
             />
           </svg>
         </button>
-        <h1 className="text-ink text-[17px] font-bold">메이트 초대</h1>
+        <h1 className="text-ink text-[17px] font-bold">{t('inviteTitle')}</h1>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
@@ -85,11 +91,8 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
           </svg>
         </div>
 
-        <h2 className="text-ink mb-2 text-[20px] font-bold">링크로 초대하기</h2>
-        <p className="text-ink3 mb-10 text-[14px] leading-relaxed">
-          링크를 공유해서 메이트를 초대하세요.{'\n'}
-          링크를 받은 사람은 가입 후 여행에 참여할 수 있어요.
-        </p>
+        <h2 className="text-ink mb-2 text-[20px] font-bold">{t('inviteHeadline')}</h2>
+        <p className="text-ink3 mb-10 text-[14px] leading-relaxed">{t('inviteDesc')}</p>
 
         {inviteUrl ? (
           <div className="w-full space-y-3">
@@ -115,7 +118,7 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
                     strokeLinecap="round"
                   />
                 </svg>
-                링크 복사
+                {t('inviteCopy')}
               </Button>
               <Button onClick={handleShareLink} className="flex-1">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -129,12 +132,12 @@ export default function InviteClient({ tripId, tripTitle, inviteToken }: Props) 
                     strokeLinecap="round"
                   />
                 </svg>
-                공유하기
+                {t('inviteShare')}
               </Button>
             </div>
           </div>
         ) : (
-          <p className="text-ink3 text-[13px]">링크를 생성할 수 없어요</p>
+          <p className="text-ink3 text-[13px]">{t('inviteNoLink')}</p>
         )}
       </div>
     </div>

@@ -36,5 +36,6 @@
   "aiRefresh": "다시 추천 받기",
   "aiCtaTitle": "AI 맞춤 장소 추천",
   "aiCtaDesc": "내 취향에 딱 맞는 장소를 찾아줄게요",
-  "me": "나"
+  "me": "나",
+  "ratingCount": " · {count}개"
 }

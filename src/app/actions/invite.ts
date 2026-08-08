@@ -1,5 +1,7 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
+
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
@@ -167,7 +169,7 @@ export async function sendDirectInvite(
       trip_id: tripId,
       trip_name: trip.title,
       actor_id: user.id,
-      actor_name: actor?.name ?? '누군가',
+      actor_name: actor?.name ?? (await getTranslations('notifications'))('someone'),
       invited_user_id: targetUserId,
     },
   })

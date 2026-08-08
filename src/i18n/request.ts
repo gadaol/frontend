@@ -19,6 +19,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'notifications',
     'inquiries',
     'notices',
+    'ai',
   ]
   const messages = Object.fromEntries(
     await Promise.all(

@@ -33,6 +33,8 @@ export default function VoteClient({
   candidates: initialCandidates,
   initialVotes,
 }: Props) {
+  const t = useTranslations('trips')
+  const tc = useTranslations('common')
   const tp = useTranslations('places')
   const locale = useLocale()
   const router = useRouter()
@@ -119,7 +121,7 @@ export default function VoteClient({
         </button>
         <div className="flex-1">
           <p className="text-ink3 text-[11px]">{tripTitle}</p>
-          <h1 className="text-ink text-[17px] font-bold">후보 장소 투표</h1>
+          <h1 className="text-ink text-[17px] font-bold">{t('voteTitle')}</h1>
         </div>
         <Link
           href={`/${locale}/trips/${tripId}/places`}
@@ -128,18 +130,14 @@ export default function VoteClient({
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-          후보 추가
+          {t('addCandidateShort')}
         </Link>
       </div>
 
       {/* 안내 배너 */}
       <div className="bg-primary-light mx-4 mt-4 rounded-2xl px-4 py-3">
-        <p className="text-primary text-[13px] font-medium">
-          👍 좋아요가 많은 장소를 일정에 추가해보세요
-        </p>
-        <p className="mt-0.5 text-[11px] text-[#4A8AF4]">
-          투표 후 원하는 날짜에 바로 확정할 수 있어요
-        </p>
+        <p className="text-primary text-[13px] font-medium">{t('voteHint1')}</p>
+        <p className="mt-0.5 text-[11px] text-[#4A8AF4]">{t('voteHint2')}</p>
       </div>
 
       {/* 후보 리스트 */}
@@ -158,14 +156,14 @@ export default function VoteClient({
               </svg>
             </div>
             <div>
-              <p className="text-ink mb-1 text-[16px] font-semibold">후보 장소가 없어요</p>
-              <p className="text-ink3 text-[13px]">장소를 검색해서 후보에 추가해보세요</p>
+              <p className="text-ink mb-1 text-[16px] font-semibold">{t('voteEmpty')}</p>
+              <p className="text-ink3 text-[13px]">{t('voteEmptyDesc')}</p>
             </div>
             <Link
               href={`/${locale}/trips/${tripId}/places`}
               className="bg-primary mt-1 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
             >
-              후보 장소 추가하기
+              {t('voteAddCandidate')}
             </Link>
           </div>
         ) : (
@@ -249,9 +247,7 @@ export default function VoteClient({
                     <div className="border-bg2 border-t px-4 pt-2 pb-4">
                       {isPickingDay ? (
                         <div>
-                          <p className="text-ink2 mb-2 text-[12px] font-medium">
-                            어느 날에 추가할까요?
-                          </p>
+                          <p className="text-ink2 mb-2 text-[12px] font-medium">{t('whichDay')}</p>
                           <div className="flex flex-wrap gap-2">
                             {expectedDays.map((day) => (
                               <button
@@ -276,7 +272,7 @@ export default function VoteClient({
                               onClick={() => setOpenDayPickerId(null)}
                               className="border-border text-ink3 rounded-full border px-3 py-1.5 text-[12px]"
                             >
-                              취소
+                              {tc('cancel')}
                             </button>
                           </div>
                         </div>
@@ -300,7 +296,7 @@ export default function VoteClient({
                               />
                             </svg>
                           )}
-                          일정에 추가
+                          {t('addToItinerary')}
                         </button>
                       )}
                     </div>

@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function TermsSheet({ onAgree, onCancel }: Props) {
+  const ta = useTranslations('auth')
   const t = useTranslations('auth')
   const [termsChecked, setTermsChecked] = useState(false)
   const [privacyChecked, setPrivacyChecked] = useState(false)
@@ -40,7 +41,7 @@ export default function TermsSheet({ onAgree, onCancel }: Props) {
           className="border-border mb-4 flex w-full items-center gap-3 rounded-xl border p-4"
         >
           <CheckCircle checked={allChecked} />
-          <span className="text-ink text-[15px] font-semibold">전체 동의</span>
+          <span className="text-ink text-[15px] font-semibold">{ta('agreeAll')}</span>
         </button>
 
         <div className="flex flex-col gap-3 pl-1">

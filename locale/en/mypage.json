@@ -149,5 +149,13 @@
   "nameRequired": "Please enter a name",
   "saveFailed": "Couldn't save",
   "saving": "Saving...",
-  "primaryBadge": "Primary"
+  "primaryBadge": "Primary",
+  "payFailTitle": "Payment failed",
+  "payFailHeadline": "Payment didn’t go through",
+  "payFailDefault": "Something went wrong. Please try again.",
+  "backToMypage": "Back to profile",
+  "payBadAccess": "Invalid access",
+  "payAuthError": "Authentication error",
+  "payProcessError": "Something went wrong while processing the payment",
+  "payTitle": "Checkout"
 }

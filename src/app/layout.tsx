@@ -1,18 +1,22 @@
 import type { Metadata } from 'next'
+import { getLocale, getTranslations } from 'next-intl/server'
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: '가다로그',
-  description: '나만의 여행 로그를 기록하다',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('common')
+  return { title: t('appName'), description: t('appDescription') }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // 로케일이 en일 때도 lang이 ko로 남으면 스크린리더·검색엔진이 잘못 읽는다
+  const locale = await getLocale()
+
   return (
-    <html lang="ko" className="h-full">
+    <html lang={locale} className="h-full">
       <head>
         <link
           rel="stylesheet"

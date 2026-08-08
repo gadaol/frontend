@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from 'ai'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
 import { useVoice } from '@/hooks/useVoice'
 import CharacterAvatar from './CharacterAvatar'
@@ -22,23 +22,13 @@ import {
 } from '@/lib/ai/history'
 
 /** 눈썹 문구가 있어야 셋이 나란히 있을 때 성격이 구분된다 */
-const SUGGESTIONS: Record<'ko' | 'en', Array<{ eyebrow: string; text: string }>> = {
-  ko: [
-    { eyebrow: '가까운 곳', text: '주말에 갈 만한 국내 여행지' },
-    { eyebrow: '일정 짜기', text: '제주도 3박 4일 코스 만들어줘' },
-    { eyebrow: '혼자 여행', text: '조용히 쉬다 올 만한 곳 추천해줘' },
-  ],
-  en: [
-    { eyebrow: 'Nearby', text: 'Weekend trips I can drive to' },
-    { eyebrow: 'Itinerary', text: 'Plan 3 nights in Jeju for me' },
-    { eyebrow: 'Solo', text: 'Somewhere quiet to unwind alone' },
-  ],
-}
+const SUGGESTION_KEYS = ['nearby', 'plan', 'solo'] as const
 
 export default function AssistantPanel() {
   const { isOpen, close, character, setCharacter, initialPrompt, clearInitialPrompt } =
     useAssistantStore()
   const locale = useLocale() as 'ko' | 'en'
+  const t = useTranslations('ai')
 
   const [inputText, setInputText] = useState('')
   const [voiceMode, setVoiceMode] = useState(false)
@@ -287,7 +277,6 @@ export default function AssistantPanel() {
   }
 
   const meta = CHARACTER_META[character]
-  const suggestions = SUGGESTIONS[locale]
 
   return (
     <div
@@ -315,7 +304,7 @@ export default function AssistantPanel() {
             <button
               onClick={close}
               className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
-              aria-label={locale === 'ko' ? '닫기' : 'Close'}
+              aria-label={t('close')}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
@@ -346,7 +335,7 @@ export default function AssistantPanel() {
               <button
                 onClick={openHistory}
                 className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
-                aria-label={locale === 'ko' ? '지난 대화' : 'Past chats'}
+                aria-label={t('pastChats')}
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <circle cx="9" cy="9" r="6.6" stroke="var(--color-ink2)" strokeWidth="1.5" />
@@ -364,7 +353,7 @@ export default function AssistantPanel() {
                 onClick={startNewChat}
                 disabled={!hasMessages}
                 className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
-                aria-label={locale === 'ko' ? '새 대화' : 'New chat'}
+                aria-label={t('newChat')}
               >
                 {/* 새 대화 — 통용되는 '작성' 아이콘이라 +보다 뜻이 분명하다 */}
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -434,12 +423,10 @@ export default function AssistantPanel() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14px] font-bold text-white">
-                        {locale === 'ko' ? '목소리로 대화하기' : 'Talk out loud'}
+                        {t('talkOutLoud')}
                       </span>
                       <span className="block text-[12px] text-white/75">
-                        {locale === 'ko'
-                          ? '말하면 내용은 알아서 정리해둘게요'
-                          : "I'll take notes while we talk"}
+                        {t('talkOutLoudDesc')}
                       </span>
                     </span>
                   </button>
@@ -447,13 +434,13 @@ export default function AssistantPanel() {
 
                 {/* 추천 질문 — 왼쪽 색 띠로 캐릭터와 묶고, 눈썹 문구로 성격을 구분한다 */}
                 <p className="text-ink3 mt-7 mb-2.5 pl-0.5 text-[12px] font-semibold">
-                  {locale === 'ko' ? '이런 걸 물어보세요' : 'Try asking'}
+                  {t('tryAsking')}
                 </p>
                 <div className="space-y-2">
-                  {suggestions.map((s) => (
+                  {SUGGESTION_KEYS.map((key) => (
                     <button
-                      key={s.text}
-                      onClick={() => sendMessage({ text: s.text })}
+                      key={key}
+                      onClick={() => sendMessage({ text: t(`suggest.${key}Text` as never) })}
                       className="bg-bg2 group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl py-3 pr-3 pl-4 text-left transition-transform active:scale-[0.98]"
                     >
                       <span
@@ -465,10 +452,10 @@ export default function AssistantPanel() {
                           className="mb-0.5 block text-[11px] font-bold"
                           style={{ color: meta.color }}
                         >
-                          {s.eyebrow}
+                          {t(`suggest.${key}Eyebrow` as never)}
                         </span>
                         <span className="text-ink block text-[14px] leading-snug font-medium">
-                          {s.text}
+                          {t(`suggest.${key}Text` as never)}
                         </span>
                       </span>
                       <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white">
@@ -539,7 +526,7 @@ export default function AssistantPanel() {
                   type="button"
                   onClick={enterVoiceMode}
                   className="bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full active:opacity-70"
-                  aria-label={locale === 'ko' ? '음성 대화' : 'Voice chat'}
+                  aria-label={t('voiceChat')}
                 >
                   <svg width="19" height="19" viewBox="0 0 26 26" fill="none">
                     <rect
@@ -566,7 +553,7 @@ export default function AssistantPanel() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={locale === 'ko' ? '무엇이든 물어보세요' : 'Ask me anything'}
+                placeholder={t('inputPlaceholder')}
                 rows={1}
                 className="bg-bg2 text-ink placeholder:text-ink3 flex-1 resize-none rounded-[20px] px-4 py-2.5 text-[15px] outline-none"
                 style={{ maxHeight: 120, overflowY: 'auto' }}
@@ -578,7 +565,7 @@ export default function AssistantPanel() {
                 disabled={!inputText.trim() || isLoading}
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
                 style={{ background: meta.color }}
-                aria-label={locale === 'ko' ? '전송' : 'Send'}
+                aria-label={t('send')}
               >
                 <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
                   <path

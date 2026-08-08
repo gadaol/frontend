@@ -56,8 +56,14 @@ export const PLAN_PRICE: Record<string, Record<string, number>> = {
   plus: { monthly: 6900, yearly: 59900 },
 }
 
-export function planOrderName(plan: string, period: string): string {
+/**
+ * 토스 결제창에 표시되는 주문명.
+ * '가다로그'는 브랜드 고유명사라 번역하지 않고, 기간 표기만 로케일에 맞춘다.
+ */
+export function planOrderName(plan: string, period: string, locale = 'ko'): string {
   const planLabel = plan === 'pro' ? 'Pro' : 'Plus'
-  const periodLabel = period === 'yearly' ? '연간' : '월간'
-  return `가다로그 ${planLabel} ${periodLabel} 구독`
+  if (locale === 'ko') {
+    return `가다로그 ${planLabel} ${period === 'yearly' ? '연간' : '월간'} 구독`
+  }
+  return `Gadarog ${planLabel} ${period === 'yearly' ? 'yearly' : 'monthly'} subscription`
 }

@@ -16,6 +16,7 @@ type NavTab = {
 }
 
 export default function BottomNav() {
+  const tai = useTranslations('ai')
   const t = useTranslations('common.nav')
   const locale = useLocale()
   const pathname = usePathname()
@@ -87,7 +88,7 @@ export default function BottomNav() {
         <button
           onClick={() => open()}
           className="flex flex-1 flex-col items-center gap-1 py-2.5"
-          aria-label="AI 비서 열기"
+          aria-label={tai('openAssistant')}
         >
           <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full shadow-sm shadow-black/15">
             {mounted ? (

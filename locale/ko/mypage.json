@@ -149,5 +149,13 @@
   "nameRequired": "이름을 입력해주세요",
   "saveFailed": "저장에 실패했어요",
   "saving": "저장 중...",
-  "primaryBadge": "기본"
+  "primaryBadge": "기본",
+  "payFailTitle": "결제 실패",
+  "payFailHeadline": "결제에 실패했어요",
+  "payFailDefault": "일시적인 오류가 발생했어요. 다시 시도해주세요.",
+  "backToMypage": "마이페이지로 돌아가기",
+  "payBadAccess": "잘못된 접근이에요",
+  "payAuthError": "인증 오류가 발생했어요",
+  "payProcessError": "결제 처리 중 오류가 발생했어요",
+  "payTitle": "구독 결제"
 }

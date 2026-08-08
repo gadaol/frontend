@@ -1,0 +1,27 @@
+{
+  "close": "Close",
+  "pastChats": "Past chats",
+  "newChat": "New chat",
+  "send": "Send",
+  "voiceChat": "Voice chat",
+  "inputPlaceholder": "Ask me anything",
+  "tryAsking": "Try asking",
+  "talkOutLoud": "Talk out loud",
+  "talkOutLoudDesc": "I'll take notes while we talk",
+  "suggest": {
+    "nearbyEyebrow": "Nearby",
+    "nearbyText": "Weekend trips I can drive to",
+    "planEyebrow": "Itinerary",
+    "planText": "Plan 3 nights in Jeju for me",
+    "soloEyebrow": "Solo",
+    "soloText": "Somewhere quiet to unwind alone"
+  },
+  "askAi": "Ask AI",
+  "nearbyPrompt": "Recommend good places around here",
+  "backToChat": "Back to chat",
+  "notes": "Notes",
+  "micUnavailable": "Microphone unavailable",
+  "micOff": "Turn mic off",
+  "micOn": "Turn mic on",
+  "openAssistant": "Open AI assistant"
+}

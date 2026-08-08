@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import Badge, { type BadgeProps } from '@/components/ui/Badge'
@@ -16,6 +16,7 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('notices')
 
   const {
     data: { user },
@@ -33,7 +34,7 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="bg-bg2 min-h-dvh">
-      <AppHeader title="공지사항" onBack="router" border />
+      <AppHeader title={t('title')} onBack="router" border />
 
       <div className="px-4 pt-5 pb-10">
         <div className="border-border rounded-2xl border bg-white px-5 py-5">

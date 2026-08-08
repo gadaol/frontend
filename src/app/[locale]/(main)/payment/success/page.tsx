@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { issueBillingKey, chargeBilling, PLAN_PRICE, planOrderName } from '@/lib/toss'
@@ -17,9 +17,10 @@ interface Props {
 export default async function PaymentSuccessPage({ searchParams }: Props) {
   const { authKey, customerKey, plan, period } = await searchParams
   const locale = await getLocale()
+  const t = await getTranslations('mypage')
 
   if (!authKey || !customerKey || !plan || (plan !== 'pro' && plan !== 'plus')) {
-    redirect(`/${locale}/payment/fail?message=잘못된 접근이에요`)
+    redirect(`/${locale}/payment/fail?message=${encodeURIComponent(t('payBadAccess'))}`)
   }
 
   const supabase = await createClient()
@@ -28,13 +29,13 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
   } = await supabase.auth.getUser()
 
   if (!user || user.id !== customerKey) {
-    redirect(`/${locale}/payment/fail?message=인증 오류가 발생했어요`)
+    redirect(`/${locale}/payment/fail?message=${encodeURIComponent(t('payAuthError'))}`)
   }
 
   const validPeriod = period === 'yearly' ? 'yearly' : 'monthly'
   const amount = PLAN_PRICE[plan][validPeriod]
   const orderId = crypto.randomUUID()
-  const orderName = planOrderName(plan, validPeriod)
+  const orderName = planOrderName(plan, validPeriod, locale)
 
   const adminSupabase = createAdminClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -91,7 +92,7 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
       canceled_at: null,
     })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : '결제 처리 중 오류가 발생했어요'
+    const msg = err instanceof Error ? err.message : t('payProcessError')
     redirect(`/${locale}/payment/fail?message=${encodeURIComponent(msg)}`)
   }
 

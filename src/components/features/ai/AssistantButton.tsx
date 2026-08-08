@@ -1,9 +1,12 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useAssistantStore } from '@/lib/ai/store'
 import CharacterAvatar from './CharacterAvatar'
 
 export default function AssistantButton() {
+  const tai = useTranslations('ai')
   const { open, character } = useAssistantStore()
 
   return (
@@ -17,7 +20,7 @@ export default function AssistantButton() {
             ? 'linear-gradient(135deg, #f97316 0%, #dc2626 100%)'
             : 'linear-gradient(135deg, #1b6ff0 0%, #7c3aed 100%)',
       }}
-      aria-label="AI 비서 열기"
+      aria-label={tai('openAssistant')}
     >
       <CharacterAvatar character={character} size="md" />
     </button>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import VoiceOrb, { type VoiceState } from './VoiceOrb'
 import { CHARACTER_META, type CharacterId, type Locale } from '@/lib/ai/characters'
 
@@ -42,6 +43,7 @@ export default function VoiceMode({
   onToggleMic,
   onExit,
 }: Props) {
+  const ta = useTranslations('ai')
   const notesEndRef = useRef<HTMLDivElement>(null)
   const meta = CHARACTER_META[character]
 
@@ -69,7 +71,7 @@ export default function VoiceMode({
               strokeLinejoin="round"
             />
           </svg>
-          {locale === 'ko' ? '채팅으로' : 'Back to chat'}
+          {ta('backToChat')}
         </button>
         <p className="text-ink2 text-[13px] font-semibold">{meta.name[locale]}</p>
         <div className="w-[92px]" />
@@ -80,11 +82,7 @@ export default function VoiceMode({
         <VoiceOrb character={character} state={state} />
 
         <p className="text-ink3 mt-5 text-[12px] font-medium tracking-wide">
-          {error
-            ? locale === 'ko'
-              ? '마이크를 사용할 수 없어요'
-              : 'Microphone unavailable'
-            : LABEL[state][locale]}
+          {error ? ta('micUnavailable') : LABEL[state][locale]}
         </p>
 
         <div className="mt-2 flex min-h-[56px] w-full items-start justify-center">
@@ -106,9 +104,7 @@ export default function VoiceMode({
         {notes.length > 0 && (
           <>
             <div className="sticky top-0 flex items-center gap-2 bg-white/90 py-2 backdrop-blur-sm">
-              <p className="text-ink3 text-[11px] font-semibold tracking-wide">
-                {locale === 'ko' ? '정리한 내용' : 'NOTES'}
-              </p>
+              <p className="text-ink3 text-[11px] font-semibold tracking-wide">{ta('notes')}</p>
               <div className="bg-border h-px flex-1" />
             </div>
             <div className="space-y-2 pb-2">
@@ -151,7 +147,7 @@ export default function VoiceMode({
             background: state === 'listening' ? meta.color : 'var(--color-bg2)',
             boxShadow: state === 'listening' ? `0 6px 24px ${meta.color}55` : 'none',
           }}
-          aria-label={state === 'listening' ? '마이크 끄기' : '마이크 켜기'}
+          aria-label={state === 'listening' ? ta('micOff') : ta('micOn')}
         >
           {state === 'listening' ? (
             <span className="h-5 w-5 rounded-[5px] bg-white" />

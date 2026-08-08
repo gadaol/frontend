@@ -36,5 +36,6 @@
   "aiRefresh": "Refresh",
   "aiCtaTitle": "Get AI Recommendations",
   "aiCtaDesc": "Places matched to your taste",
-  "me": "Me"
+  "me": "Me",
+  "ratingCount": " · {count} reviews"
 }

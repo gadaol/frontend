@@ -17,7 +17,6 @@ export type CategoryStyle = {
   bg: string // background color (tailwind)
   hex: string // hex for map markers etc.
   label: string // DB에 저장된 한국어 명칭 (조회 키이기도 하다)
-  hashLabel: string // #명칭 형태
   /** places 네임스페이스 기준 번역 키. 화면에 보일 땐 label 대신 이걸 쓴다 */
   i18nKey: string
 }
@@ -30,7 +29,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#FFF3EA]',
     hex: '#EA6000',
     label: '식당',
-    hashLabel: '#식당',
     i18nKey: 'category.restaurant',
   },
   카페: {
@@ -39,7 +37,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#FEF3C7]',
     hex: '#92400E',
     label: '카페',
-    hashLabel: '#카페',
     i18nKey: 'category.cafe',
   },
   관광지: {
@@ -48,7 +45,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#FFFBEB]',
     hex: '#D97706',
     label: '관광지',
-    hashLabel: '#관광지',
     i18nKey: 'category.landmark',
   },
   숙소: {
@@ -57,7 +53,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#EEF4FF]',
     hex: '#2563EB',
     label: '숙소',
-    hashLabel: '#숙소',
     i18nKey: 'category.hotel',
   },
   쇼핑: {
@@ -66,7 +61,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#F3F0FF]',
     hex: '#7C3AED',
     label: '쇼핑',
-    hashLabel: '#쇼핑',
     i18nKey: 'category.shopping',
   },
   자연: {
@@ -75,7 +69,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#F0FDF4]',
     hex: '#16A34A',
     label: '자연',
-    hashLabel: '#자연',
     i18nKey: 'category.nature',
   },
   액티비티: {
@@ -84,7 +77,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#FFF1F2]',
     hex: '#DC2626',
     label: '액티비티',
-    hashLabel: '#액티비티',
     i18nKey: 'category.activity',
   },
   기타: {
@@ -93,7 +85,6 @@ const CATEGORY_STYLES: Record<string, CategoryStyle> = {
     bg: 'bg-[#F3F6F9]',
     hex: '#64748B',
     label: '기타',
-    hashLabel: '#기타',
     i18nKey: 'category.etc',
   },
 }

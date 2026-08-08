@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { addToBacklog, getOrCreatePlace } from '@/app/actions/backlog'
 import { addCandidatePlace } from '@/app/actions/candidate'
 import { addItineraryItem } from '@/app/actions/trip'
@@ -43,6 +43,7 @@ function computeDays(startDate: string, endDate: string) {
 }
 
 export default function DestinationSheet({ destination, onClose }: Props) {
+  const tp = useTranslations('places')
   const locale = useLocale()
   const router = useRouter()
   const isKo = locale === 'ko'
@@ -275,7 +276,7 @@ export default function DestinationSheet({ destination, onClose }: Props) {
                           <p className="text-ink3 mt-1 text-[11px]">
                             ⭐ {place.rating.toFixed(1)}
                             {place.userRatingCount
-                              ? ` · ${place.userRatingCount.toLocaleString()}개`
+                              ? tp('ratingCount', { count: place.userRatingCount.toLocaleString() })
                               : ''}
                           </p>
                         ) : null}

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import PaymentClient from './_components/PaymentClient'
@@ -11,6 +11,7 @@ interface Props {
 export default async function PaymentPage({ searchParams }: Props) {
   const { plan, period } = await searchParams
   const locale = await getLocale()
+  const t = await getTranslations('mypage')
 
   if (plan !== 'pro' && plan !== 'plus') redirect(`/${locale}/mypage`)
 
@@ -25,7 +26,7 @@ export default async function PaymentPage({ searchParams }: Props) {
 
   return (
     <div className="bg-bg2 flex min-h-dvh flex-col">
-      <AppHeader title="구독 결제" onBack="router" />
+      <AppHeader title={t('payTitle')} onBack="router" />
       <PaymentClient plan={plan} period={validPeriod} userId={user.id} locale={locale} />
     </div>
   )

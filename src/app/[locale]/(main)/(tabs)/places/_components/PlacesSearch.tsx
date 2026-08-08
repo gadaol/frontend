@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState } from 'react'
 import { BacklogIcon } from '@/components/icons'
 import { addToBacklog } from '@/app/actions/backlog'
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export default function PlacesSearch({ initialAvatar, initialName }: Props) {
+  const ta = useTranslations('ai')
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const openAssistant = useAssistantStore((s) => s.open)
@@ -45,12 +48,12 @@ export default function PlacesSearch({ initialAvatar, initialName }: Props) {
       initialName={initialName}
       headerExtra={
         <button
-          onClick={() => openAssistant({ prompt: '이 근처 가볼만한 장소를 추천해줘' })}
+          onClick={() => openAssistant({ prompt: ta('nearbyPrompt') })}
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
           style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
         >
           <span>✨</span>
-          <span>AI에게 물어보기</span>
+          <span>{ta('askAi')}</span>
         </button>
       }
       renderListAction={(place) => {
