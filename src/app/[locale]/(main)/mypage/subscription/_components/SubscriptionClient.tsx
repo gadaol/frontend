@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import AppHeader from '@/components/common/AppHeader'
 import Tabs, { type TabItem } from '@/components/ui/Tabs'
@@ -60,7 +60,11 @@ export default function SubscriptionClient({
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('mypage.subscription')
-  const [activeTab, setActiveTab] = useState<Plan>(plan)
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab') as Plan | null
+  const [activeTab, setActiveTab] = useState<Plan>(
+    tabParam && PLAN_KEYS.includes(tabParam) ? tabParam : plan
+  )
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [isPending, startTransition] = useTransition()
 

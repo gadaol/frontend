@@ -25,7 +25,9 @@ export default function UpgradeSheet({ required, feature, onClose }: Props) {
 
   function goUpgrade() {
     onClose()
-    router.push(`/${locale}/mypage/subscription?from=${encodeURIComponent(pathname)}`)
+    router.push(
+      `/${locale}/mypage/subscription?tab=${required}&from=${encodeURIComponent(pathname)}`
+    )
   }
 
   return (
