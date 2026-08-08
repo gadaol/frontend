@@ -290,6 +290,7 @@ export const CHARACTER_META: Record<
   CharacterId,
   {
     name: Record<Locale, string>
+    type: Record<Locale, string>
     tagline: Record<Locale, string>
     greeting: Record<Locale, string>
     /** 음성 모드 진입 시 소리내어 말하는 첫 마디 */
@@ -300,6 +301,7 @@ export const CHARACTER_META: Record<
 > = {
   gada: {
     name: { ko: '가다', en: 'Gada' },
+    type: { ko: '감성형 메이트', en: 'Emotional Mate' },
     tagline: { ko: '감성으로 먼저 읽는 여행 메이트', en: 'Vibes first, logistics second' },
     greeting: {
       ko: '요즘 어디가 끌리세요?\n막연해도 괜찮아요. 느낌부터 같이 얘기해봐요.',
@@ -313,6 +315,7 @@ export const CHARACTER_META: Record<
   },
   rog: {
     name: { ko: '로그', en: 'Rog' },
+    type: { ko: '팩트형 메이트', en: 'Fact-Based Mate' },
     tagline: { ko: '팩트만. 감성은 다른 데 가서.', en: 'Facts only. Take your feelings elsewhere.' },
     greeting: {
       ko: '...계획 잡아줄게.\n어디 가는 거야, 며칠이야.',

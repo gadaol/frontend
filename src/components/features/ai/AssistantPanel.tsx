@@ -218,10 +218,23 @@ export default function AssistantPanel() {
     }
   }, [isOpen, initialPrompt, voiceMode])
 
-  // 패널을 닫으면 소리도 멈춘다
+  // 패널을 닫으면 소리도 멈추고, 다음 오픈을 위해 대화를 초기화한다
+  const wasOpenRef = useRef(isOpen)
   useEffect(() => {
-    if (!isOpen && live.current.voice) exitVoiceMode()
-  }, [isOpen, exitVoiceMode])
+    const wasOpen = wasOpenRef.current
+    wasOpenRef.current = isOpen
+    if (wasOpen && !isOpen) {
+      if (live.current.voice) exitVoiceMode()
+      // 슬라이드 닫힘 애니메이션(300ms) 후에 리셋 — 화면에서 깜빡임 없이 사라진 뒤 초기화
+      const t = setTimeout(() => {
+        conversationIdRef.current = crypto.randomUUID()
+        setMessages([])
+        setNotes([])
+        lastSpokenIdRef.current = null
+      }, 350)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen, exitVoiceMode, setMessages])
 
   /* ── 지난 대화 ────────────────────────────────────────── */
 
@@ -397,6 +410,9 @@ export default function AssistantPanel() {
                 {/* 캐릭터 소개 — 좌측 정렬 편집형 */}
                 <div className="flex items-end justify-between gap-3">
                   <div className="min-w-0 pb-1">
+                    <span className="bg-primary/10 text-primary mb-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold">
+                      {meta.type[locale]}
+                    </span>
                     <p className="text-ink text-[26px] leading-tight font-bold">
                       {meta.name[locale]}
                     </p>

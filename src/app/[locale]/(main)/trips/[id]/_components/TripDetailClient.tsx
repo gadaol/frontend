@@ -453,20 +453,6 @@ export default function TripDetailClient({
                 currentUserAvatar={currentUserAvatar}
                 currentUserName={currentUserName}
               />
-              {/* AI 추천 플로팅 버튼 */}
-              <button
-                onClick={() =>
-                  openAssistant({
-                    prompt: trip.destination
-                      ? t('aiRecommendPrompt', { destination: trip.destination })
-                      : t('aiRecommendPromptNoDest'),
-                  })
-                }
-                className="bg-primary shadow-primary/30 absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold text-white shadow-lg"
-              >
-                <span>✨</span>
-                {t('aiRecommend')}
-              </button>
             </div>
           )}
           {activeTab === 'mates' && (
@@ -506,6 +492,7 @@ export default function TripDetailClient({
           tripId={trip.id}
           targetDays={emptyDays}
           excludePlaces={existingPlaceNames}
+          memberCount={trip.trip_members.length}
           onClose={() => setShowAISheet(false)}
         />
       )}

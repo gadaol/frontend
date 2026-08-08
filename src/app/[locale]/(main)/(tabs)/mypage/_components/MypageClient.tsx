@@ -433,6 +433,9 @@ export default function MypageClient({
                 >
                   <CharacterFigure character={id} size="md" />
                   <div>
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1 ${active ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-ink3'}`}>
+                      {info.type[locale as 'ko' | 'en']}
+                    </span>
                     <p className={`text-[14px] font-bold ${active ? 'text-primary' : 'text-ink'}`}>
                       {info.name[locale as 'ko' | 'en']}
                     </p>

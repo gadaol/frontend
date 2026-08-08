@@ -60,6 +60,17 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
 
   const mapRef = useRef<google.maps.Map | null>(null)
   const polylineRefs = useRef<Map<number, google.maps.Polyline>>(new Map())
+  const markerRefs = useRef<Map<string, google.maps.Marker>>(new Map())
+
+  // 언마운트 시 모든 오버레이 명시적 정리 — 지도 인스턴스 재사용 시 마커가 타 지도에 남는 것 방지
+  useEffect(() => {
+    return () => {
+      markerRefs.current.forEach((m) => m.setMap(null))
+      markerRefs.current.clear()
+      polylineRefs.current.forEach((p) => p.setMap(null))
+      polylineRefs.current.clear()
+    }
+  }, [])
   const [selectedPin, setSelectedPin] = useState<PlacePin | null>(null)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locating, setLocating] = useState(false)
@@ -203,6 +214,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
         style={listOpen ? { height: MAP_H } : { bottom: BOTTOM_NAV_H + PANEL_HEADER_H }}
       >
         <GoogleMap
+          key={trip.id}
           mapContainerStyle={{ width: '100%', height: '100%' }}
           center={center}
           zoom={13}
@@ -225,7 +237,10 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                   polylineRefs.current.set(dayNum, pl)
                   pl.setVisible(showRoute && (selectedDay === null || selectedDay === dayNum))
                 }}
-                onUnmount={() => polylineRefs.current.delete(dayNum)}
+                onUnmount={(pl) => {
+                  pl.setMap(null)
+                  polylineRefs.current.delete(dayNum)
+                }}
               />
             ) : null,
           )}
@@ -250,6 +265,11 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                   fontWeight: '700',
                 }}
                 onClick={() => handlePinClick(pin)}
+                onLoad={(m) => markerRefs.current.set(pin.id, m)}
+                onUnmount={(m) => {
+                  m.setMap(null)
+                  markerRefs.current.delete(pin.id)
+                }}
               />
             ))}
           {myLocation && (

@@ -14,6 +14,14 @@ const ItineraryItemSchema = z.object({
   duration_minutes: z.number(),
   memo: z.string(),
   google_search_query: z.string().describe('Query to search this place on Google Places'),
+  estimated_cost_krw: z
+    .number()
+    .describe('Per-person estimated cost in KRW. Fill only when cost estimation is requested. Otherwise 0.')
+    .default(0),
+  cost_category: z
+    .string()
+    .describe('Expense category: 식비/카페/숙박/교통/입장료/쇼핑/기타')
+    .default('기타'),
 })
 
 const ItineraryDaySchema = z.object({
@@ -50,6 +58,7 @@ export async function POST(req: NextRequest) {
     style = [],
     companion = '',
     notes = '',
+    withCost = false,
     locale = 'ko',
   } = (await req.json()) as {
     destination: string
@@ -71,6 +80,7 @@ export async function POST(req: NextRequest) {
     companion?: string
     /** 사용자가 자유롭게 적은 추가 요청 (가고 싶은 곳, 피하고 싶은 것 등) */
     notes?: string
+    withCost?: boolean
     locale?: Locale
   }
 
@@ -100,6 +110,8 @@ export async function POST(req: NextRequest) {
           startTime && `첫날은 ${startTime}부터 일정 시작 가능 (그 이전 시간은 비워둘 것)`,
           endTime && `마지막날은 ${endTime}까지 일정 종료 (이후 시간은 비워둘 것)`,
           trimmedNotes && `추가 요청(최우선 반영): ${trimmedNotes}`,
+          withCost &&
+            `각 장소의 estimated_cost_krw에 1인 기준 현실적인 예상 비용(원화)을 설정하라. 무료이면 0. cost_category는 식비/카페/숙박/교통/입장료/쇼핑/기타 중 하나.`,
         ]
           .filter(Boolean)
           .join('\n')
@@ -116,6 +128,8 @@ export async function POST(req: NextRequest) {
           startTime && `Day 1 can only start at ${startTime} — leave earlier hours empty`,
           endTime && `The last day must wrap up by ${endTime} — leave later hours empty`,
           trimmedNotes && `Additional requests (prioritize these): ${trimmedNotes}`,
+          withCost &&
+            `For each place, set estimated_cost_krw to the realistic per-person cost in KRW (0 if free). Set cost_category to one of: 식비/카페/숙박/교통/입장료/쇼핑/기타.`,
         ]
           .filter(Boolean)
           .join('\n')

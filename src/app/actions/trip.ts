@@ -66,6 +66,10 @@ export interface GeneratedItineraryItemInput {
   visitTime: string
   memo: string
   googleSearchQuery: string
+  /** AI가 산출한 1인 예상 비용(원). 0이면 저장 안 함 */
+  estimatedCostKrw?: number
+  /** trip_expenses.category 값 (식비/카페/숙박/교통/입장료/쇼핑/기타) */
+  costCategory?: string
 }
 
 export interface GeneratedItineraryDayInput {
@@ -263,8 +267,34 @@ export async function applyGeneratedItinerary(
   })
 
   if (itemRows.length > 0) {
-    const { error } = await supabase.from('itinerary_items').insert(itemRows)
+    const { data: insertedItems, error } = await supabase
+      .from('itinerary_items')
+      .insert(itemRows)
+      .select('id, day_id, order_index')
     if (error) return { tripId, error: error.message }
+
+    // 비용 산출 요청이 있으면 trip_expenses에 일괄 삽입
+    const insertedMap = new Map(
+      (insertedItems ?? []).map((r) => [`${r.day_id}:${r.order_index}`, r.id]),
+    )
+    const expenseRows = days.flatMap((day) => {
+      const dayId = dayIdByDate.get(day.dayDate)
+      if (!dayId) return []
+      return day.items
+        .map((item, i) => ({ item, i }))
+        .filter(({ item }) => (item.estimatedCostKrw ?? 0) > 0)
+        .map(({ item, i }) => ({
+          trip_id: tripId,
+          day_id: dayId,
+          item_id: insertedMap.get(`${dayId}:${i}`) ?? null,
+          amount: item.estimatedCostKrw!,
+          category: item.costCategory || '기타',
+          note: null,
+        }))
+    })
+    if (expenseRows.length > 0) {
+      await supabase.from('trip_expenses').insert(expenseRows)
+    }
   }
 
   const locale = await getLocale()

@@ -33,6 +33,8 @@ interface Props {
   targetDays?: Array<{ dayNumber: number; dayDate: string }>
   /** 이미 여행에 담긴 장소명. 같은 곳을 또 추천하지 않게 한다 */
   excludePlaces?: string[]
+  /** 여행 멤버 수 — 비용 산출 시 인원 선택 상한 */
+  memberCount?: number
   onClose: () => void
 }
 
@@ -47,6 +49,7 @@ export default function AIItinerarySheet({
   tripId: existingTripId,
   targetDays = [],
   excludePlaces = [],
+  memberCount = 1,
   onClose,
 }: Props) {
   const locale = useLocale()
@@ -57,8 +60,9 @@ export default function AIItinerarySheet({
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [companion, setCompanion] = useState('solo')
   const [notes, setNotes] = useState('')
+  const [withCost, setWithCost] = useState(false)
+  const [personCount, setPersonCount] = useState(memberCount)
   const [streaming, setStreaming] = useState(false)
-  const [streamText, setStreamText] = useState('')
   const [itinerary, setItinerary] = useState<GeneratedItinerary | null>(null)
   const [parseError, setParseError] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -68,7 +72,6 @@ export default function AIItinerarySheet({
 
   const generate = useCallback(async () => {
     if (!canGenerate) return
-    setStreamText('')
     setItinerary(null)
     setParseError(false)
     setStreaming(true)
@@ -90,6 +93,7 @@ export default function AIItinerarySheet({
           style: selectedStyles,
           companion,
           notes,
+          withCost,
           locale,
         }),
         signal: abortRef.current.signal,
@@ -103,7 +107,6 @@ export default function AIItinerarySheet({
         const { done, value } = await reader.read()
         if (done) break
         accumulated += decoder.decode(value, { stream: true })
-        setStreamText(accumulated)
       }
 
       try {
@@ -129,6 +132,7 @@ export default function AIItinerarySheet({
     selectedStyles,
     companion,
     notes,
+    withCost,
     locale,
   ])
 
@@ -151,6 +155,11 @@ export default function AIItinerarySheet({
             visitTime: item.visit_time,
             memo: item.memo,
             googleSearchQuery: item.google_search_query,
+            estimatedCostKrw:
+              (item.estimated_cost_krw ?? 0) > 0
+                ? item.estimated_cost_krw! * personCount
+                : undefined,
+            costCategory: item.cost_category || undefined,
           })),
         }))
 
@@ -281,7 +290,7 @@ export default function AIItinerarySheet({
                 </div>
               </div>
 
-              {/* 추가 요청 — 칩으로 담기지 않는 구체적인 조건을 받는다 */}
+              {/* 추가 요청 */}
               <div>
                 <p className="text-ink mb-2 text-[13px] font-semibold">
                   {t('ai.notesLabel')}
@@ -298,20 +307,87 @@ export default function AIItinerarySheet({
                   <p className="text-ink3 mt-1 text-right text-[11px]">{notes.length}/500</p>
                 )}
               </div>
+
+              {/* 예상 비용 산출 옵션 */}
+              <div
+                className="rounded-xl border transition-colors"
+                style={{
+                  borderColor: withCost ? 'var(--color-primary)' : 'var(--color-border)',
+                  backgroundColor: withCost ? 'var(--color-primary-light)' : 'transparent',
+                }}
+              >
+                <button
+                  onClick={() => setWithCost((v) => !v)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                >
+                  <div
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[5px] transition-colors"
+                    style={{
+                      backgroundColor: withCost ? 'var(--color-primary)' : 'transparent',
+                      border: withCost ? 'none' : '1.5px solid var(--color-ink3)',
+                    }}
+                  >
+                    {withCost && (
+                      <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                        <path
+                          d="M1 4l3 3.5L10 1"
+                          stroke="white"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-ink text-[13px] font-semibold">예상 비용 산출</p>
+                    <p className="text-ink3 text-[11px]">
+                      장소별 예상 비용을 함께 생성해 경비 탭에 자동 등록합니다
+                    </p>
+                  </div>
+                </button>
+
+                {/* 인원 선택 — 체크됐을 때만 */}
+                {withCost && (
+                  <div className="border-primary/20 flex items-center justify-between border-t px-4 py-2.5">
+                    <span className="text-ink text-[13px] font-medium">인원</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setPersonCount((v) => Math.max(1, v - 1))}
+                        disabled={personCount <= 1}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm disabled:opacity-30"
+                      >
+                        <svg width="12" height="2" viewBox="0 0 12 2" fill="none">
+                          <path d="M1 1h10" stroke="var(--color-ink)" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <span className="text-ink w-8 text-center text-[15px] font-bold">
+                        {personCount}
+                      </span>
+                      <button
+                        onClick={() => setPersonCount((v) => Math.min(memberCount > 1 ? memberCount : 99, v + 1))}
+                        disabled={memberCount > 1 && personCount >= memberCount}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm disabled:opacity-30"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M6 1v10M1 6h10" stroke="var(--color-ink)" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      {memberCount > 1 && (
+                        <span className="text-ink3 text-[11px]">/ {memberCount}명</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {/* 스트리밍 중 raw 텍스트 */}
+          {/* 스트리밍 중 로딩 */}
           {streaming && !itinerary && (
-            <div className="px-5 py-4">
-              <div className="text-ink3 mb-3 flex items-center gap-2 text-[13px]">
-                <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
-                {t('ai.working')}
-              </div>
-              <p className="text-ink3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap opacity-60">
-                {streamText.slice(0, 400)}
-                {streamText.length > 400 ? '...' : ''}
-              </p>
+            <div className="flex flex-col items-center justify-center gap-4 px-5 py-16">
+              <div className="border-primary h-8 w-8 animate-spin rounded-full border-[3px] border-t-transparent" />
+              <p className="text-ink3 text-[13px]">{t('ai.working')}</p>
             </div>
           )}
 
@@ -328,30 +404,50 @@ export default function AIItinerarySheet({
                 <p className="text-ink3 mt-1 text-[12px] leading-relaxed">{itinerary.summary}</p>
               </div>
 
-              {itinerary.days.map((day) => (
-                <div key={day.day_number} className="border-border rounded-2xl border p-4">
-                  <div className="mb-2.5 flex items-center gap-2">
-                    <span className="bg-primary rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white">
-                      {t('ai.dayN', { n: day.day_number })}
-                    </span>
-                    <span className="text-ink3 text-[12px]">{day.day_date}</span>
-                    <span className="text-ink text-[12px] font-medium">· {day.theme}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {day.items.map((item) => (
-                      <div key={item.order_index} className="flex items-start gap-2.5">
-                        <span className="text-primary mt-0.5 w-10 flex-shrink-0 text-[11px] font-semibold">
-                          {item.visit_time}
+              {itinerary.days.map((day) => {
+                const dayTotal = day.items.reduce(
+                  (sum, item) => sum + (item.estimated_cost_krw ?? 0),
+                  0,
+                )
+                return (
+                  <div key={day.day_number} className="border-border rounded-2xl border p-4">
+                    <div className="mb-2.5 flex items-center gap-2">
+                      <span className="bg-primary rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white">
+                        {t('ai.dayN', { n: day.day_number })}
+                      </span>
+                      <span className="text-ink3 text-[12px]">{day.day_date}</span>
+                      <span className="text-ink text-[12px] font-medium">· {day.theme}</span>
+                      {dayTotal > 0 && (
+                        <span className="text-ink3 ml-auto flex-shrink-0 text-[11px]">
+                          {personCount > 1
+                            ? `~${(dayTotal * personCount).toLocaleString()}원 (${personCount}인)`
+                            : `~${dayTotal.toLocaleString()}원`}
                         </span>
-                        <div className="min-w-0">
-                          <p className="text-ink text-[13px] font-semibold">{item.place_name}</p>
-                          {item.memo && <p className="text-ink3 text-[11px]">{item.memo}</p>}
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {day.items.map((item) => (
+                        <div key={item.order_index} className="flex items-start gap-2.5">
+                          <span className="text-primary mt-0.5 w-10 flex-shrink-0 text-[11px] font-semibold">
+                            {item.visit_time}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-ink text-[13px] font-semibold">{item.place_name}</p>
+                            {item.memo && <p className="text-ink3 text-[11px]">{item.memo}</p>}
+                          </div>
+                          {(item.estimated_cost_krw ?? 0) > 0 && (
+                            <span className="text-primary flex-shrink-0 text-right text-[11px] font-semibold">
+                              {personCount > 1
+                                ? `${(item.estimated_cost_krw! * personCount).toLocaleString()}원`
+                                : `${item.estimated_cost_krw!.toLocaleString()}원`}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -372,7 +468,6 @@ export default function AIItinerarySheet({
                 <button
                   onClick={() => {
                     setItinerary(null)
-                    setStreamText('')
                   }}
                   className="border-border text-ink2 flex-1 rounded-2xl border py-3.5 text-[14px] font-semibold"
                 >

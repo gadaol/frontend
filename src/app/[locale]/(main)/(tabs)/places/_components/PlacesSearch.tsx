@@ -1,13 +1,10 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-
 import { useState } from 'react'
 import { BacklogIcon } from '@/components/icons'
 import { addToBacklog } from '@/app/actions/backlog'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
 import { getDbCategory } from '@/utils/placeCategory'
-import { useAssistantStore } from '@/lib/ai/store'
 import type { GooglePlace } from '@/types/place'
 
 interface Props {
@@ -16,10 +13,8 @@ interface Props {
 }
 
 export default function PlacesSearch({ initialAvatar, initialName }: Props) {
-  const ta = useTranslations('ai')
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
-  const openAssistant = useAssistantStore((s) => s.open)
 
   async function handleSave(place: GooglePlace, e: React.MouseEvent) {
     e.stopPropagation()
@@ -46,16 +41,6 @@ export default function PlacesSearch({ initialAvatar, initialName }: Props) {
     <PlaceMapSearch
       initialAvatar={initialAvatar}
       initialName={initialName}
-      headerExtra={
-        <button
-          onClick={() => openAssistant({ prompt: ta('nearbyPrompt') })}
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
-          style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
-        >
-          <span>✨</span>
-          <span>{ta('askAi')}</span>
-        </button>
-      }
       renderListAction={(place) => {
         const isSaved = savedIds.has(place.id)
         const isSaving = savingIds.has(place.id)

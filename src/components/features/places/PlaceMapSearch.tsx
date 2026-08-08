@@ -76,6 +76,7 @@ export default function PlaceMapSearch({
   const [userName, setUserName] = useState<string | null>(initialName)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
+  const markerRefs = useRef<Map<string, google.maps.Marker>>(new Map())
 
   // AI 맞춤 추천
   const [selectedCats, setSelectedCats] = useState<string[]>([])
@@ -126,6 +127,13 @@ export default function PlaceMapSearch({
   useEffect(() => {
     return () => {
       aiAbortRef.current?.abort()
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      markerRefs.current.forEach((m) => m.setMap(null))
+      markerRefs.current.clear()
     }
   }, [])
 
@@ -262,6 +270,11 @@ export default function PlaceMapSearch({
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
                     strokeWeight: 2,
+                  }}
+                  onLoad={(m) => markerRefs.current.set(place.id, m)}
+                  onUnmount={(m) => {
+                    m.setMap(null)
+                    markerRefs.current.delete(place.id)
                   }}
                 />
               ) : null,
