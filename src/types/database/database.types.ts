@@ -864,9 +864,11 @@ export type Database = {
           created_at: string | null
           destination: string | null
           end_date: string | null
+          end_time: string | null
           id: string
           owner_id: string
           start_date: string | null
+          start_time: string | null
           status: string
           title: string
           updated_at: string | null
@@ -876,9 +878,11 @@ export type Database = {
           created_at?: string | null
           destination?: string | null
           end_date?: string | null
+          end_time?: string | null
           id?: string
           owner_id: string
           start_date?: string | null
+          start_time?: string | null
           status?: string
           title: string
           updated_at?: string | null
@@ -888,9 +892,11 @@ export type Database = {
           created_at?: string | null
           destination?: string | null
           end_date?: string | null
+          end_time?: string | null
           id?: string
           owner_id?: string
           start_date?: string | null
+          start_time?: string | null
           status?: string
           title?: string
           updated_at?: string | null

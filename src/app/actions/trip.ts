@@ -22,6 +22,8 @@ export async function createTripReturnId(
   const endDate = (formData.get('end_date') as string) || null
   const destination = (formData.get('destination') as string)?.trim() || null
   const coverUrl = (formData.get('cover_url') as string) || null
+  const startTime = (formData.get('start_time') as string) || null
+  const endTime = (formData.get('end_time') as string) || null
 
   if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
 
@@ -33,6 +35,8 @@ export async function createTripReturnId(
       cover_url: coverUrl,
       start_date: startDate,
       end_date: endDate,
+      start_time: startTime,
+      end_time: endTime,
       owner_id: user.id,
     })
     .select('id')
@@ -60,6 +64,8 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const endDate = (formData.get('end_date') as string) || null
   const destination = (formData.get('destination') as string)?.trim() || null
   const coverUrl = (formData.get('cover_url') as string) || null
+  const startTime = (formData.get('start_time') as string) || null
+  const endTime = (formData.get('end_time') as string) || null
   const invitedIds = (formData.getAll('invited_user_ids') as string[]).filter(Boolean)
 
   if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
@@ -72,6 +78,8 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
       cover_url: coverUrl,
       start_date: startDate,
       end_date: endDate,
+      start_time: startTime,
+      end_time: endTime,
       owner_id: user.id,
     })
     .select('id')
@@ -315,6 +323,8 @@ export async function updateTrip(
     destination?: string | null
     start_date?: string | null
     end_date?: string | null
+    start_time?: string | null
+    end_time?: string | null
     cover_url?: string | null
   },
 ): Promise<{ error?: string }> {

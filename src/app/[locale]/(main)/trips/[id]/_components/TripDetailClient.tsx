@@ -229,6 +229,15 @@ export default function TripDetailClient({
 
   const isOwner = trip.owner_id === currentUserId
 
+  /** 아직 아무 일정도 없는 날짜. AI에는 이 날들만 짜게 시킨다 */
+  const emptyDates = useMemo(
+    () =>
+      expectedDays
+        .filter((d) => (dayMap.get(d.dayDate)?.itinerary_items.length ?? 0) === 0)
+        .map((d) => d.dayDate),
+    [expectedDays, dayMap],
+  )
+
   const isMapTab = activeTab === 'places'
   const openAssistant = useAssistantStore((s) => s.open)
 
@@ -428,7 +437,7 @@ export default function TripDetailClient({
             />
           )}
           {activeTab === 'places' && (
-            <div className="relative flex-1">
+            <div className="relative flex min-h-0 flex-1 flex-col">
               <PlacesMapTab
                 trip={trip}
                 currentUserAvatar={currentUserAvatar}
@@ -481,11 +490,11 @@ export default function TripDetailClient({
           destination={trip.destination ?? ''}
           startDate={trip.start_date}
           endDate={trip.end_date}
+          startTime={(trip.start_time ?? '').slice(0, 5)}
+          endTime={(trip.end_time ?? '').slice(0, 5)}
           coverUrl={trip.cover_url ?? ''}
           tripId={trip.id}
-          filledDates={trip.itinerary_days
-            .filter((d) => d.itinerary_items.length > 0)
-            .map((d) => d.day_date)}
+          targetDates={emptyDates}
           onClose={() => setShowAISheet(false)}
         />
       )}
@@ -558,10 +567,14 @@ function ItineraryTab({
     (n, day) => n + (dayMap.get(day.dayDate)?.itinerary_items.length ?? 0),
     0,
   )
+  // AI는 비어 있는 날만 채우므로, 채울 날이 남아 있을 때만 진입로를 둔다
+  const emptyDayCount = expectedDays.filter(
+    (day) => (dayMap.get(day.dayDate)?.itinerary_items.length ?? 0) === 0,
+  ).length
 
   return (
     <div>
-      {/* 날짜는 잡혔는데 일정이 비어 있는 순간이 AI 생성 의도가 가장 뚜렷하다 */}
+      {/* 일정이 통째로 비었을 때가 AI 생성 의도가 가장 뚜렷하다 */}
       {isOwner && totalItems === 0 && (
         <button
           onClick={onGenerateAI}
@@ -588,6 +601,24 @@ function ItineraryTab({
           </svg>
         </button>
       )}
+
+      {/* 일부만 채워진 경우 — 한 번 생성했다고 진입로가 사라지면 안 되므로
+          남은 빈 날을 채우는 경로를 눈에 덜 띄게 남겨둔다 */}
+      {isOwner && totalItems > 0 && emptyDayCount > 0 && (
+        <button
+          onClick={onGenerateAI}
+          className="border-border active:bg-bg2 mx-4 mt-3 flex w-[calc(100%-2rem)] items-center gap-2.5 rounded-xl border border-dashed px-3.5 py-2.5 text-left"
+        >
+          <span className="text-[14px]">✨</span>
+          <span className="min-w-0 flex-1">
+            <span className="text-ink block text-[12px] font-semibold">{t('aiFillEmpty')}</span>
+            <span className="text-ink3 block text-[11px]">
+              {t('aiFillEmptyDesc', { count: emptyDayCount })}
+            </span>
+          </span>
+        </button>
+      )}
+
       {expectedDays.map((day) => {
         const dayDB = dayMap.get(day.dayDate)
         const dayExpenses = dayDB ? (expensesByDay.get(dayDB.id) ?? []) : []

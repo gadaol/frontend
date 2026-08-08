@@ -59,6 +59,9 @@ export default function ScheduleEditClient({
   const [destination, setDestination] = useState(trip.destination ?? '')
   const [startDate, setStartDate] = useState(trip.start_date ?? '')
   const [endDate, setEndDate] = useState(trip.end_date ?? '')
+  // time 컬럼은 'HH:MM:SS'로 오는데 input[type=time]은 'HH:MM'만 받는다
+  const [startTime, setStartTime] = useState((trip.start_time ?? '').slice(0, 5))
+  const [endTime, setEndTime] = useState((trip.end_time ?? '').slice(0, 5))
   const [coverUrl, setCoverUrl] = useState(trip.cover_url ?? COVER_PRESETS[0])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -189,6 +192,8 @@ export default function ScheduleEditClient({
       destination: destination.trim() || null,
       start_date: startDate || null,
       end_date: endDate || null,
+      start_time: startTime || null,
+      end_time: endTime || null,
       cover_url: coverUrl,
     })
     setSaving(false)
@@ -501,14 +506,18 @@ export default function ScheduleEditClient({
               <DestinationInput value={destination} onChange={setDestination} />
             </div>
 
-            {/* 날짜 */}
+            {/* 기간 — 날짜와 시간을 한 블록에서 같이 잡는다.
+                시간을 따로 떼어두면 서로 무관한 설정처럼 보인다. */}
             <div>
               <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
                 {t('period')}
               </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <p className="text-ink3 mb-1 text-[11px]">{t('startDate')}</p>
+
+              <div className="border-border divide-border divide-y rounded-xl border bg-white">
+                <div className="flex items-center gap-2 px-3 py-2.5">
+                  <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
+                    {t('rangeStart')}
+                  </span>
                   <input
                     type="date"
                     value={startDate}
@@ -516,21 +525,38 @@ export default function ScheduleEditClient({
                       setStartDate(e.target.value)
                       if (endDate && e.target.value > endDate) setEndDate(e.target.value)
                     }}
-                    className="border-border text-ink focus:border-primary w-full rounded-xl border bg-white px-3 py-3 text-[14px] focus:outline-none"
+                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
+                  />
+                  <input
+                    /* 폭을 고정하지 않는다 — iOS는 '오후 3:30', 크롬은 '15:30'으로
+                       렌더돼 필요한 폭이 달라서 고정하면 잘린다 */
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="text-ink2 flex-shrink-0 bg-transparent text-right text-[14px] focus:outline-none"
                   />
                 </div>
-                <div className="text-ink3 flex items-end pb-[13px]">—</div>
-                <div className="flex-1">
-                  <p className="text-ink3 mb-1 text-[11px]">{t('endDate')}</p>
+
+                <div className="flex items-center gap-2 px-3 py-2.5">
+                  <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
+                    {t('rangeEnd')}
+                  </span>
                   <input
                     type="date"
                     value={endDate}
                     min={startDate || undefined}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="border-border text-ink focus:border-primary w-full rounded-xl border bg-white px-3 py-3 text-[14px] focus:outline-none"
+                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
+                  />
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="text-ink2 flex-shrink-0 bg-transparent text-right text-[14px] focus:outline-none"
                   />
                 </div>
               </div>
+
               {startDate && endDate && expectedDays.length > 0 && (
                 <p className="text-primary mt-1.5 text-[12px]">
                   {expectedDays.length === 1
@@ -541,6 +567,7 @@ export default function ScheduleEditClient({
                       })}
                 </p>
               )}
+              <p className="text-ink3 mt-1 text-[12px]">{t('rangeHint')}</p>
             </div>
           </div>
         )}

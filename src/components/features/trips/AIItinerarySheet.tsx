@@ -16,14 +16,21 @@ interface Props {
   destination: string
   startDate: string
   endDate: string
+  /** 'HH:MM'. 있으면 첫날/마지막날을 이 시각에 맞춰 짠다 */
+  startTime?: string
+  endTime?: string
   coverUrl: string
   /**
    * 이미 만들어진 여행에 일정을 채워 넣을 때 그 여행 id.
    * 없으면 새 여행을 만들면서 일정까지 함께 저장한다.
    */
   tripId?: string
-  /** 이미 일정이 있는 날짜(YYYY-MM-DD). 사용자가 짜둔 걸 덮지 않도록 건너뛴다 */
-  filledDates?: string[]
+  /**
+   * 채울 날짜(YYYY-MM-DD)만 지정한다. 비우면 전체 기간을 짠다.
+   * 이걸 넘기면 AI가 해당 날짜만 생성하므로, 미리보기에 적용되지 않을 날이
+   * 섞이지 않는다.
+   */
+  targetDates?: string[]
   onClose: () => void
 }
 
@@ -32,9 +39,11 @@ export default function AIItinerarySheet({
   destination,
   startDate,
   endDate,
+  startTime = '',
+  endTime = '',
   coverUrl,
   tripId: existingTripId,
-  filledDates = [],
+  targetDates = [],
   onClose,
 }: Props) {
   const locale = useLocale()
@@ -72,6 +81,9 @@ export default function AIItinerarySheet({
           destination,
           startDate,
           endDate,
+          startTime,
+          endTime,
+          targetDates,
           style: selectedStyles,
           companion,
           notes,
@@ -102,7 +114,19 @@ export default function AIItinerarySheet({
     } finally {
       setStreaming(false)
     }
-  }, [canGenerate, destination, startDate, endDate, selectedStyles, companion, notes, locale])
+  }, [
+    canGenerate,
+    destination,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    targetDates,
+    selectedStyles,
+    companion,
+    notes,
+    locale,
+  ])
 
   async function applyItinerary() {
     if (!itinerary || saving) return
@@ -124,10 +148,10 @@ export default function AIItinerarySheet({
         targetTripId = id
       }
 
-      const skip = new Set(filledDates)
+      const allowed = targetDates.length > 0 ? new Set(targetDates) : null
       for (const day of itinerary.days) {
-        // 이미 사용자가 채워둔 날은 건드리지 않는다
-        if (skip.has(day.day_date)) continue
+        // 대상 날짜를 지정했으면 그 날만 저장한다 (모델이 다른 날을 끼워도 방어)
+        if (allowed && !allowed.has(day.day_date)) continue
         setSaveStep(t('ai.savingDay', { n: day.day_number }))
         for (const item of day.items) {
           try {

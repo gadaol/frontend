@@ -402,7 +402,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
         {/* 바 핸들 토글 */}
         <button
           onClick={() => setListOpen((v) => !v)}
-          className="flex w-full flex-col items-center gap-2 pt-3 pb-1"
+          className="flex w-full flex-shrink-0 flex-col items-center gap-2 pt-3 pb-1"
         >
           <div className="h-[5px] w-10 rounded-full bg-gray-300" />
           <div className="flex w-full items-center justify-between px-4 pb-1">
@@ -426,12 +426,11 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
           </div>
         </button>
 
-        {/* 목록: 패널 높이에서 헤더 제외한 나머지를 스크롤 영역으로 */}
+        {/* 목록: 헤더가 차지한 만큼 빼고 남은 높이를 그대로 쓴다.
+            calc(100% - 헤더높이)로 계산하면 헤더 디자인이 바뀔 때마다
+            상수가 어긋나 목록이 잘리거나 빈 공간이 생긴다. */}
         {listOpen && (
-          <div
-            className="overflow-y-auto px-4 pt-2 pb-4"
-            style={{ height: `calc(100% - ${PANEL_HEADER_H}px)` }}
-          >
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
             {dayGroups
               .filter(([dayNum]) => selectedDay === null || dayNum === selectedDay)
               .map(([dayNum, dayPins]) => (

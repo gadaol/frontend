@@ -24,8 +24,6 @@
   "endBeforeStart": "End date cannot be before the start date",
   "destination": "Destination",
   "period": "Dates",
-  "startDate": "Start",
-  "endDate": "End",
   "dayTrip": "Day trip",
   "nights": "{nights} nights, {days} days",
   "tabInfo": "Basics",
@@ -138,7 +136,6 @@
   "deleteExpense": "Delete expense",
   "coverSelect": "Choose a cover",
   "titlePlaceholderNew": "e.g. Jeju getaway",
-  "dateLaterHint": "You can set dates later",
   "optional": "(optional)",
   "aiCardTitle": "Generate with AI",
   "aiCardReady": "AI will plan your {destination} trip for you",
@@ -189,5 +186,11 @@
   "titleRequired": "Please enter a trip name",
   "createFailed": "Couldn’t create the trip",
   "addedToTrip": "Added to {trip}",
-  "notAdded": "Not added"
+  "notAdded": "Not added",
+  "aiFillEmpty": "Fill empty days with AI",
+  "aiFillEmptyDesc": "{count} days still empty",
+  "aiFromEdit": "Fill with AI",
+  "rangeStart": "Start",
+  "rangeEnd": "End",
+  "rangeHint": "Dates alone are fine. Add times and AI will plan around them."
 }

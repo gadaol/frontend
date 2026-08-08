@@ -24,8 +24,6 @@
   "endBeforeStart": "종료일이 시작일보다 빠를 수 없어요",
   "destination": "목적지",
   "period": "여행 기간",
-  "startDate": "시작일",
-  "endDate": "종료일",
   "dayTrip": "당일치기",
   "nights": "{nights}박 {days}일",
   "tabInfo": "기본",
@@ -138,7 +136,6 @@
   "deleteExpense": "경비 삭제",
   "coverSelect": "커버 선택",
   "titlePlaceholderNew": "예: 제주도 힐링 여행",
-  "dateLaterHint": "날짜는 나중에 설정할 수 있어요",
   "optional": "(선택)",
   "aiCardTitle": "AI 일정 자동 생성",
   "aiCardReady": "AI가 {destination} 여행 일정을 자동으로 짜드려요",
@@ -189,5 +186,11 @@
   "titleRequired": "여행 제목을 입력해주세요",
   "createFailed": "여행 생성에 실패했어요",
   "addedToTrip": "{trip}에 추가됨",
-  "notAdded": "미추가"
+  "notAdded": "미추가",
+  "aiFillEmpty": "빈 날을 AI로 채우기",
+  "aiFillEmptyDesc": "{count}일이 비어 있어요",
+  "aiFromEdit": "AI로 일정 채우기",
+  "rangeStart": "시작",
+  "rangeEnd": "종료",
+  "rangeHint": "날짜만 정해도 돼요. 시간을 넣으면 AI가 그 시간에 맞춰 일정을 짜요."
 }

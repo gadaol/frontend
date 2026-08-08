@@ -20,6 +20,8 @@ export default function NewTripPage() {
   const [selectedCover, setSelectedCover] = useState(COVER_PRESETS[0])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [destination, setDestination] = useState('')
   const [title, setTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -151,36 +153,62 @@ export default function NewTripPage() {
           <DestinationInput name="destination" value={destination} onChange={setDestination} />
         </div>
 
-        {/* 날짜 */}
+        {/* 기간 — 날짜와 시간을 한 블록에서 같이 잡는다 */}
         <div>
           <label className="text-ink mb-2 block text-[13px] font-semibold">
             {t('period')} <span className="text-ink3 font-normal">{t('optional')}</span>
           </label>
-          <div className="flex items-center gap-2">
-            <input
-              name="start_date"
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value)
-                if (endDate && e.target.value > endDate) setEndDate('')
-              }}
-              className="border-border text-ink focus:border-primary bg-bg2 flex-1 rounded-2xl border px-4 py-3.5 text-[15px] transition-colors outline-none focus:bg-white"
-            />
-            <span className="text-ink3 text-[13px]">~</span>
-            <input
-              name="end_date"
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border-border text-ink focus:border-primary bg-bg2 flex-1 rounded-2xl border px-4 py-3.5 text-[15px] transition-colors outline-none focus:bg-white"
-            />
+
+          <div className="border-border divide-border bg-bg2 divide-y overflow-hidden rounded-2xl border">
+            <div className="flex items-center gap-2 px-4 py-3">
+              <span className="text-ink3 w-9 flex-shrink-0 text-[12px] font-semibold">
+                {t('rangeStart')}
+              </span>
+              <input
+                name="start_date"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value)
+                  if (endDate && e.target.value > endDate) setEndDate('')
+                }}
+                className="text-ink min-w-0 flex-1 bg-transparent text-[15px] outline-none"
+              />
+              <input
+                /* 폭을 고정하지 않는다 — iOS는 '오후 3:30', 크롬은 '15:30'으로
+                       렌더돼 필요한 폭이 달라서 고정하면 잘린다 */
+                name="start_time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="text-ink2 flex-shrink-0 bg-transparent text-right text-[15px] outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 px-4 py-3">
+              <span className="text-ink3 w-9 flex-shrink-0 text-[12px] font-semibold">
+                {t('rangeEnd')}
+              </span>
+              <input
+                name="end_date"
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="text-ink min-w-0 flex-1 bg-transparent text-[15px] outline-none"
+              />
+              <input
+                name="end_time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="text-ink2 flex-shrink-0 bg-transparent text-right text-[15px] outline-none"
+              />
+            </div>
           </div>
-          <p className="text-ink3 mt-1.5 text-[12px]">{t('dateLaterHint')}</p>
+          <p className="text-ink3 mt-1.5 text-[12px]">{t('rangeHint')}</p>
         </div>
 
-        {/* AI 일정 자동 생성 버튼 */}
         {/* AI 일정 생성 — 조건이 맞을 때만 튀어나오면 못 찾으므로 항상 두고 안내한다 */}
         {(() => {
           const ready = !!destination && !!startDate && !!endDate
@@ -234,6 +262,8 @@ export default function NewTripPage() {
           destination={destination}
           startDate={startDate}
           endDate={endDate}
+          startTime={startTime}
+          endTime={endTime}
           coverUrl={selectedCover}
           onClose={() => setShowAISheet(false)}
         />

@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
     destination,
     startDate,
     endDate,
+    startTime = '',
+    endTime = '',
+    targetDates = [],
     style = [],
     companion = '',
     notes = '',
@@ -51,6 +54,12 @@ export async function POST(req: NextRequest) {
     destination: string
     startDate: string
     endDate: string
+    /** 첫날 일정을 시작할 수 있는 시각 (도착 시간) */
+    startTime?: string
+    /** 마지막날 일정을 끝내야 하는 시각 (출발 시간) */
+    endTime?: string
+    /** 이 날짜들만 생성한다. 비면 전체 기간 */
+    targetDates?: string[]
     style?: string[]
     companion?: string
     /** 사용자가 자유롭게 적은 추가 요청 (가고 싶은 곳, 피하고 싶은 것 등) */
@@ -69,18 +78,26 @@ export async function POST(req: NextRequest) {
     locale === 'ko'
       ? [
           `목적지: ${destination}`,
-          `기간: ${startDate} ~ ${endDate}`,
+          targetDates.length > 0
+            ? `아래 날짜만 짜라. 다른 날짜는 절대 포함하지 마라: ${targetDates.join(', ')}`
+            : `기간: ${startDate} ~ ${endDate}`,
           `스타일: ${style.join(', ')}`,
           `동행: ${companion}`,
+          startTime && `첫날은 ${startTime}부터 일정 시작 가능 (그 이전 시간은 비워둘 것)`,
+          endTime && `마지막날은 ${endTime}까지 일정 종료 (이후 시간은 비워둘 것)`,
           trimmedNotes && `추가 요청(최우선 반영): ${trimmedNotes}`,
         ]
           .filter(Boolean)
           .join('\n')
       : [
           `Destination: ${destination}`,
-          `Dates: ${startDate} to ${endDate}`,
+          targetDates.length > 0
+            ? `Plan ONLY these dates, never include others: ${targetDates.join(', ')}`
+            : `Dates: ${startDate} to ${endDate}`,
           `Style: ${style.join(', ')}`,
           `Companion: ${companion}`,
+          startTime && `Day 1 can only start at ${startTime} — leave earlier hours empty`,
+          endTime && `The last day must wrap up by ${endTime} — leave later hours empty`,
           trimmedNotes && `Additional requests (prioritize these): ${trimmedNotes}`,
         ]
           .filter(Boolean)
