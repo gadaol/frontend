@@ -89,6 +89,10 @@ export default function PlaceMapSearch({
 
   const fetchAIRecommend = useCallback(async () => {
     if (aiPhase === 'loading') return
+    if (!canAccess(plan, FEATURE_PLAN.aiRecommend)) {
+      setUpgradeSheet(true)
+      return
+    }
     setAiResult(null)
     setAiPhase('loading')
     aiAbortRef.current?.abort()

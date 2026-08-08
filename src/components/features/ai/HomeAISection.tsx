@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 import {
   addRecommendedPlaceToBacklog,
   addRecommendedPlaceToTrip,
@@ -35,6 +38,8 @@ export default function HomeAISection() {
 
   const abortRef = useRef<AbortController | null>(null)
   const openAssistant = useAssistantStore((s) => s.open)
+  const plan = usePlanStore((s) => s.plan)
+  const [upgradeSheet, setUpgradeSheet] = useState(false)
 
   async function fetchRecommend() {
     if (loading) return
@@ -88,6 +93,10 @@ export default function HomeAISection() {
   }, [result])
 
   function handleOpen() {
+    if (!canAccess(plan, FEATURE_PLAN.aiRecommend)) {
+      setUpgradeSheet(true)
+      return
+    }
     setOpen(true)
     if (!result && !loading) fetchRecommend()
   }
@@ -155,6 +164,13 @@ export default function HomeAISection() {
 
   return (
     <>
+      {upgradeSheet && (
+        <UpgradeSheet
+          required="pro"
+          feature="AI 맞춤 추천"
+          onClose={() => setUpgradeSheet(false)}
+        />
+      )}
       {/* 배너 버튼 */}
       <button
         onClick={handleOpen}

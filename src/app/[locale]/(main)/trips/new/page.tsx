@@ -12,6 +12,8 @@ import { createClient } from '@/lib/supabase/client'
 import { COVER_PRESETS } from '@/utils/coverPresets'
 import AIItinerarySheet from '@/components/features/trips/AIItinerarySheet'
 import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
@@ -58,6 +60,8 @@ export default function NewTripPage() {
   const [title, setTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [tripLimitSheet, setTripLimitSheet] = useState(false)
+  const [multiDestUpgrade, setMultiDestUpgrade] = useState(false)
+  const plan = usePlanStore((s) => s.plan)
   const [uploading, setUploading] = useState(false)
   const [showAISheet, setShowAISheet] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -80,6 +84,10 @@ export default function NewTripPage() {
   }
 
   function addSegment() {
+    if (!canAccess(plan, FEATURE_PLAN.multiDestination)) {
+      setMultiDestUpgrade(true)
+      return
+    }
     setSegments((prev) => {
       const last = prev[prev.length - 1]
       return [...prev, { destination: '', startDate: last?.endDate ?? '', endDate: '' }]
@@ -136,6 +144,13 @@ export default function NewTripPage() {
         required="pro"
         feature="여행 3개 초과 생성"
         onClose={() => setTripLimitSheet(false)}
+      />
+    )}
+    {multiDestUpgrade && (
+      <UpgradeSheet
+        required="pro"
+        feature="다중 목적지"
+        onClose={() => setMultiDestUpgrade(false)}
       />
     )}
     <div className="flex min-h-full flex-col bg-white">

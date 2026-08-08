@@ -37,7 +37,7 @@ export const FEATURE_PLAN = {
   multiDestination: 'pro',
   characterRog: 'pro',
   aiSearch: 'pro',
-  aiDestinations: 'pro',
+  aiRecommend: 'pro',
 } as const satisfies Record<string, Plan>
 
 export const FREE_TRIP_LIMIT = 3
