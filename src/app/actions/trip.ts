@@ -376,6 +376,10 @@ export async function updateItineraryItemMemo(
     .eq('id', itemId)
 
   if (error) return { error: error.message }
+
+  const locale = await getLocale()
+  revalidatePath(`/${locale}/trips/${tripId}`)
+  revalidatePath(`/${locale}/trips/${tripId}/edit`)
   return {}
 }
 

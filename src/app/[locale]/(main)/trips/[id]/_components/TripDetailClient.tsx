@@ -147,6 +147,7 @@ export default function TripDetailClient({
   function handleMemoSave(itemId: string, memo: string) {
     startTransition(async () => {
       await updateItineraryItemMemo(itemId, memo)
+      router.refresh()
     })
   }
 
