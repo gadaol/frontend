@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
     locale?: Locale
   }
 
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+
   const [
     profileResult,
     backlogResult,
@@ -87,6 +89,7 @@ export async function POST(req: NextRequest) {
     dislikedResult,
     interactionsResult,
     completedTripsResult,
+    trendingResult,
   ] = await Promise.allSettled([
     supabase
       .from('profiles')
@@ -128,6 +131,13 @@ export async function POST(req: NextRequest) {
       .eq('owner_id', user.id)
       .eq('status', 'completed')
       .limit(3),
+
+    supabase
+      .from('backlog_items')
+      .select('place_id, places(name, place_categories(name))')
+      .not('place_id', 'is', null)
+      .gt('created_at', ninetyDaysAgo)
+      .limit(500),
   ])
 
   const settled = <T,>(r: PromiseSettledResult<T>): T | null =>
@@ -201,6 +211,37 @@ export async function POST(req: NextRequest) {
     .filter((x): x is string => x !== null)
   if (visitedLines.length) {
     sections.push(`[실제 다녀온 여행]\n${visitedLines.join('\n')}`)
+  }
+
+  type TrendingRaw = { place_id: string | null; places: PlaceWithCategory }
+  const knownNames = new Set([...backlogNames, ...likedNames, ...dislikedNames])
+  const trendingCountMap = new Map<string, { name: string; category: string; count: number }>()
+  for (const item of (settled(trendingResult)?.data as TrendingRaw[] | null) ?? []) {
+    const id = item.place_id
+    const p = item.places
+    if (!id || !p) continue
+    const existing = trendingCountMap.get(id)
+    if (existing) {
+      existing.count++
+    } else {
+      trendingCountMap.set(id, {
+        name: p.name,
+        category: p.place_categories?.name ?? '',
+        count: 1,
+      })
+    }
+  }
+  const trendingPlaces = [...trendingCountMap.values()]
+    .filter((p) => !knownNames.has(p.name))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 15)
+  if (trendingPlaces.length) {
+    sections.push(
+      `[요즘 많이 저장되는 장소 — 전체 유저 트렌드 (최근 90일)]\n` +
+        trendingPlaces
+          .map((p) => `- ${p.name}${p.category ? `(${p.category})` : ''} [${p.count}명 저장]`)
+          .join('\n'),
+    )
   }
 
   const userContext = sections.join('\n\n')

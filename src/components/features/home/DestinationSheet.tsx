@@ -162,6 +162,8 @@ export default function DestinationSheet({ destination, onClose }: Props) {
         [trip.id]: { ...(prev[place.id]?.[trip.id] ?? {}), [dayKey]: 'saved' },
       },
     }))
+
+    setTimeout(() => router.push(`/${locale}/trips/${trip.id}`), 600)
   }
 
   if (!destination) return null
