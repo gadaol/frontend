@@ -82,7 +82,7 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
                   />
                 </svg>
               </div>
-              <p className="text-primary text-[13px] font-semibold">가다올 팀 답변</p>
+              <p className="text-primary text-[13px] font-semibold">가다로그 팀 답변</p>
               <p className="text-ink3 ml-auto text-[12px]">
                 {new Date(answer.created_at).toLocaleDateString('ko-KR', {
                   month: 'long',

@@ -59,5 +59,5 @@ export const PLAN_PRICE: Record<string, Record<string, number>> = {
 export function planOrderName(plan: string, period: string): string {
   const planLabel = plan === 'pro' ? 'Pro' : 'Plus'
   const periodLabel = period === 'yearly' ? '연간' : '월간'
-  return `가다올 ${planLabel} ${periodLabel} 구독`
+  return `가다로그 ${planLabel} ${periodLabel} 구독`
 }

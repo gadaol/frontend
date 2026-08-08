@@ -72,11 +72,14 @@ export function makePlaceTools(supabase: DB, userId: string) {
 
         if (error) return { success: false, error: error.message }
 
-        supabase.from('place_interactions').insert({
-          user_id: userId,
-          place_id: placeId,
-          interaction_type: 'ai_added_to_candidates',
-        }).then(undefined, () => null)
+        supabase
+          .from('place_interactions')
+          .insert({
+            user_id: userId,
+            place_id: placeId,
+            interaction_type: 'ai_added_to_candidates',
+          })
+          .then(undefined, () => null)
 
         return { success: true, placeId }
       },

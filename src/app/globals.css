@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── 가다올 디자인 토큰 ── */
+/* ── 가다로그 디자인 토큰 ── */
 @theme {
   /* 브랜드 */
   --color-primary: #1b6ff0;
@@ -44,6 +44,13 @@
   --color-kakao: #fee500;
   --color-kakao-ink: #191919;
 
+  /* AI 캐릭터 — 가다(순둥이) / 로그(츤데레).
+     두 캐릭터는 동일한 실루엣을 쓰고 색과 표정으로만 구분한다. */
+  --color-gada: #1b6ff0;
+  --color-rog: #e83a14;
+  --color-rog-accent: #ff6b3d;
+  --color-rog-deep: #0c0c10;
+
   /* 폰트 */
   --font-sans: 'Pretendard Variable', Pretendard, sans-serif;
 
@@ -77,6 +84,55 @@
   body {
     @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* AI 텍스트 순차 애니메이션 */
+@keyframes ai-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ai-fade {
+  animation: ai-fade-in 0.25s ease-out both;
+}
+
+/* ── 음성 모드 오브 ────────────────────────────────────────── */
+
+/* 대기 — 숨쉬듯 아주 느리게 */
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+/* 듣는 중 — 파문이 바깥으로 번짐 */
+@keyframes orb-ripple {
+  0%   { transform: scale(0.85); opacity: 0.55; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+/* 말하는 중 — 짧고 탄력 있게 */
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.13); }
+}
+/* 생각 중 — 궤도를 도는 점 */
+@keyframes orb-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* 자막이 아래에서 올라옴 */
+@keyframes caption-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.orb-breathe { animation: orb-breathe 3.6s ease-in-out infinite; }
+.orb-ripple  { animation: orb-ripple 2s ease-out infinite; }
+.orb-pulse   { animation: orb-pulse 0.7s ease-in-out infinite; }
+.orb-orbit   { animation: orb-orbit 1.4s linear infinite; }
+.caption-rise { animation: caption-rise 0.28s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-breathe, .orb-ripple, .orb-pulse, .orb-orbit {
+    animation: none;
   }
 }
 

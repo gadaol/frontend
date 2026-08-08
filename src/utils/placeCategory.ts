@@ -13,11 +13,11 @@ type IconComponent = typeof PlacePinIcon
 
 export type CategoryStyle = {
   icon: IconComponent
-  color: string      // text color (tailwind)
-  bg: string         // background color (tailwind)
-  hex: string        // hex for map markers etc.
-  label: string      // 한국어 명칭
-  hashLabel: string  // #명칭 형태
+  color: string // text color (tailwind)
+  bg: string // background color (tailwind)
+  hex: string // hex for map markers etc.
+  label: string // 한국어 명칭
+  hashLabel: string // #명칭 형태
 }
 
 // DB place_categories.name 기반 (8개)
@@ -97,23 +97,56 @@ export function getCategoryStyle(name: string | null | undefined): CategoryStyle
 
 // 하위호환: 기존 Google type 배열 기반 조회
 const GOOGLE_TYPE_TO_DB: Record<string, string> = {
-  restaurant: '식당', food: '식당', meal_takeaway: '식당', meal_delivery: '식당',
-  fast_food_restaurant: '식당', korean_restaurant: '식당', chinese_restaurant: '식당',
-  japanese_restaurant: '식당', american_restaurant: '식당', seafood_restaurant: '식당',
-  cafe: '카페', bakery: '카페', coffee: '카페', coffee_shop: '카페',
-  tourist_attraction: '관광지', museum: '관광지', art_gallery: '관광지',
-  point_of_interest: '관광지', landmark: '관광지', historical_place: '관광지',
-  cultural_landmark: '관광지', monument: '관광지', palace: '관광지',
-  castle: '관광지', shrine: '관광지', temple: '관광지', church: '관광지',
-  zoo: '관광지', aquarium: '관광지',
-  lodging: '숙소', hotel: '숙소', motel: '숙소',
-  shopping_mall: '쇼핑', store: '쇼핑', clothing_store: '쇼핑',
-  department_store: '쇼핑', convenience_store: '쇼핑', supermarket: '쇼핑',
+  restaurant: '식당',
+  food: '식당',
+  meal_takeaway: '식당',
+  meal_delivery: '식당',
+  fast_food_restaurant: '식당',
+  korean_restaurant: '식당',
+  chinese_restaurant: '식당',
+  japanese_restaurant: '식당',
+  american_restaurant: '식당',
+  seafood_restaurant: '식당',
+  cafe: '카페',
+  bakery: '카페',
+  coffee: '카페',
+  coffee_shop: '카페',
+  tourist_attraction: '관광지',
+  museum: '관광지',
+  art_gallery: '관광지',
+  point_of_interest: '관광지',
+  landmark: '관광지',
+  historical_place: '관광지',
+  cultural_landmark: '관광지',
+  monument: '관광지',
+  palace: '관광지',
+  castle: '관광지',
+  shrine: '관광지',
+  temple: '관광지',
+  church: '관광지',
+  zoo: '관광지',
+  aquarium: '관광지',
+  lodging: '숙소',
+  hotel: '숙소',
+  motel: '숙소',
+  shopping_mall: '쇼핑',
+  store: '쇼핑',
+  clothing_store: '쇼핑',
+  department_store: '쇼핑',
+  convenience_store: '쇼핑',
+  supermarket: '쇼핑',
   grocery_store: '쇼핑',
-  park: '자연', natural_feature: '자연', campground: '자연',
-  national_park: '자연', beach: '자연', forest: '자연',
-  amusement_park: '액티비티', sports_complex: '액티비티', stadium: '액티비티',
-  golf_course: '액티비티', bowling_alley: '액티비티',
+  park: '자연',
+  natural_feature: '자연',
+  campground: '자연',
+  national_park: '자연',
+  beach: '자연',
+  forest: '자연',
+  amusement_park: '액티비티',
+  sports_complex: '액티비티',
+  stadium: '액티비티',
+  golf_course: '액티비티',
+  bowling_alley: '액티비티',
 }
 
 /** Google Places API types 배열 → CategoryStyle */

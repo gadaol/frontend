@@ -4,13 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import dayjs from '@/lib/dayjs'
 import { daysUntil, formatDateRange, isTripOngoing, isTripUpcoming } from '@/utils/date'
-import {
-  BacklogIcon,
-  BellIcon,
-  ExploreIcon,
-  ListIcon,
-  PlusIcon,
-} from '@/components/icons'
+import { BacklogIcon, BellIcon, ExploreIcon, ListIcon, PlusIcon } from '@/components/icons'
 import { isGradient } from '@/utils/uploadCover'
 import { AVATAR_COLORS } from '@/utils/avatarColors'
 import HomeAISection from '@/components/features/ai/HomeAISection'
@@ -39,7 +33,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const [tripsResult, notifResult, profileResult] = await Promise.all([
+  const [tripsResult, notifResult, profileResult, destResult] = await Promise.all([
     supabase
       .from('trips')
       .select('*, trip_members(user_id, role), trip_tags(tag)')
@@ -50,10 +44,28 @@ export default async function HomePage() {
       .eq('user_id', user.id)
       .eq('is_read', false),
     supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase
+      .from('trips')
+      .select('destination')
+      .not('destination', 'is', null)
+      .neq('destination', '')
+      .limit(500),
   ])
 
   const allTrips = (tripsResult.data ?? []) as TripWithMembers[]
   const unreadCount = notifResult.count ?? 0
+
+  // 앱 내 인기 여행지 집계
+  const destCountMap = new Map<string, number>()
+  for (const t of destResult.data ?? []) {
+    if (t.destination) {
+      destCountMap.set(t.destination, (destCountMap.get(t.destination) ?? 0) + 1)
+    }
+  }
+  const popularDestinations = [...destCountMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, count]) => ({ name, count }))
   const displayName = profileResult.data?.name ?? ''
 
   const upcomingTrip =
@@ -270,9 +282,8 @@ export default async function HomePage() {
         {/* AI 취향 추천 배너 */}
         <HomeAISection />
 
-        {/* 실시간 인기 여행지 */}
-        <HomePopularSection />
-
+        {/* 앱 인기 여행지 */}
+        <HomePopularSection popularDestinations={popularDestinations} />
       </div>
     </div>
   )

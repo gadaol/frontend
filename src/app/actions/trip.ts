@@ -27,7 +27,14 @@ export async function createTripReturnId(
 
   const { data: trip, error } = await supabase
     .from('trips')
-    .insert({ title, destination, cover_url: coverUrl, start_date: startDate, end_date: endDate, owner_id: user.id })
+    .insert({
+      title,
+      destination,
+      cover_url: coverUrl,
+      start_date: startDate,
+      end_date: endDate,
+      owner_id: user.id,
+    })
     .select('id')
     .single()
 
@@ -517,10 +524,6 @@ export async function kickMember(
 
 export async function getTripDestination(tripId: string): Promise<string | null> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('trips')
-    .select('destination')
-    .eq('id', tripId)
-    .maybeSingle()
+  const { data } = await supabase.from('trips').select('destination').eq('id', tripId).maybeSingle()
   return data?.destination ?? null
 }

@@ -25,7 +25,7 @@ export default function TermsSheet({ onAgree, onCancel }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onCancel}>
       <div
-        className="w-full rounded-t-[24px] bg-white px-5 pb-10 pt-6 shadow-2xl"
+        className="w-full rounded-t-[24px] bg-white px-5 pt-6 pb-10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-gray-200" />
@@ -83,11 +83,7 @@ function CheckRow({
   label: string
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className="flex items-center gap-3"
-    >
+    <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-3">
       <CheckCircle checked={checked} size={20} />
       <span className="text-ink3 text-[14px]">{label}</span>
     </button>

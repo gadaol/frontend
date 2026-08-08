@@ -1,75 +1,206 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, isTextUIPart } from 'ai'
+import { DefaultChatTransport, isTextUIPart, type UIMessage } from 'ai'
 import { useLocale } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
+import { useVoice } from '@/hooks/useVoice'
 import CharacterAvatar from './CharacterAvatar'
+import CharacterFigure from './CharacterFigure'
+import VoiceMode, { type VoiceNote } from './VoiceMode'
+import type { VoiceState } from './VoiceOrb'
+import ConversationHistory from './ConversationHistory'
 import MarkdownContent from '@/components/ui/MarkdownContent'
-import type { CharacterId } from '@/lib/ai/characters'
+import { CHARACTER_META, type CharacterId } from '@/lib/ai/characters'
+import {
+  loadConversations,
+  saveConversation,
+  deleteConversation,
+  deriveTitle,
+  type Conversation,
+} from '@/lib/ai/history'
 
-const CHARACTER_INFO: Record<CharacterId, { name: string; greeting: string; greetingEn: string }> = {
-  kakali: {
-    name: '까칠이',
-    greeting: '...뭐야. 여행 계획 도와줄게.\n뭐가 궁금해?',
-    greetingEn: "...What. I'll help you plan. What do you need?",
-  },
-  dajeong: {
-    name: '다정이',
-    greeting: '안녕하세요! 어떤 여행을 꿈꾸고\n계신가요? 함께 계획해봐요 ✈️',
-    greetingEn: "Hello! What kind of trip are you dreaming of?\nLet's plan it together ✈️",
-  },
+/** 눈썹 문구가 있어야 셋이 나란히 있을 때 성격이 구분된다 */
+const SUGGESTIONS: Record<'ko' | 'en', Array<{ eyebrow: string; text: string }>> = {
+  ko: [
+    { eyebrow: '가까운 곳', text: '주말에 갈 만한 국내 여행지' },
+    { eyebrow: '일정 짜기', text: '제주도 3박 4일 코스 만들어줘' },
+    { eyebrow: '혼자 여행', text: '조용히 쉬다 올 만한 곳 추천해줘' },
+  ],
+  en: [
+    { eyebrow: 'Nearby', text: 'Weekend trips I can drive to' },
+    { eyebrow: 'Itinerary', text: 'Plan 3 nights in Jeju for me' },
+    { eyebrow: 'Solo', text: 'Somewhere quiet to unwind alone' },
+  ],
 }
 
-const SUGGESTIONS_KO = ['주말 국내 여행지 추천', '제주도 3박4일 일정', '혼자 여행하기 좋은 곳']
-const SUGGESTIONS_EN = ['Weekend trip ideas', '3-night Jeju itinerary', 'Best solo travel spots']
-
 export default function AssistantPanel() {
-  const { isOpen, close, character, setCharacter, initialPrompt, clearInitialPrompt } = useAssistantStore()
+  const { isOpen, close, character, setCharacter, initialPrompt, clearInitialPrompt } =
+    useAssistantStore()
   const locale = useLocale() as 'ko' | 'en'
+
   const [inputText, setInputText] = useState('')
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [notes, setNotes] = useState<VoiceNote[]>([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const prevCharacterRef = useRef<CharacterId>(character)
-  const characterRef = useRef(character)
-  const localeRef = useRef(locale)
+  /** 지금 편집 중인 대화의 id — 저장할 때 같은 항목을 갱신하기 위해 유지한다 */
+  const conversationIdRef = useRef<string>(crypto.randomUUID())
 
-  useEffect(() => { characterRef.current = character }, [character])
-  useEffect(() => { localeRef.current = locale }, [locale])
+  /**
+   * transport는 한 번만 만들어져서 캐릭터·언어·음성 여부를 클로저로 가둘 수 없다.
+   * ref에 최신 값을 흘려두고 전송 시점(prepareSendMessagesRequest)에 읽는다.
+   */
+  const live = useRef({ character, locale, voice: false })
+  useEffect(() => {
+    live.current.character = character
+    live.current.locale = locale
+  }, [character, locale])
 
-  const transport = useMemo(
+  const [transport] = useState(
+    /* live를 읽지만 이 콜백은 렌더가 아니라 요청을 보낼 때 실행되므로
+       렌더 결과에 영향을 주지 않는다. */
+    // eslint-disable-next-line react-hooks/refs
     () =>
-      new DefaultChatTransport({
+      new DefaultChatTransport<UIMessage>({
         api: '/api/ai/assistant',
         prepareSendMessagesRequest: ({ messages }) => ({
           body: {
             messages,
-            character: characterRef.current,
-            locale: localeRef.current,
+            character: live.current.character,
+            locale: live.current.locale,
+            voice: live.current.voice,
           },
         }),
       }),
-    [],
   )
 
   const { messages, sendMessage, status, setMessages } = useChat({ transport })
 
+  const isLoading = status === 'submitted' || status === 'streaming'
+  const hasMessages = messages.length > 0
+  const lastIsUser = messages.at(-1)?.role === 'user'
+
+  const textOf = (m: (typeof messages)[number]) =>
+    m.parts
+      .filter(isTextUIPart)
+      .map((p) => p.text)
+      .join('')
+
+  /* ── 음성 ─────────────────────────────────────────────── */
+
+  const handleUtterance = useCallback((text: string) => sendMessage({ text }), [sendMessage])
+
+  const {
+    supported: voiceSupported,
+    isListening,
+    isSpeaking,
+    interim,
+    error: voiceError,
+    startListening,
+    stopListening,
+    speak,
+    stopSpeaking,
+  } = useVoice({ character, locale, onUtterance: handleUtterance })
+
+  const voiceState: VoiceState = isSpeaking
+    ? 'speaking'
+    : isLoading
+      ? 'thinking'
+      : isListening
+        ? 'listening'
+        : 'idle'
+
+  const lastSpokenIdRef = useRef<string | null>(null)
+
+  const lastAssistantText = useMemo(() => {
+    const last = messages.at(-1)
+    return last?.role === 'assistant' ? textOf(last) : ''
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages])
+
+  // 답변이 끝나면 소리내어 읽고, 같은 내용을 노트로 압축해 쌓는다
+  useEffect(() => {
+    if (!voiceMode || isLoading) return
+    const last = messages.at(-1)
+    if (!last || last.role !== 'assistant') return
+    if (lastSpokenIdRef.current === last.id) return
+
+    const assistantText = textOf(last)
+    if (!assistantText.trim()) return
+    lastSpokenIdRef.current = last.id
+
+    const userMsg = [...messages].reverse().find((m) => m.role === 'user')
+    const userText = userMsg ? textOf(userMsg) : ''
+
+    void speak(assistantText).then(() => {
+      if (live.current.voice) startListening()
+    })
+
+    void fetch('/api/ai/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userText, assistantText, locale }),
+    })
+      .then((r) => r.json())
+      .then((note: { title: string | null; points: string[] }) => {
+        if (!note.title && note.points.length === 0) return
+        setNotes((prev) => [...prev, { id: last.id, ...note }])
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, isLoading, messages, speak, startListening, locale])
+
+  const exitVoiceMode = useCallback(() => {
+    live.current.voice = false
+    setVoiceMode(false)
+    stopListening()
+    stopSpeaking()
+  }, [stopListening, stopSpeaking])
+
+  function enterVoiceMode() {
+    setVoiceMode(true)
+    live.current.voice = true
+    // iOS는 사용자 제스처 안에서 첫 재생이 일어나야 이후 재생이 허용된다
+    void speak(CHARACTER_META[character].voiceGreeting[locale]).then(() => {
+      if (live.current.voice) startListening()
+    })
+  }
+
+  function toggleMic() {
+    if (isListening) {
+      stopListening()
+    } else {
+      stopSpeaking()
+      startListening()
+    }
+  }
+
+  /* ── 기본 동작 ────────────────────────────────────────── */
+
   useEffect(() => {
     if (prevCharacterRef.current !== character) {
+      // 캐릭터가 바뀌면 별개의 대화로 본다 — 기존 기록을 덮어쓰지 않도록 id도 새로 뗀다
+      conversationIdRef.current = crypto.randomUUID()
       setMessages([])
       setInputText('')
+      setNotes([])
+      lastSpokenIdRef.current = null
       prevCharacterRef.current = character
     }
   }, [character, setMessages])
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && !voiceMode) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages, voiceMode])
 
-  // Auto-send initialPrompt when panel opens
   useEffect(() => {
     if (isOpen && initialPrompt) {
       const t = setTimeout(() => {
@@ -81,15 +212,65 @@ export default function AssistantPanel() {
   }, [isOpen, initialPrompt, sendMessage, clearInitialPrompt])
 
   useEffect(() => {
-    if (isOpen && !initialPrompt) {
+    if (isOpen && !initialPrompt && !voiceMode) {
       const t = setTimeout(() => inputRef.current?.focus(), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen, initialPrompt])
+  }, [isOpen, initialPrompt, voiceMode])
 
-  const isLoading = status === 'submitted' || status === 'streaming'
-  const hasMessages = messages.length > 0
-  const lastIsUser = messages.at(-1)?.role === 'user'
+  // 패널을 닫으면 소리도 멈춘다
+  useEffect(() => {
+    if (!isOpen && live.current.voice) exitVoiceMode()
+  }, [isOpen, exitVoiceMode])
+
+  /* ── 지난 대화 ────────────────────────────────────────── */
+
+  function openHistory() {
+    // 시트를 열 때만 읽는다 — 패널을 여닫을 때마다 스토리지를 훑을 이유가 없다
+    setConversations(loadConversations())
+    setShowHistory(true)
+  }
+
+  // 답변이 끝난 시점에만 저장한다. 스트리밍 도중 저장하면 반쪽짜리 기록이 남는다.
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return
+    if (messages.at(-1)?.role !== 'assistant') return
+
+    setConversations(
+      saveConversation({
+        id: conversationIdRef.current,
+        character,
+        title: deriveTitle(messages),
+        messages,
+        updatedAt: Date.now(),
+      }),
+    )
+  }, [isLoading, messages, character])
+
+  function startNewChat() {
+    conversationIdRef.current = crypto.randomUUID()
+    setMessages([])
+    setNotes([])
+    lastSpokenIdRef.current = null
+  }
+
+  function openConversation(conv: Conversation) {
+    conversationIdRef.current = conv.id
+    if (conv.character !== character) {
+      // 캐릭터 전환 이펙트가 메시지를 지우지 않도록 기준값을 먼저 맞춘다
+      prevCharacterRef.current = conv.character
+      setCharacter(conv.character)
+    }
+    setMessages(conv.messages)
+    setNotes([])
+    lastSpokenIdRef.current = null
+    setShowHistory(false)
+  }
+
+  function removeConversation(id: string) {
+    setConversations(deleteConversation(id))
+    if (id === conversationIdRef.current) startNewChat()
+  }
 
   function handleSend() {
     const text = inputText.trim()
@@ -105,9 +286,8 @@ export default function AssistantPanel() {
     }
   }
 
-  const info = CHARACTER_INFO[character]
-  const greeting = locale === 'ko' ? info.greeting : info.greetingEn
-  const suggestions = locale === 'ko' ? SUGGESTIONS_KO : SUGGESTIONS_EN
+  const meta = CHARACTER_META[character]
+  const suggestions = SUGGESTIONS[locale]
 
   return (
     <div
@@ -116,155 +296,316 @@ export default function AssistantPanel() {
       }`}
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Header */}
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">
-        <button
-          onClick={close}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-bg2"
-          aria-label="닫기"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M5 5l10 10M15 5L5 15"
-              stroke="var(--color-ink2)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-
-        {/* Character toggle */}
-        <div className="flex items-center gap-0.5 rounded-full bg-bg2 p-1">
-          {(['dajeong', 'kakali'] as CharacterId[]).map((c) => (
+      {voiceMode ? (
+        <VoiceMode
+          character={character}
+          locale={locale}
+          state={voiceState}
+          interim={interim}
+          spoken={lastAssistantText}
+          notes={notes}
+          error={voiceError}
+          onToggleMic={toggleMic}
+          onExit={exitVoiceMode}
+        />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex flex-shrink-0 items-center justify-between px-3 py-2.5">
             <button
-              key={c}
-              onClick={() => setCharacter(c)}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium transition-all ${
-                character === c ? 'bg-white text-ink shadow-sm' : 'text-ink3'
-              }`}
+              onClick={close}
+              className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
+              aria-label={locale === 'ko' ? '닫기' : 'Close'}
             >
-              <CharacterAvatar character={c} size="xs" />
-              {CHARACTER_INFO[c].name}
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M5 5l10 10M15 5L5 15"
+                  stroke="var(--color-ink2)"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
-          ))}
-        </div>
 
-        <div className="w-9" />
-      </div>
-
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto">
-        {!hasMessages ? (
-          /* Welcome state */
-          <div className="flex flex-col items-center px-6 pt-12 pb-6">
-            <CharacterAvatar character={character} size="xl" />
-            <p className="mt-4 text-[20px] font-bold text-ink">{info.name}</p>
-            <p className="mt-2 text-center text-[14px] leading-relaxed text-ink2 whitespace-pre-line">
-              {greeting}
-            </p>
-
-            <div className="mt-8 w-full space-y-2.5">
-              {suggestions.map((s) => (
+            <div className="bg-bg2 flex items-center gap-0.5 rounded-full p-1">
+              {(['gada', 'rog'] as CharacterId[]).map((c) => (
                 <button
-                  key={s}
-                  onClick={() => { setInputText(''); sendMessage({ text: s }) }}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3.5 text-left transition-colors hover:bg-bg2"
+                  key={c}
+                  onClick={() => setCharacter(c)}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all ${
+                    character === c ? 'text-ink bg-white shadow-sm' : 'text-ink3'
+                  }`}
                 >
-                  <span className="text-[16px]">✈️</span>
-                  <span className="text-[14px] text-ink2">{s}</span>
+                  <CharacterAvatar character={c} size="xs" />
+                  {CHARACTER_META[c].name[locale]}
                 </button>
               ))}
             </div>
+
+            <div className="flex items-center">
+              <button
+                onClick={openHistory}
+                className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
+                aria-label={locale === 'ko' ? '지난 대화' : 'Past chats'}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <circle cx="9" cy="9" r="6.6" stroke="var(--color-ink2)" strokeWidth="1.5" />
+                  <path
+                    d="M9 5.4V9l2.4 1.5"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={startNewChat}
+                disabled={!hasMessages}
+                className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
+                aria-label={locale === 'ko' ? '새 대화' : 'New chat'}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M9 3.6v10.8M3.6 9h10.8"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-        ) : (
-          /* Chat messages */
-          <div className="space-y-3 px-4 py-4">
-            {messages.map((message) => {
-              const text = message.parts
-                .filter(isTextUIPart)
-                .map((p) => p.text)
-                .join('')
 
-              if (message.role === 'user') {
-                return (
-                  <div key={message.id} className="flex justify-end">
-                    <div className="max-w-[78%] rounded-[18px] rounded-br-[4px] bg-primary px-4 py-3 text-[14px] leading-relaxed text-white">
-                      {text}
-                    </div>
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto">
+            {!hasMessages ? (
+              <div className="px-5 pt-6 pb-6">
+                {/* 캐릭터 소개 — 좌측 정렬 편집형 */}
+                <div className="flex items-end justify-between gap-3">
+                  <div className="min-w-0 pb-1">
+                    <p className="text-ink text-[26px] leading-tight font-bold">
+                      {meta.name[locale]}
+                    </p>
+                    <p className="text-ink3 mt-0.5 text-[13px]">{meta.tagline[locale]}</p>
                   </div>
-                )
-              }
-
-              return (
-                <div key={message.id} className="flex items-start gap-2">
-                  <CharacterAvatar character={character} size="sm" />
-                  <div className="max-w-[78%] rounded-[18px] rounded-bl-[4px] bg-bg2 px-4 py-3">
-                    {text ? <MarkdownContent text={text} /> : <TypingDots />}
-                  </div>
+                  <CharacterFigure character={character} size="md" />
                 </div>
-              )
-            })}
 
-            {isLoading && lastIsUser && (
-              <div className="flex items-start gap-2">
-                <CharacterAvatar character={character} size="sm" />
-                <div className="rounded-[18px] rounded-bl-[4px] bg-bg2 px-4 py-3">
-                  <TypingDots />
+                <p className="text-ink2 mt-5 text-[17px] leading-relaxed whitespace-pre-line">
+                  {meta.greeting[locale]}
+                </p>
+
+                {/* 음성 대화 진입 */}
+                {voiceSupported && (
+                  <button
+                    onClick={enterVoiceMode}
+                    className="mt-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:opacity-90"
+                    style={{ background: meta.color }}
+                  >
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
+                      <svg width="17" height="17" viewBox="0 0 26 26" fill="none">
+                        <rect
+                          x="9.5"
+                          y="3"
+                          width="7"
+                          height="12"
+                          rx="3.5"
+                          stroke="#fff"
+                          strokeWidth="1.9"
+                        />
+                        <path
+                          d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                          stroke="#fff"
+                          strokeWidth="1.9"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-bold text-white">
+                        {locale === 'ko' ? '목소리로 대화하기' : 'Talk out loud'}
+                      </span>
+                      <span className="block text-[12px] text-white/75">
+                        {locale === 'ko'
+                          ? '말하면 내용은 알아서 정리해둘게요'
+                          : "I'll take notes while we talk"}
+                      </span>
+                    </span>
+                  </button>
+                )}
+
+                {/* 추천 질문 — 왼쪽 색 띠로 캐릭터와 묶고, 눈썹 문구로 성격을 구분한다 */}
+                <p className="text-ink3 mt-7 mb-2.5 pl-0.5 text-[12px] font-semibold">
+                  {locale === 'ko' ? '이런 걸 물어보세요' : 'Try asking'}
+                </p>
+                <div className="space-y-2">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.text}
+                      onClick={() => sendMessage({ text: s.text })}
+                      className="bg-bg2 group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl py-3 pr-3 pl-4 text-left transition-transform active:scale-[0.98]"
+                    >
+                      <span
+                        className="absolute inset-y-0 left-0 w-[3px]"
+                        style={{ background: meta.color }}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="mb-0.5 block text-[11px] font-bold"
+                          style={{ color: meta.color }}
+                        >
+                          {s.eyebrow}
+                        </span>
+                        <span className="text-ink block text-[14px] leading-snug font-medium">
+                          {s.text}
+                        </span>
+                      </span>
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white">
+                        <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+                          <path
+                            d="M5.5 3.5l4 4-4 4"
+                            stroke="var(--color-ink3)"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
+            ) : (
+              <div className="space-y-3 px-4 py-4">
+                {messages.map((message) => {
+                  const text = textOf(message)
+
+                  if (message.role === 'user') {
+                    return (
+                      <div key={message.id} className="flex justify-end">
+                        <div
+                          className="max-w-[78%] rounded-[20px] rounded-br-[6px] px-4 py-2.5 text-[15px] leading-relaxed text-white"
+                          style={{ background: meta.color }}
+                        >
+                          {text}
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div key={message.id} className="flex items-start gap-2">
+                      <CharacterAvatar character={character} size="sm" />
+                      <div className="bg-bg2 max-w-[78%] rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
+                        {text ? <MarkdownContent text={text} /> : <TypingDots />}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {isLoading && lastIsUser && (
+                  <div className="flex items-start gap-2">
+                    <CharacterAvatar character={character} size="sm" />
+                    <div className="bg-bg2 rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
+                      <TypingDots />
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
-        )}
-      </div>
 
-      {/* Input bar */}
-      <div
-        className="flex-shrink-0 border-t border-border bg-white px-4 pt-3"
-        style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
-      >
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={locale === 'ko' ? '무엇이든 물어보세요...' : 'Ask me anything...'}
-            rows={1}
-            className="flex-1 resize-none rounded-2xl border border-border bg-bg2 px-4 py-2.5 text-[14px] text-ink outline-none placeholder:text-ink3 focus:border-primary"
-            style={{ maxHeight: '120px', overflowY: 'auto' }}
-          />
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!inputText.trim() || isLoading}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary transition-opacity disabled:opacity-40"
-            aria-label="전송"
+          {/* Input bar */}
+          <div
+            className="border-border flex-shrink-0 border-t bg-white px-3 pt-2.5"
+            style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M9 14V4M9 4L5 8M9 4l4 4"
-                stroke="white"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="flex items-end gap-1.5">
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={enterVoiceMode}
+                  className="bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full active:opacity-70"
+                  aria-label={locale === 'ko' ? '음성 대화' : 'Voice chat'}
+                >
+                  <svg width="19" height="19" viewBox="0 0 26 26" fill="none">
+                    <rect
+                      x="9.5"
+                      y="3"
+                      width="7"
+                      height="12"
+                      rx="3.5"
+                      stroke="var(--color-ink2)"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                      stroke="var(--color-ink2)"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              )}
+
+              <textarea
+                ref={inputRef}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={locale === 'ko' ? '무엇이든 물어보세요' : 'Ask me anything'}
+                rows={1}
+                className="bg-bg2 text-ink placeholder:text-ink3 flex-1 resize-none rounded-[20px] px-4 py-2.5 text-[15px] outline-none"
+                style={{ maxHeight: 120, overflowY: 'auto' }}
               />
-            </svg>
-          </button>
-        </div>
-      </div>
+
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={!inputText.trim() || isLoading}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
+                style={{ background: meta.color }}
+                aria-label={locale === 'ko' ? '전송' : 'Send'}
+              >
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M9 14V4M9 4L5 8M9 4l4 4"
+                    stroke="white"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showHistory && (
+        <ConversationHistory
+          conversations={conversations}
+          locale={locale}
+          onOpen={openConversation}
+          onDelete={removeConversation}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   )
 }
 
 function TypingDots() {
   return (
-    <div className="flex items-center gap-1" style={{ height: '20px' }}>
+    <div className="flex items-center gap-1" style={{ height: 20 }}>
       {[0, 150, 300].map((delay) => (
         <span
           key={delay}
-          className="h-2 w-2 rounded-full bg-ink3 animate-bounce"
+          className="bg-ink3 h-1.5 w-1.5 animate-bounce rounded-full"
           style={{ animationDelay: `${delay}ms` }}
         />
       ))}

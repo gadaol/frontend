@@ -25,14 +25,20 @@ export async function GET(req: NextRequest) {
   if (!res.ok) return NextResponse.json({ places: [] })
 
   const data = await res.json()
-  const places = (data.places ?? []).map((place: Record<string, unknown> & { photos?: Array<{ name: string }> }) => ({
-    ...place,
-    photoRef: place.photos?.[0]?.name ?? null,
-    photos: undefined, // 클라이언트로 전체 photos 배열 불필요
-  }))
+  const places = (data.places ?? []).map(
+    (place: Record<string, unknown> & { photos?: Array<{ name: string }> }) => ({
+      ...place,
+      photoRef: place.photos?.[0]?.name ?? null,
+      photos: undefined, // 클라이언트로 전체 photos 배열 불필요
+    }),
+  )
 
   return NextResponse.json(
     { places },
-    { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400' } },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    },
   )
 }

@@ -47,10 +47,7 @@ export async function GET(req: NextRequest) {
 
       if (!billingKey) {
         // 빌링키 없으면 만료 처리
-        await supabase
-          .from('subscriptions')
-          .update({ status: 'expired' })
-          .eq('id', sub.id)
+        await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
         return { subId: sub.id, result: 'expired_no_billing_key' }
       }
 
@@ -98,10 +95,7 @@ export async function GET(req: NextRequest) {
         console.error(`[cron] charge failed for sub ${sub.id}:`, msg)
 
         // 결제 실패 → 만료 처리
-        await supabase
-          .from('subscriptions')
-          .update({ status: 'expired' })
-          .eq('id', sub.id)
+        await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
 
         return { subId: sub.id, result: 'expired_charge_failed', error: msg }
       }

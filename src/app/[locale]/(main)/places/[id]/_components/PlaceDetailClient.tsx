@@ -52,6 +52,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
   const category = getCategoryInfo(place.types)
   const Icon = category.icon
   const coverGradient = getCoverGradient(place.types)
+  const coverPhotoRef = place.photos?.[0]?.name ?? null
 
   function handleSaveToggle() {
     startTransition(async () => {
@@ -64,6 +65,7 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
           name: place.displayName.text,
           address: place.formattedAddress,
           categoryName: place.types[0] ?? null,
+          photoRef: coverPhotoRef,
         })
         setSaved(true)
       }
@@ -74,13 +76,25 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
   return (
     <div className="bg-bg2 flex min-h-full flex-col">
       {/* 커버 */}
-      <div className="relative h-60 flex-shrink-0" style={{ background: coverGradient }}>
+      <div
+        className="relative h-60 flex-shrink-0"
+        style={coverPhotoRef ? undefined : { background: coverGradient }}
+      >
+        {coverPhotoRef && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/api/places/photo?ref=${encodeURIComponent(coverPhotoRef)}`}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         {/* 어두운 오버레이 */}
         <div
           className="absolute inset-0"
           style={{
-            background:
-              'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
+            background: coverPhotoRef
+              ? 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 55%, transparent 100%)'
+              : 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
           }}
         />
 

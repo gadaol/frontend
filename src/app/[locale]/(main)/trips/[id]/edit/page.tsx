@@ -29,7 +29,7 @@ export default async function EditPage({
           id, day_number, day_date,
           itinerary_items(
             id, order_index, visit_time, memo, place_id, item_type,
-            places(id, google_place_id, name, address, lat, lng, place_categories(name))
+            places(id, google_place_id, name, address, lat, lng, photo_ref, place_categories(name))
           )
         )`,
       )
@@ -47,9 +47,6 @@ export default async function EditPage({
   if (!isMember) redirect(`/${locale}`)
 
   return (
-    <ScheduleEditClient
-      trip={trip as TripDetail}
-      expenses={(expenseRows ?? []) as TripExpense[]}
-    />
+    <ScheduleEditClient trip={trip as TripDetail} expenses={(expenseRows ?? []) as TripExpense[]} />
   )
 }

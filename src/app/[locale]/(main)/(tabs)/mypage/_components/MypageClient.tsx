@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
@@ -11,6 +11,15 @@ import Button from '@/components/ui/Button'
 import { BellIcon } from '@/components/icons'
 import api, { isApiError } from '@/lib/axios/client'
 import { PLAN_LABEL, type Plan } from '@/utils/plans'
+import { useAssistantStore } from '@/lib/ai/store'
+import CharacterFigure from '@/components/features/ai/CharacterFigure'
+import { CHARACTER_META, type CharacterId } from '@/lib/ai/characters'
+
+/** 라벨은 현재 보고 있는 UI 언어로 통일한다 (한국어/영어 ↔ Korean/English) */
+const LOCALES = [
+  { code: 'ko', label: { ko: '한국어', en: 'Korean' } },
+  { code: 'en', label: { ko: '영어', en: 'English' } },
+] as const
 
 interface Subscription {
   plan: Plan
@@ -48,8 +57,18 @@ export default function MypageClient({
 }: Props) {
   const router = useRouter()
   const locale = useLocale()
+  const pathname = usePathname()
+
+  /** 현재 화면을 유지한 채 경로의 로케일 구간만 교체한다 */
+  function switchLocale(next: string) {
+    if (next === locale) return
+    router.replace(pathname.replace(/^\/[^/]+/, `/${next}`))
+    router.refresh()
+  }
+
   const unreadCount = useUnreadCount()
   const [isPending, startTransition] = useTransition()
+  const { character, setCharacter } = useAssistantStore()
 
   const searchParams = useSearchParams()
   const [currentAvatarUrl] = useState(avatarUrl)
@@ -131,7 +150,14 @@ export default function MypageClient({
           <svg
             aria-hidden
             viewBox="0 0 48 48"
-            style={{ position: 'absolute', right: -12, top: -12, width: 90, height: 90, opacity: 0.18 }}
+            style={{
+              position: 'absolute',
+              right: -12,
+              top: -12,
+              width: 90,
+              height: 90,
+              opacity: 0.18,
+            }}
           >
             <g transform="translate(10 9)">
               <path d="M3 24L23 4L18 24L12 17Z" fill="white" />
@@ -203,20 +229,30 @@ export default function MypageClient({
         <button
           onClick={() => router.push(`/${locale}/mypage/subscription`)}
           className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3.5 overflow-hidden rounded-2xl p-4"
-          style={{ background: 'linear-gradient(135deg, #1b6ff0 0%, #7c3aed 100%)', position: 'relative' }}
+          style={{
+            background: 'linear-gradient(135deg, #1b6ff0 0%, #7c3aed 100%)',
+            position: 'relative',
+          }}
         >
           {/* 우상단 로고 마크 */}
           <svg
             aria-hidden
             viewBox="0 0 48 48"
-            style={{ position: 'absolute', right: -8, top: -10, width: 72, height: 72, opacity: 0.18 }}
+            style={{
+              position: 'absolute',
+              right: -8,
+              top: -10,
+              width: 72,
+              height: 72,
+              opacity: 0.18,
+            }}
           >
             <g transform="translate(10 9)">
               <path d="M3 24L23 4L18 24L12 17Z" fill="white" />
               <path d="M17 25L20 30" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
             </g>
           </svg>
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 relative z-10">
+          <div className="relative z-10 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path d="M11 2l2 6h6l-5 4 2 6-5-3.5L6 18l2-6-5-4h6z" fill="var(--color-kakao)" />
             </svg>
@@ -226,7 +262,9 @@ export default function MypageClient({
               {plan === 'free' ? 'Pro로 업그레이드' : 'Plus로 업그레이드'}
             </p>
             <p className="text-[12px] text-white/60">
-              {plan === 'free' ? '무제한 여행 · AI 일정 추천 · 광고 없음' : '모든 Pro 혜택 + 우선 지원 · 팀 공유'}
+              {plan === 'free'
+                ? '무제한 여행 · AI 일정 추천 · 광고 없음'
+                : '모든 Pro 혜택 + 우선 지원 · 팀 공유'}
             </p>
           </div>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -354,6 +392,62 @@ export default function MypageClient({
           last
         />
       </MenuGroup>
+
+      {/* 언어 — 선택지가 둘뿐이라 한 줄 토글로 둔다 */}
+      <div className="mx-4 mt-3">
+        <div className="border-border flex items-center justify-between rounded-2xl border bg-white px-4 py-3">
+          <span className="text-ink text-[14px] font-medium">
+            {locale === 'ko' ? '언어' : 'Language'}
+          </span>
+          <div className="bg-bg2 flex items-center gap-0.5 rounded-full p-0.5">
+            {LOCALES.map(({ code, label }) => (
+              <button
+                key={code}
+                onClick={() => switchLocale(code)}
+                className={`rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all ${
+                  locale === code ? 'text-ink bg-white shadow-sm' : 'text-ink3'
+                }`}
+              >
+                {locale === 'ko' ? label.ko : label.en}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* AI 비서 설정 */}
+      <div className="mx-4 mt-3">
+        <p className="text-ink3 mb-2 pl-1 text-[11px] font-semibold tracking-[1px] uppercase">
+          AI 비서
+        </p>
+        <div className="border-border overflow-hidden rounded-2xl border bg-white p-4">
+          <p className="text-ink mb-3 text-[13px] font-medium">함께할 AI 메이트를 선택해요</p>
+          <div className="flex gap-3">
+            {(['gada', 'rog'] as CharacterId[]).map((id) => {
+              // 이 화면은 원래부터 한국어 하드코딩이라 ko 문구를 그대로 쓴다
+              const info = CHARACTER_META[id]
+              const active = character === id
+              return (
+                <button
+                  key={id}
+                  onClick={() => setCharacter(id)}
+                  className={`flex flex-1 flex-col items-center gap-2 rounded-2xl border-2 py-4 transition-all ${
+                    active ? 'border-primary bg-primary-light' : 'border-border bg-bg2'
+                  }`}
+                >
+                  <CharacterFigure character={id} size="md" />
+                  <div>
+                    <p className={`text-[14px] font-bold ${active ? 'text-primary' : 'text-ink'}`}>
+                      {info.name.ko}
+                    </p>
+                    <p className="text-ink3 mt-0.5 text-[11px]">{info.tagline.ko}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* 앱 그룹 */}
       <MenuGroup label="앱">
@@ -565,7 +659,7 @@ function DeleteConfirmSheet({
   const confirmed = input === '탈퇴'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
         <p className="text-ink mb-1.5 text-center text-[17px] font-bold">정말 탈퇴하시겠어요?</p>
         <p className="text-ink3 mb-4 text-center text-[14px] leading-relaxed">
@@ -653,7 +747,7 @@ function PhoneVerifySheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40">
       <div className="w-full max-w-sm rounded-t-3xl bg-white px-6 pt-5 pb-10">
         <div className="bg-border mx-auto mb-5 h-1 w-10 rounded-full" />
 
@@ -749,18 +843,21 @@ function ConfirmSheet({
   loading: boolean
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
         <p className="text-ink mb-1.5 text-center text-[17px] font-bold">{title}</p>
         <p className="text-ink3 mb-6 text-center text-[14px] leading-relaxed">{message}</p>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={onCancel} className="flex-1">
+          <button
+            onClick={onCancel}
+            className="border-border text-ink h-[52px] flex-1 rounded-xl border bg-white text-[15px] font-medium"
+          >
             취소
-          </Button>
+          </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-2xl py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
+            className="h-[52px] flex-1 rounded-xl text-[15px] font-bold text-white disabled:opacity-60"
             style={{ backgroundColor: confirmColor }}
           >
             {loading ? '처리 중...' : confirmLabel}

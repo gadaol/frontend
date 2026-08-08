@@ -19,8 +19,11 @@ import {
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
+import PhotoBackfillTrigger from '@/components/features/places/PhotoBackfillTrigger'
 import Button from '@/components/ui/Button'
 import { COVER_PRESETS } from '@/utils/coverPresets'
+import DestinationInput from '@/components/features/trips/DestinationInput'
 import ItemDetailSheet from '../../_components/ItemDetailSheet'
 import type { TripDetail, TripExpense } from '../../page'
 
@@ -88,7 +91,6 @@ export default function ScheduleEditClient({
 
   // 경비 집계
   const totalExpenses = localExpenses.reduce((sum, e) => sum + e.amount, 0)
-  const memberCount = trip.trip_members.length
 
   const expensesByDay = useMemo(() => {
     const map = new Map<string, TripExpense[]>()
@@ -315,8 +317,15 @@ export default function ScheduleEditClient({
     })
   }
 
+  const backfillIds = trip.itinerary_days
+    .flatMap((d) => d.itinerary_items)
+    .filter((item) => item.places && !item.places.photo_ref && item.places.google_place_id)
+    .map((item) => item.places!.google_place_id!)
+    .slice(0, 10)
+
   return (
     <div className="bg-bg2 relative flex h-[100dvh] flex-col">
+      <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
       {/* 헤더 */}
       <div className="border-border flex h-14 flex-shrink-0 items-center justify-between border-b bg-white px-2 pr-3">
         <button
@@ -480,12 +489,7 @@ export default function ScheduleEditClient({
             {/* 목적지 */}
             <div>
               <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">목적지</label>
-              <input
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="예) 제주도, 도쿄, 파리"
-                className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
-              />
+              <DestinationInput value={destination} onChange={setDestination} />
             </div>
 
             {/* 날짜 */}
@@ -961,7 +965,6 @@ function TimelineItemRow({
   const isMemo = item.item_type === 'memo'
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
-  const Icon = category.icon
 
   function openTimePicker() {
     const el = timeRef.current
@@ -1088,11 +1091,12 @@ function TimelineItemRow({
               onTouchEnd={onTouchEnd}
               onClick={() => swiped && setSwiped(false)}
             >
-              <div
-                className={`flex w-14 flex-shrink-0 items-center justify-center self-stretch ${category.bg}`}
-              >
-                <Icon size={22} className={category.color} />
-              </div>
+              <PlacePhoto
+                photoRef={item.places?.photo_ref}
+                categoryStyle={category}
+                iconSize={22}
+                className="w-14 flex-shrink-0 self-stretch"
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 bg-white px-3 py-2.5">
                 <p className="text-ink text-[13px] leading-snug font-semibold break-keep">
                   {item.places?.name ?? '알 수 없는 장소'}

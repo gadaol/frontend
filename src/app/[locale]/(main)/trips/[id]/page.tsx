@@ -6,7 +6,10 @@ import type { Tables } from '@/types/database/database.types'
 
 type ItineraryItem = Tables<'itinerary_items'> & {
   places:
-    | (Pick<Tables<'places'>, 'id' | 'google_place_id' | 'name' | 'address' | 'lat' | 'lng'> & {
+    | (Pick<
+        Tables<'places'>,
+        'id' | 'google_place_id' | 'name' | 'address' | 'lat' | 'lng' | 'photo_ref'
+      > & {
         place_categories: Pick<Tables<'place_categories'>, 'name'> | null
       })
     | null
@@ -46,30 +49,31 @@ export default async function TripDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const [{ data: trip }, { data: profileRows }, { data: expenseRows }, { data: myProfile }] = await Promise.all([
-    supabase
-      .from('trips')
-      .select(
-        `*,
+  const [{ data: trip }, { data: profileRows }, { data: expenseRows }, { data: myProfile }] =
+    await Promise.all([
+      supabase
+        .from('trips')
+        .select(
+          `*,
         trip_members(user_id, role),
         trip_tags(tag),
         itinerary_days(
           id, day_number, day_date,
           itinerary_items(
             id, order_index, visit_time, memo, place_id, item_type,
-            places(id, google_place_id, name, address, lat, lng, place_categories(name))
+            places(id, google_place_id, name, address, lat, lng, photo_ref, place_categories(name))
           )
         )`,
-      )
-      .eq('id', id)
-      .single(),
-    supabase.from('profiles').select('id, name, avatar_url'),
-    supabase
-      .from('trip_expenses')
-      .select('id, amount, category, note, item_id, day_id')
-      .eq('trip_id', id),
-    supabase.from('profiles').select('name, avatar_url').eq('id', user.id).maybeSingle(),
-  ])
+        )
+        .eq('id', id)
+        .single(),
+      supabase.from('profiles').select('id, name, avatar_url'),
+      supabase
+        .from('trip_expenses')
+        .select('id, amount, category, note, item_id, day_id')
+        .eq('trip_id', id),
+      supabase.from('profiles').select('name, avatar_url').eq('id', user.id).maybeSingle(),
+    ])
 
   if (!trip) notFound()
 

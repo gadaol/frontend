@@ -18,7 +18,6 @@ const CATEGORY_CHIPS = (
   ['식당', '카페', '관광지', '숙소', '쇼핑', '자연', '액티비티', '기타'] as const
 ).map(getCategoryStyle)
 
-
 const MAP_DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 }
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -117,14 +116,13 @@ export default function PlaceMapSearch({
     } finally {
       setAiLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale])
 
   useEffect(() => {
-    fetchAIRecommend()
-    return () => { aiAbortRef.current?.abort() }
-  // only on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      aiAbortRef.current?.abort()
+    }
   }, [])
 
   const { isLoaded } = useJsApiLoader({
@@ -276,10 +274,33 @@ export default function PlaceMapSearch({
                     <img
                       src={userAvatar}
                       alt={userName ?? '나'}
-                      style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', objectFit: 'cover', display: 'block' }}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        border: '3px solid white',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
                     />
                   ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 700 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        border: '3px solid white',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                        backgroundColor: 'var(--color-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: 13,
+                        fontWeight: 700,
+                      }}
+                    >
                       {userName?.[0] ?? '나'}
                     </div>
                   )}
@@ -476,30 +497,82 @@ export default function PlaceMapSearch({
                 style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
               >
                 {aiLoading && !aiText && (
-                  <div className="flex items-center gap-2 py-1 text-[13px] text-ink3">
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    {locale === 'ko' ? 'AI가 취향에 맞는 장소를 찾고 있어요...' : 'Finding places for you...'}
+                  <div className="text-ink3 flex items-center gap-2 py-1 text-[13px]">
+                    <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
+                    {locale === 'ko'
+                      ? 'AI가 취향에 맞는 장소를 찾고 있어요...'
+                      : 'Finding places for you...'}
                   </div>
                 )}
                 {aiText && (
                   <>
                     <MarkdownContent text={aiText} size="sm" />
                     {aiLoading && (
-                      <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-ink3 align-text-bottom" />
+                      <span className="bg-ink3 ml-0.5 inline-block h-3.5 w-0.5 animate-pulse align-text-bottom" />
                     )}
                   </>
                 )}
                 {aiDone && (
                   <button
-                    onClick={() => { setAiText(''); setAiDone(false); fetchAIRecommend() }}
-                    className="mt-2 text-[12px] font-medium text-primary"
+                    onClick={() => {
+                      setAiText('')
+                      setAiDone(false)
+                      fetchAIRecommend()
+                    }}
+                    className="border-border text-ink2 active:bg-bg2 mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold"
                   >
-                    {locale === 'ko' ? '다시 추천 받기 →' : 'Refresh →'}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M1.5 7A5.5 5.5 0 1 0 3 3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M1.5 2v1.5H3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {locale === 'ko' ? '다시 추천 받기' : 'Refresh'}
                   </button>
                 )}
                 {!aiText && !aiLoading && !aiDone && (
-                  <button onClick={fetchAIRecommend} className="py-1 text-[13px] font-medium text-primary">
-                    {locale === 'ko' ? 'AI 추천 받기 →' : 'Get AI recommendations →'}
+                  <button
+                    onClick={fetchAIRecommend}
+                    className="my-1 flex w-full items-center gap-3 rounded-2xl p-3.5 text-left transition-opacity active:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
+                  >
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
+                      <span className="text-[18px]">✨</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-bold text-white">
+                        {locale === 'ko' ? 'AI 맞춤 장소 추천' : 'Get AI Recommendations'}
+                      </p>
+                      <p className="text-[11px] text-white/70">
+                        {locale === 'ko'
+                          ? '내 취향에 딱 맞는 장소를 찾아줄게요'
+                          : 'Places matched to your taste'}
+                      </p>
+                    </div>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="flex-shrink-0"
+                    >
+                      <path
+                        d="M6 3.5l4.5 4.5L6 12.5"
+                        stroke="rgba(255,255,255,0.6)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                 )}
               </div>

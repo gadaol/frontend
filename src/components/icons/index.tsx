@@ -53,7 +53,7 @@ export function BacklogIcon({ size = 24, className, filled }: IconProps & { fill
       viewBox="0 0 24 24"
       fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -357,7 +357,10 @@ export function PlaceFoodIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       {/* 포크 (왼쪽) */}
-      <path d="M4 3v7a3 3 0 003 3v8h2v-8a3 3 0 003-3V3h-1.5v5.5h-1V3h-2v5.5h-1V3H4z" fill="currentColor" />
+      <path
+        d="M4 3v7a3 3 0 003 3v8h2v-8a3 3 0 003-3V3h-1.5v5.5h-1V3h-2v5.5h-1V3H4z"
+        fill="currentColor"
+      />
       {/* 나이프 (오른쪽) */}
       <path d="M16 3c-1 1-2 3-2 6v12h4V9c0-3-1-5-2-6z" fill="currentColor" />
     </svg>
@@ -368,9 +371,27 @@ export function PlaceCafeIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       <path d="M5 8h14l-1.6 9.4A2 2 0 0115.4 19H8.6a2 2 0 01-2-.6L5 8z" fill="currentColor" />
-      <path d="M15 11h2a2 2 0 010 4h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      <path d="M9.5 4c0 0 1 .8 0 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity=".5" />
-      <path d="M12.5 4c0 0 1 .8 0 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity=".5" />
+      <path
+        d="M15 11h2a2 2 0 010 4h-2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M9.5 4c0 0 1 .8 0 2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        opacity=".5"
+      />
+      <path
+        d="M12.5 4c0 0 1 .8 0 2"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        opacity=".5"
+      />
     </svg>
   )
 }
@@ -403,7 +424,14 @@ export function PlaceShoppingIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       <path d="M4 8h16l-2 12a1 1 0 01-1 .9H7a1 1 0 01-1-.9L4 8z" fill="currentColor" />
-      <path d="M9 8V6a3 3 0 016 0v2" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity=".8" />
+      <path
+        d="M9 8V6a3 3 0 016 0v2"
+        stroke="white"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+        opacity=".8"
+      />
     </svg>
   )
 }
@@ -411,7 +439,10 @@ export function PlaceShoppingIcon({ size = 24, className }: IconProps) {
 export function PlaceNatureIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M12 3C7.5 3 4 6.7 4 11.2c0 3.5 2.1 6.5 5.1 7.9L12 11l2.9 8.1C17.9 17.7 20 14.7 20 11.2 20 6.7 16.5 3 12 3z" fill="currentColor" />
+      <path
+        d="M12 3C7.5 3 4 6.7 4 11.2c0 3.5 2.1 6.5 5.1 7.9L12 11l2.9 8.1C17.9 17.7 20 14.7 20 11.2 20 6.7 16.5 3 12 3z"
+        fill="currentColor"
+      />
       <rect x="11" y="17" width="2" height="5" rx="1" fill="currentColor" opacity=".6" />
     </svg>
   )
@@ -428,7 +459,10 @@ export function PlaceActivityIcon({ size = 24, className }: IconProps) {
 export function PlacePinIcon({ size = 24, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M12 2C8.1 2 5 5.1 5 9c0 5.5 7 13 7 13s7-7.5 7-13c0-3.9-3.1-7-7-7z" fill="currentColor" />
+      <path
+        d="M12 2C8.1 2 5 5.1 5 9c0 5.5 7 13 7 13s7-7.5 7-13c0-3.9-3.1-7-7-7z"
+        fill="currentColor"
+      />
       <circle cx="12" cy="9" r="2.5" fill="white" opacity=".85" />
     </svg>
   )

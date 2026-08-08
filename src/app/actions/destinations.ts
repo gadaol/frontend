@@ -13,7 +13,9 @@ export type UpcomingTrip = {
 
 export async function getUpcomingTrips(): Promise<UpcomingTrip[]> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return []
 
   const today = dayjs().format('YYYY-MM-DD')

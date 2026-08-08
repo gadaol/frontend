@@ -66,11 +66,29 @@ export function makeItineraryTools(supabase: DB, userId: string) {
         visitTime: z.string().optional().describe('HH:MM format'),
         memo: z.string().optional(),
       }),
-      execute: async ({ tripId, dayDate, dayNumber, googlePlaceId, placeName, address, lat, lng, visitTime, memo }) => {
+      execute: async ({
+        tripId,
+        dayDate,
+        dayNumber,
+        googlePlaceId,
+        placeName,
+        address,
+        lat,
+        lng,
+        visitTime,
+        memo,
+      }) => {
         const dayId = await ensureDay(supabase, tripId, dayDate, dayNumber)
         if (!dayId) return { success: false, error: '일자 생성 실패' }
 
-        const placeId = await getOrCreatePlace(supabase, googlePlaceId, placeName, address, lat, lng)
+        const placeId = await getOrCreatePlace(
+          supabase,
+          googlePlaceId,
+          placeName,
+          address,
+          lat,
+          lng,
+        )
         if (!placeId) return { success: false, error: '장소 저장 실패' }
 
         const { data: lastItem } = await supabase
@@ -93,11 +111,14 @@ export function makeItineraryTools(supabase: DB, userId: string) {
 
         if (error) return { success: false, error: error.message }
 
-        supabase.from('place_interactions').insert({
-          user_id: userId,
-          place_id: placeId,
-          interaction_type: 'ai_added_to_itinerary',
-        }).then(undefined, () => null)
+        supabase
+          .from('place_interactions')
+          .insert({
+            user_id: userId,
+            place_id: placeId,
+            interaction_type: 'ai_added_to_itinerary',
+          })
+          .then(undefined, () => null)
 
         return { success: true, dayId, placeId, orderIndex }
       },
@@ -109,10 +130,7 @@ export function makeItineraryTools(supabase: DB, userId: string) {
         itemId: z.string().uuid(),
       }),
       execute: async ({ itemId }) => {
-        const { error } = await supabase
-          .from('itinerary_items')
-          .delete()
-          .eq('id', itemId)
+        const { error } = await supabase.from('itinerary_items').delete().eq('id', itemId)
 
         if (error) return { success: false, error: error.message }
         return { success: true }

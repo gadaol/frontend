@@ -6,6 +6,8 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import dayjs from '@/lib/dayjs'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
+import PhotoBackfillTrigger from '@/components/features/places/PhotoBackfillTrigger'
 import { toggleVote } from '@/app/actions/vote'
 import { removeCandidatePlace, confirmCandidateToDay } from '@/app/actions/candidate'
 import type { VoteRecord } from '../../page'
@@ -90,8 +92,14 @@ export default function VoteClient({
     router.refresh()
   }
 
+  const backfillIds = initialCandidates
+    .filter((c) => c.places && !c.places.photo_ref && c.places.google_place_id)
+    .map((c) => c.places!.google_place_id!)
+    .slice(0, 10)
+
   return (
     <div className="bg-bg2 flex min-h-dvh flex-col">
+      <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
       {/* 헤더 */}
       <div className="border-border sticky top-0 z-20 flex h-[54px] items-center gap-3 border-b bg-white px-4">
         <button
@@ -166,7 +174,6 @@ export default function VoteClient({
               if (!place) return null
               const catLabel = place.place_categories?.name ?? '기타'
               const category = getCategoryInfoByLabel(catLabel)
-              const Icon = category.icon
               const voteEntry = votes[candidate.place_id] ?? { likes: 0, dislikes: 0, myVote: null }
               const isPickingDay = openDayPickerId === candidate.id
               const isConfirming = confirmingId === candidate.id
@@ -175,11 +182,12 @@ export default function VoteClient({
                 <div key={candidate.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
                   {/* 장소 정보 */}
                   <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-                    <div
-                      className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[12px] ${category.bg}`}
-                    >
-                      <Icon size={22} className={category.color} />
-                    </div>
+                    <PlacePhoto
+                      photoRef={place.photo_ref}
+                      categoryStyle={category}
+                      iconSize={22}
+                      className="h-11 w-11 flex-shrink-0 rounded-[12px]"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="text-ink text-[15px] leading-snug font-semibold">
                         {place.name}
@@ -187,7 +195,10 @@ export default function VoteClient({
                       {place.address && (
                         <p className="text-ink3 mt-0.5 truncate text-[12px]">{place.address}</p>
                       )}
-                      <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
+                      <p
+                        className="mt-0.5 text-[11px] font-semibold"
+                        style={{ color: category.hex }}
+                      >
                         {category.hashLabel}
                       </p>
                     </div>

@@ -8,11 +8,32 @@ import Button from '@/components/ui/Button'
 import StepIndicator from './StepIndicator'
 
 type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous' | 'photo'
-type PlaceKey = 'restaurant' | 'cafe' | 'nature' | 'landmark' | 'shopping' | 'activity' | 'culture' | 'night' | 'healing' | 'market'
+type PlaceKey =
+  | 'restaurant'
+  | 'cafe'
+  | 'nature'
+  | 'landmark'
+  | 'shopping'
+  | 'activity'
+  | 'culture'
+  | 'night'
+  | 'healing'
+  | 'market'
 type CompanionKey = 'solo' | 'couple' | 'family' | 'friends' | 'pet'
 
 const PACE_KEYS: PaceKey[] = ['relaxed', 'fast', 'planned', 'spontaneous', 'photo']
-const PLACE_KEYS: PlaceKey[] = ['restaurant', 'cafe', 'nature', 'landmark', 'shopping', 'activity', 'culture', 'night', 'healing', 'market']
+const PLACE_KEYS: PlaceKey[] = [
+  'restaurant',
+  'cafe',
+  'nature',
+  'landmark',
+  'shopping',
+  'activity',
+  'culture',
+  'night',
+  'healing',
+  'market',
+]
 const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends', 'pet']
 
 interface Props {
@@ -46,7 +67,9 @@ export default function TravelStyleStep({ nickname, onBack, redirectTo }: Props)
           .from('profiles')
           .update({
             ...(nickname.trim() ? { name: nickname.trim() } : {}),
-            ...(withStyle ? { travel_pace: pace, travel_places: places, travel_companion: companion } : {}),
+            ...(withStyle
+              ? { travel_pace: pace, travel_places: places, travel_companion: companion }
+              : {}),
             onboarding_completed: true,
           })
           .eq('id', user.id)

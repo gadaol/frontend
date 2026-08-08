@@ -34,7 +34,9 @@ export type GeneratedItinerary = z.infer<typeof ItinerarySchema>
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
   const {
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
     style = [],
     companion = '',
     locale = 'ko',
-  } = await req.json() as {
+  } = (await req.json()) as {
     destination: string
     startDate: string
     endDate: string
@@ -57,9 +59,10 @@ export async function POST(req: NextRequest) {
 
   const system = [getItineraryPrompt(locale), languageInstruction].join('\n\n')
 
-  const userPrompt = locale === 'ko'
-    ? `목적지: ${destination}\n기간: ${startDate} ~ ${endDate}\n스타일: ${style.join(', ')}\n동행: ${companion}`
-    : `Destination: ${destination}\nDates: ${startDate} to ${endDate}\nStyle: ${style.join(', ')}\nCompanion: ${companion}`
+  const userPrompt =
+    locale === 'ko'
+      ? `목적지: ${destination}\n기간: ${startDate} ~ ${endDate}\n스타일: ${style.join(', ')}\n동행: ${companion}`
+      : `Destination: ${destination}\nDates: ${startDate} to ${endDate}\nStyle: ${style.join(', ')}\nCompanion: ${companion}`
 
   const result = streamObject({
     model: cerebras(MODELS.default),

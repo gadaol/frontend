@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      backlog_collections: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          order_index: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          order_index?: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          order_index?: number
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       backlog_items: {
         Row: {
           created_at: string | null
@@ -22,6 +46,7 @@ export type Database = {
           place_id: string | null
           trip_id: string | null
           user_id: string
+          collection_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -30,6 +55,7 @@ export type Database = {
           place_id?: string | null
           trip_id?: string | null
           user_id: string
+          collection_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -38,6 +64,7 @@ export type Database = {
           place_id?: string | null
           trip_id?: string | null
           user_id?: string
+          collection_id?: string | null
         }
         Relationships: [
           {
@@ -52,6 +79,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlog_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "backlog_collections"
             referencedColumns: ["id"]
           },
         ]
@@ -455,6 +489,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           name: string
+          photo_ref: string | null
         }
         Insert: {
           address?: string | null
@@ -465,6 +500,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           name: string
+          photo_ref?: string | null
         }
         Update: {
           address?: string | null
@@ -475,6 +511,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           name?: string
+          photo_ref?: string | null
         }
         Relationships: [
           {

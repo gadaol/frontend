@@ -6,4 +6,5 @@ export type GooglePlace = {
   rating?: number
   userRatingCount?: number
   location?: { latitude: number; longitude: number }
+  photos?: Array<{ name: string }>
 }

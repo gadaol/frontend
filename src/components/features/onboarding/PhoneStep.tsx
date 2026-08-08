@@ -50,7 +50,12 @@ export default function PhoneStep({ onNext }: Props) {
     }, 1000)
   }
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    },
+    [],
+  )
 
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -130,10 +135,7 @@ export default function PhoneStep({ onNext }: Props) {
                 className="text-ink placeholder:text-ink3 disabled:text-ink3 flex-1 bg-transparent text-[15px] outline-none"
               />
             </div>
-            <Button
-              onClick={handleSend}
-              disabled={rawPhone(phone).length < 10 || sending}
-            >
+            <Button onClick={handleSend} disabled={rawPhone(phone).length < 10 || sending}>
               {otpSent ? t('resendOtp') : t('sendOtp')}
             </Button>
           </div>
@@ -151,7 +153,9 @@ export default function PhoneStep({ onNext }: Props) {
                 <span className="text-error text-[13px]">만료됨</span>
               )}
             </div>
-            <div className={`flex h-[52px] items-center rounded-xl border-[1.5px] bg-white px-4 ${timeLeft > 0 ? 'border-primary shadow-[0_0_0_3px_rgba(27,111,240,0.1)]' : 'border-red-300'}`}>
+            <div
+              className={`flex h-[52px] items-center rounded-xl border-[1.5px] bg-white px-4 ${timeLeft > 0 ? 'border-primary shadow-[0_0_0_3px_rgba(27,111,240,0.1)]' : 'border-red-300'}`}
+            >
               <input
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -162,7 +166,9 @@ export default function PhoneStep({ onNext }: Props) {
               />
             </div>
             {timeLeft === 0 && (
-              <p className="text-error mt-1.5 text-[12px]">인증번호가 만료됐어요. 다시 받아주세요.</p>
+              <p className="text-error mt-1.5 text-[12px]">
+                인증번호가 만료됐어요. 다시 받아주세요.
+              </p>
             )}
           </div>
         )}

@@ -53,9 +53,7 @@ export async function POST(request: Request) {
     })
 
     if (!subError) {
-      const { error: grantError } = await adminSupabase
-        .from('phone_trial_grants')
-        .insert({ phone })
+      const { error: grantError } = await adminSupabase.from('phone_trial_grants').insert({ phone })
       if (!grantError) trialGranted = true
     }
   }

@@ -8,7 +8,17 @@ import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 
 type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous' | 'photo'
-type PlaceKey = 'restaurant' | 'cafe' | 'nature' | 'landmark' | 'shopping' | 'activity' | 'culture' | 'night' | 'healing' | 'market'
+type PlaceKey =
+  | 'restaurant'
+  | 'cafe'
+  | 'nature'
+  | 'landmark'
+  | 'shopping'
+  | 'activity'
+  | 'culture'
+  | 'night'
+  | 'healing'
+  | 'market'
 type CompanionKey = 'solo' | 'couple' | 'family' | 'friends' | 'pet'
 
 const PACE_OPTIONS: { key: PaceKey; label: string }[] = [
@@ -202,7 +212,9 @@ export default function ProfileSettingsClient({
             <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">전화번호</p>
             <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white">
               <div className="px-4 py-3.5">
-                <p className="text-ink text-[15px]">{phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}</p>
+                <p className="text-ink text-[15px]">
+                  {phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}
+                </p>
               </div>
             </div>
           </>
@@ -230,7 +242,7 @@ export default function ProfileSettingsClient({
           <p className="text-ink3 mt-0.5 text-[12px]">AI 추천 정확도에 영향을 줘요</p>
         </div>
 
-        <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white px-4 py-4 space-y-5">
+        <div className="border-border mb-5 space-y-5 overflow-hidden rounded-2xl border bg-white px-4 py-4">
           <ChipSection
             label="여행 페이스"
             options={PACE_OPTIONS}

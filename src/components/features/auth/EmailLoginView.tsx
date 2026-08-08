@@ -80,17 +80,14 @@ export default function EmailLoginView({ onBack, onSignUp, onVerificationSent }:
         <span className="text-ink text-[17px] font-semibold">{t('emailLogin')}</span>
       </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-1 flex-col px-5 py-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col px-5 py-6">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label className="text-ink text-[13px] font-medium">{t('emailLabel')}</label>
             <input
               {...register('email')}
               type="email"
-              placeholder="hello@gadaol.com"
+              placeholder="hello@gadarog.com"
               className={`text-ink focus:border-primary focus:ring-primary/10 h-12 rounded-xl border px-3.5 text-[15px] outline-none focus:ring-2 ${errors.email ? 'border-error' : 'border-border'}`}
             />
             {errors.email && <span className="text-error text-[12px]">{errors.email.message}</span>}

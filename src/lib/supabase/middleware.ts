@@ -32,7 +32,15 @@ export async function updateSession(request: NextRequest, response?: NextRespons
   const pathname = request.nextUrl.pathname.replace(/^\/(ko|en)/, '') || '/'
   const locale = request.nextUrl.pathname.match(/^\/(ko|en)/)?.[1] ?? 'ko'
 
-  const protectedPaths = ['/home', '/trips', '/places', '/backlog', '/mypage', '/notifications', '/onboarding']
+  const protectedPaths = [
+    '/home',
+    '/trips',
+    '/places',
+    '/backlog',
+    '/mypage',
+    '/notifications',
+    '/onboarding',
+  ]
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
   const isOnboarding = pathname.startsWith('/onboarding')
   const isAuthRoute = pathname === '/'

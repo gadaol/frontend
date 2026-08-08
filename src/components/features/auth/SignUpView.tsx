@@ -140,7 +140,7 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
             <input
               {...register('email')}
               type="email"
-              placeholder="hello@gadaol.com"
+              placeholder="hello@gadarog.com"
               className={inputClass(!!errors.email)}
             />
           </Field>
@@ -173,12 +173,20 @@ export default function SignUpView({ onBack, onVerificationSent }: Props) {
               <CheckCircle checked={allChecked} />
               <span className="text-ink text-[14px] font-semibold">전체 동의</span>
             </button>
-            <div className="border-border border-t pt-3 flex flex-col gap-3">
-              <button type="button" onClick={() => setTermsChecked(!termsChecked)} className="flex items-center gap-3">
+            <div className="border-border flex flex-col gap-3 border-t pt-3">
+              <button
+                type="button"
+                onClick={() => setTermsChecked(!termsChecked)}
+                className="flex items-center gap-3"
+              >
                 <CheckCircle checked={termsChecked} size={20} />
                 <span className="text-ink3 text-[13px]">{t('termsAgreeTerms')}</span>
               </button>
-              <button type="button" onClick={() => setPrivacyChecked(!privacyChecked)} className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPrivacyChecked(!privacyChecked)}
+                className="flex items-center gap-3"
+              >
                 <CheckCircle checked={privacyChecked} size={20} />
                 <span className="text-ink3 text-[13px]">{t('termsAgreePrivacy')}</span>
               </button>

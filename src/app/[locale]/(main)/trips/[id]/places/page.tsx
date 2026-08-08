@@ -15,10 +15,7 @@ export default async function TripPlacesPage({ params, searchParams }: Props) {
   const dayNumber = parseInt(day ?? '1', 10)
   const dayDate = date ?? ''
 
-  const [destination, supabase] = await Promise.all([
-    getTripDestination(tripId),
-    createClient(),
-  ])
+  const [destination, supabase] = await Promise.all([getTripDestination(tripId), createClient()])
 
   const {
     data: { user },

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   if (!res.ok) return new NextResponse(null, { status: 404 })
 
-  const data = await res.json() as { photoUri?: string }
+  const data = (await res.json()) as { photoUri?: string }
   if (!data.photoUri) return new NextResponse(null, { status: 404 })
 
   return NextResponse.redirect(data.photoUri, {

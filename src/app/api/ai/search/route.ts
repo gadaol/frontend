@@ -8,15 +8,18 @@ import type { Locale } from '@/lib/ai/characters'
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const { query, locale = 'ko' } = await req.json() as {
+  const { query, locale = 'ko' } = (await req.json()) as {
     query: string
     locale?: Locale
   }
 
-  const languageInstruction = locale === 'ko' ? '반드시 한국어로 답하세요.' : 'Always respond in English.'
+  const languageInstruction =
+    locale === 'ko' ? '반드시 한국어로 답하세요.' : 'Always respond in English.'
 
   const system = [getSearchPrompt(locale), languageInstruction].join('\n\n')
 

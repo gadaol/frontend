@@ -12,6 +12,7 @@ export type CandidatePlace = {
     google_place_id: string | null
     name: string
     address: string | null
+    photo_ref: string | null
     place_categories: { name: string } | null
   } | null
 }
@@ -40,7 +41,9 @@ export default async function VotePage({
       .single(),
     supabase
       .from('trip_candidate_places')
-      .select('id, place_id, places(id, google_place_id, name, address, place_categories(name))')
+      .select(
+        'id, place_id, places(id, google_place_id, name, address, photo_ref, place_categories(name))',
+      )
       .eq('trip_id', id)
       .order('created_at', { ascending: false }),
     supabase.from('votes').select('place_id, vote_type, user_id').eq('trip_id', id),

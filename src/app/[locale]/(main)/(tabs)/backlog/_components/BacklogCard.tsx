@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
 import { getCategoryStyle } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
 
 type BacklogCardProps = {
   id: string
@@ -10,6 +11,7 @@ type BacklogCardProps = {
   placeName: string
   address: string | null
   categoryName: string | null
+  photoRef: string | null
   tripTitle: string | null
   memo: string | null
 }
@@ -19,24 +21,27 @@ export default function BacklogCard({
   placeName,
   address,
   categoryName,
+  photoRef,
   tripTitle,
   memo,
 }: BacklogCardProps) {
   const locale = useLocale()
   const cat = getCategoryStyle(categoryName)
-  const Icon = cat.icon
 
   const inner = (
     <div className="border-border bg-bg flex overflow-hidden rounded-2xl border active:opacity-80">
       {/* 카테고리 썸네일 */}
-      <div className={`flex w-[72px] flex-shrink-0 items-center justify-center ${cat.bg}`}>
-        <Icon size={26} className={cat.color} />
-      </div>
+      <PlacePhoto
+        photoRef={photoRef}
+        categoryStyle={cat}
+        iconSize={26}
+        className="h-full w-[72px] flex-shrink-0"
+      />
 
       {/* 바디 */}
       <div className="flex min-w-0 flex-1 flex-col justify-between px-3.5 py-3">
         <div>
-          <p className="text-ink truncate text-[14px] font-bold leading-tight">{placeName}</p>
+          <p className="text-ink truncate text-[14px] leading-tight font-bold">{placeName}</p>
           {address && <p className="text-ink3 mt-0.5 truncate text-[11px]">{address}</p>}
         </div>
 

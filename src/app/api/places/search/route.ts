@@ -13,7 +13,7 @@ const searchPlaces = unstable_cache(
         'X-Goog-Api-Key': apiKey,
         // photos 제외 — 유료 Advanced 필드 최소화
         'X-Goog-FieldMask':
-          'places.id,places.displayName,places.formattedAddress,places.types,places.rating,places.userRatingCount,places.location',
+          'places.id,places.displayName,places.formattedAddress,places.types,places.rating,places.userRatingCount,places.location,places.photos',
       },
       body: JSON.stringify({
         textQuery: query,

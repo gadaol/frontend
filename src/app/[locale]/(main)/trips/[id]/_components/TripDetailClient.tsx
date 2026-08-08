@@ -13,6 +13,8 @@ import ItemDetailSheet from './ItemDetailSheet'
 import { useAssistantStore } from '@/lib/ai/store'
 import { isGradient } from '@/utils/uploadCover'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
+import PhotoBackfillTrigger from '@/components/features/places/PhotoBackfillTrigger'
 import { AVATAR_COLORS } from '@/utils/avatarColors'
 import {
   formatDateRange,
@@ -227,8 +229,15 @@ export default function TripDetailClient({
   const isMapTab = activeTab === '장소'
   const openAssistant = useAssistantStore((s) => s.open)
 
+  const backfillIds = trip.itinerary_days
+    .flatMap((d) => d.itinerary_items)
+    .filter((item) => item.places && !item.places.photo_ref && item.places.google_place_id)
+    .map((item) => item.places!.google_place_id!)
+    .slice(0, 10)
+
   return (
     <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
+      <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
       {/* 커버 */}
       <div
         className={`relative h-[220px] flex-shrink-0 ${isMapTab ? 'hidden' : ''}`}
@@ -273,7 +282,9 @@ export default function TripDetailClient({
       </div>
 
       {/* 바디 카드 */}
-      <div className={`relative z-10 flex flex-1 flex-col bg-white ${isMapTab ? 'overflow-hidden' : '-mt-3 rounded-t-3xl'}`}>
+      <div
+        className={`relative z-10 flex flex-1 flex-col bg-white ${isMapTab ? 'overflow-hidden' : '-mt-3 rounded-t-3xl'}`}
+      >
         {/* 멤버 row */}
         <div className={`flex items-center gap-2.5 px-4 pt-4 pb-0 ${isMapTab ? 'hidden' : ''}`}>
           <div className="flex">
@@ -324,7 +335,9 @@ export default function TripDetailClient({
         </div>
 
         {/* Quick action 2버튼 */}
-        <div className={`border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4 ${isMapTab ? 'hidden' : ''}`}>
+        <div
+          className={`border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4 ${isMapTab ? 'hidden' : ''}`}
+        >
           <Link
             href={`/${locale}/trips/${trip.id}/edit`}
             className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
@@ -382,7 +395,7 @@ export default function TripDetailClient({
         />
 
         {/* 탭 컨텐츠 */}
-        <div className={isMapTab ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'flex-1 pb-20'}>
+        <div className={isMapTab ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1 pb-20'}>
           {activeTab === '일정' && (
             <ItineraryTab
               expectedDays={expectedDays}
@@ -425,7 +438,7 @@ export default function TripDetailClient({
                       : '이 여행에 추가할 좋은 장소를 추천해줘',
                   })
                 }
-                className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-primary/30"
+                className="bg-primary shadow-primary/30 absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold text-white shadow-lg"
               >
                 <span>✨</span>
                 AI 추천
@@ -548,7 +561,6 @@ function ItineraryTab({
                 <DraggableItemList
                   items={dayDB.itinerary_items}
                   removedItemIds={removedItemIds}
-                  locale={locale}
                   onRemove={onRemove}
                   onTimeChange={onTimeChange}
                   dayId={dayDB.id}
@@ -817,7 +829,6 @@ function MateTab({
 function DraggableItemList({
   items,
   removedItemIds,
-  locale,
   onRemove,
   onTimeChange,
   dayId,
@@ -826,7 +837,6 @@ function DraggableItemList({
 }: {
   items: ItineraryItemDB[]
   removedItemIds: Set<string>
-  locale: string
   onRemove: (id: string) => void
   onTimeChange: (id: string, time: string) => void
   dayId: string
@@ -934,7 +944,6 @@ function DraggableItemList({
             <ItineraryItemRow
               item={item}
               isLast={idx === displayItems.length - 1}
-              locale={locale}
               onRemove={onRemove}
               onTimeChange={onTimeChange}
               onTap={() => onItemTap(item)}
@@ -954,7 +963,6 @@ const SWIPE_DELETE_WIDTH = 68
 function ItineraryItemRow({
   item,
   isLast,
-  locale,
   onRemove,
   onTimeChange,
   onTap,
@@ -963,7 +971,6 @@ function ItineraryItemRow({
 }: {
   item: ItineraryItemDB
   isLast: boolean
-  locale: string
   onRemove: (id: string) => void
   onTimeChange: (itemId: string, time: string) => void
   onTap: () => void
@@ -983,7 +990,6 @@ function ItineraryItemRow({
 
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
-  const Icon = category.icon
   function openTimePicker() {
     const el = timeRef.current
     if (!el) return
@@ -1106,11 +1112,12 @@ function ItineraryItemRow({
             onTouchEnd={onTouchEnd}
             onClick={handleCardClick}
           >
-            <div
-              className={`flex w-14 flex-shrink-0 items-center justify-center self-stretch ${category.bg}`}
-            >
-              <Icon size={22} className={category.color} />
-            </div>
+            <PlacePhoto
+              photoRef={item.places?.photo_ref}
+              categoryStyle={category}
+              iconSize={22}
+              className="w-14 flex-shrink-0 self-stretch"
+            />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 bg-white px-3 py-2.5">
               <p className="text-ink text-[13px] leading-snug font-semibold break-keep">
                 {item.places?.name ?? '알 수 없는 장소'}

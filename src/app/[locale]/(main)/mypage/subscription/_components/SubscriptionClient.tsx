@@ -35,7 +35,11 @@ interface Props {
 
 function formatDate(iso: string | null) {
   if (!iso) return null
-  return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(iso).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 function formatAmount(amount: number) {
@@ -81,7 +85,8 @@ export default function SubscriptionClient({
   }
 
   const price = getPrice(activeTab)
-  const priceUnit = activeTab === 'free' ? '' : (isCurrentPlan && period === 'yearly') ? '/ 년' : t('perMonth')
+  const priceUnit =
+    activeTab === 'free' ? '' : isCurrentPlan && period === 'yearly' ? '/ 년' : t('perMonth')
 
   function handleCancel() {
     startTransition(async () => {
@@ -115,9 +120,7 @@ export default function SubscriptionClient({
             </div>
             <div className="text-right">
               <span className="text-ink text-[22px] font-black">{price}</span>
-              {priceUnit && (
-                <span className="text-ink3 ml-1 text-[13px]">{priceUnit}</span>
-              )}
+              {priceUnit && <span className="text-ink3 ml-1 text-[13px]">{priceUnit}</span>}
             </div>
           </div>
 
@@ -155,7 +158,9 @@ export default function SubscriptionClient({
               {/* 갱신일 / 만료일 */}
               {expiresAt && (
                 <div className="flex items-center justify-between">
-                  <span className="text-ink3 text-[13px]">{isCanceled ? '이용 만료일' : '다음 갱신일'}</span>
+                  <span className="text-ink3 text-[13px]">
+                    {isCanceled ? '이용 만료일' : '다음 갱신일'}
+                  </span>
                   <span
                     className="text-[13px] font-medium"
                     style={{ color: isCanceled ? 'var(--color-error)' : 'var(--color-ink)' }}

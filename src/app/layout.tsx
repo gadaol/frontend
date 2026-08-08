@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '가다올',
-  description: '같이 가다, 함께 올게',
+  title: '가다로그',
+  description: '나만의 여행 로그를 기록하다',
 }
 
 export default function RootLayout({

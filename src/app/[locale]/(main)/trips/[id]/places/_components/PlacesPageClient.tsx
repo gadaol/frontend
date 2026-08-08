@@ -71,6 +71,7 @@ export default function PlacesPageClient({
             categoryName: getDbCategory(place.types ?? []),
             lat: place.location?.latitude ?? null,
             lng: place.location?.longitude ?? null,
+            photoRef: place.photos?.[0]?.name ?? null,
           })
           if (placeId) {
             await addItineraryItem(tripId, dayDate, dayNumber, placeId)

@@ -21,6 +21,7 @@ export type GooglePlaceDetail = {
   websiteUri?: string
   regularOpeningHours?: { weekdayDescriptions: string[] }
   reviews?: PlaceReview[]
+  photos?: Array<{ name: string }>
 }
 
 async function fetchPlaceDetail(placeId: string): Promise<GooglePlaceDetail | null> {
@@ -31,7 +32,7 @@ async function fetchPlaceDetail(placeId: string): Promise<GooglePlaceDetail | nu
     headers: {
       'X-Goog-Api-Key': apiKey,
       'X-Goog-FieldMask':
-        'id,displayName,formattedAddress,types,rating,userRatingCount,internationalPhoneNumber,websiteUri,regularOpeningHours,reviews',
+        'id,displayName,formattedAddress,types,rating,userRatingCount,internationalPhoneNumber,websiteUri,regularOpeningHours,reviews,photos',
       'Accept-Language': 'ko',
     },
     next: { revalidate: 3600 },

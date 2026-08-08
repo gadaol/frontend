@@ -1,8 +1,16 @@
 'use client'
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline, OverlayView } from '@react-google-maps/api'
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  InfoWindow,
+  Polyline,
+  OverlayView,
+} from '@react-google-maps/api'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
 import { getDayColor } from '@/utils/dayColors'
 import type { TripDetail } from '../page'
 
@@ -32,6 +40,7 @@ type PlacePin = {
   color: string
   orderIndex: number
   categoryName: string | null
+  photoRef: string | null
 }
 
 interface Props {
@@ -93,6 +102,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
               color: getDayColor(day.day_number, maxDayNumber),
               orderIndex: item.order_index,
               categoryName: item.places!.place_categories?.name ?? null,
+              photoRef: item.places!.photo_ref ?? null,
             })),
         ),
     [trip.itinerary_days, maxDayNumber],
@@ -164,7 +174,11 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
         <div className="bg-primary-light flex h-16 w-16 items-center justify-center rounded-[20px]">
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z" stroke="var(--color-primary)" strokeWidth="2" />
+            <path
+              d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z"
+              stroke="var(--color-primary)"
+              strokeWidth="2"
+            />
             <circle cx="15" cy="12" r="3" stroke="var(--color-primary)" strokeWidth="2" />
           </svg>
         </div>
@@ -211,27 +225,29 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
               />
             ) : null,
           )}
-          {pins.filter((p) => selectedDay === null || p.dayNumber === selectedDay).map((pin) => (
-            <Marker
-              key={pin.id}
-              position={{ lat: pin.lat, lng: pin.lng }}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: selectedPin?.id === pin.id ? 11 : 9,
-                fillColor: pin.color,
-                fillOpacity: 0.9,
-                strokeColor: '#fff',
-                strokeWeight: 2,
-              }}
-              label={{
-                text: String(pin.orderIndex + 1),
-                color: '#fff',
-                fontSize: '9px',
-                fontWeight: '700',
-              }}
-              onClick={() => handlePinClick(pin)}
-            />
-          ))}
+          {pins
+            .filter((p) => selectedDay === null || p.dayNumber === selectedDay)
+            .map((pin) => (
+              <Marker
+                key={pin.id}
+                position={{ lat: pin.lat, lng: pin.lng }}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: selectedPin?.id === pin.id ? 11 : 9,
+                  fillColor: pin.color,
+                  fillOpacity: 0.9,
+                  strokeColor: '#fff',
+                  strokeWeight: 2,
+                }}
+                label={{
+                  text: String(pin.orderIndex + 1),
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: '700',
+                }}
+                onClick={() => handlePinClick(pin)}
+              />
+            ))}
           {myLocation && (
             <OverlayView
               key={`myloc-${currentUserAvatar ?? 'none'}`}
@@ -255,20 +271,22 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                     }}
                   />
                 ) : (
-                  <div style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    border: '3px solid white',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-                    backgroundColor: 'var(--color-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      border: '3px solid white',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      backgroundColor: 'var(--color-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
                     {currentUserName?.[0] ?? '나'}
                   </div>
                 )}
@@ -281,11 +299,25 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
               onCloseClick={() => setSelectedPin(null)}
             >
               <div style={{ maxWidth: 180, padding: '6px 4px 4px' }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--color-ink)',
+                    marginBottom: 4,
+                  }}
+                >
                   {selectedPin.name}
                 </p>
                 {selectedPin.address && (
-                  <p style={{ fontSize: 11, color: 'var(--color-ink3)', marginBottom: 4, lineHeight: 1.4 }}>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--color-ink3)',
+                      marginBottom: 4,
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {selectedPin.address}
                   </p>
                 )}
@@ -298,10 +330,10 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
         </GoogleMap>
 
         {/* Day 필터 칩 */}
-        <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
           <button
             onClick={() => setSelectedDay(null)}
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm transition-colors ${selectedDay === null ? 'bg-ink text-white' : 'bg-white text-ink3'}`}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm transition-colors ${selectedDay === null ? 'bg-ink text-white' : 'text-ink3 bg-white'}`}
           >
             전체
           </button>
@@ -323,11 +355,16 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
 
         <button
           onClick={() => setShowRoute((v) => !v)}
-          className={`absolute right-3 bottom-16 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-colors ${showRoute ? 'bg-primary text-white' : 'bg-white text-ink3'}`}
+          className={`absolute right-3 bottom-16 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-colors ${showRoute ? 'bg-primary text-white' : 'text-ink3 bg-white'}`}
           title={showRoute ? '경로 숨기기' : '경로 보기'}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M3 14c0-2 1.5-3 3-3s3 1 4.5 1S13 11 13 9s-1.5-4-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <path
+              d="M3 14c0-2 1.5-3 3-3s3 1 4.5 1S13 11 13 9s-1.5-4-4-4"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
             <circle cx="3" cy="14" r="1.5" fill="currentColor" />
             <circle cx="15" cy="5" r="1.5" fill="currentColor" />
           </svg>
@@ -342,7 +379,12 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <circle cx="10" cy="10" r="3.5" fill="var(--color-primary)" />
               <circle cx="10" cy="10" r="6" stroke="var(--color-primary)" strokeWidth="1.5" />
-              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M10 2v2M10 16v2M2 10h2M16 10h2"
+                stroke="var(--color-primary)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           )}
         </button>
@@ -351,11 +393,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
       {/* 패널: 열릴때 지도 아래~하단네비 위, 닫힐때 하단네비 바로 위에 헤더만 */}
       <div
         className="absolute right-0 left-0 flex flex-col rounded-t-2xl bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.1)]"
-        style={
-          listOpen
-            ? { top: MAP_H, bottom: BOTTOM_NAV_H }
-            : { bottom: BOTTOM_NAV_H }
-        }
+        style={listOpen ? { top: MAP_H, bottom: BOTTOM_NAV_H } : { bottom: BOTTOM_NAV_H }}
       >
         {/* 바 핸들 토글 */}
         <button
@@ -373,7 +411,10 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
             <div className="flex items-center gap-1.5">
               {dayGroups.map(([dayNum, dayPins]) => (
                 <div key={dayNum} className="flex items-center gap-0.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: dayPins[0].color }} />
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: dayPins[0].color }}
+                  />
                   <span className="text-ink3 text-[10px]">D{dayNum}</span>
                 </div>
               ))}
@@ -387,60 +428,87 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
             className="overflow-y-auto px-4 pt-2 pb-4"
             style={{ height: `calc(100% - ${PANEL_HEADER_H}px)` }}
           >
-            {dayGroups.filter(([dayNum]) => selectedDay === null || dayNum === selectedDay).map(([dayNum, dayPins]) => (
-              <div key={dayNum} className="mb-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
-                    style={{ backgroundColor: dayPins[0].color }}
-                  >
-                    Day {dayNum}
-                  </span>
-                  <span className="text-ink3 text-[11px]">{dayPins[0].dayDate}</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {dayPins.map((pin) => {
-                    const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
-                    const Icon = catInfo.icon
-                    const isSelected = selectedPin?.id === pin.id
-                    return (
-                      <button
-                        key={pin.id}
-                        onClick={() => handlePinClick(pin)}
-                        className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
-                          isSelected ? 'border-primary bg-primary-light' : 'border-border bg-white'
-                        }`}
-                      >
-                        <div
-                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                          style={{ backgroundColor: pin.color }}
+            {dayGroups
+              .filter(([dayNum]) => selectedDay === null || dayNum === selectedDay)
+              .map(([dayNum, dayPins]) => (
+                <div key={dayNum} className="mb-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
+                      style={{ backgroundColor: dayPins[0].color }}
+                    >
+                      Day {dayNum}
+                    </span>
+                    <span className="text-ink3 text-[11px]">{dayPins[0].dayDate}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {dayPins.map((pin) => {
+                      const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
+                      const isSelected = selectedPin?.id === pin.id
+                      return (
+                        <button
+                          key={pin.id}
+                          onClick={() => handlePinClick(pin)}
+                          className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
+                            isSelected
+                              ? 'border-primary bg-primary-light'
+                              : 'border-border bg-white'
+                          }`}
                         >
-                          {pin.orderIndex + 1}
-                        </div>
-                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}>
-                          <Icon size={18} className={catInfo.color} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`truncate text-[13px] font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}>
-                            {pin.name}
-                          </p>
-                          {pin.address && (
-                            <p className="text-ink3 mt-0.5 truncate text-[11px]">{pin.address}</p>
-                          )}
-                          <p className="mt-0.5 text-[11px] font-semibold" style={{ color: catInfo.hex }}>
-                            {catInfo.hashLabel}
-                          </p>
-                        </div>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink3 flex-shrink-0">
-                          <path d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z" stroke="currentColor" strokeWidth="1.3" />
-                          <circle cx="7" cy="5.5" r="1.3" stroke="currentColor" strokeWidth="1.3" />
-                        </svg>
-                      </button>
-                    )
-                  })}
+                          <div
+                            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                            style={{ backgroundColor: pin.color }}
+                          >
+                            {pin.orderIndex + 1}
+                          </div>
+                          <PlacePhoto
+                            photoRef={pin.photoRef}
+                            categoryStyle={catInfo}
+                            iconSize={18}
+                            className="h-9 w-9 flex-shrink-0 rounded-[10px]"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`truncate text-[13px] font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}
+                            >
+                              {pin.name}
+                            </p>
+                            {pin.address && (
+                              <p className="text-ink3 mt-0.5 truncate text-[11px]">{pin.address}</p>
+                            )}
+                            <p
+                              className="mt-0.5 text-[11px] font-semibold"
+                              style={{ color: catInfo.hex }}
+                            >
+                              {catInfo.hashLabel}
+                            </p>
+                          </div>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            className="text-ink3 flex-shrink-0"
+                          >
+                            <path
+                              d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                            />
+                            <circle
+                              cx="7"
+                              cy="5.5"
+                              r="1.3"
+                              stroke="currentColor"
+                              strokeWidth="1.3"
+                            />
+                          </svg>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

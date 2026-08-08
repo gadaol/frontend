@@ -11,6 +11,7 @@ export type AddToBacklogInput = {
   categoryName: string | null
   lat?: number | null
   lng?: number | null
+  photoRef?: string | null
 }
 
 /** places 테이블에서 조회하거나 없으면 생성 후 place ID 반환 */
@@ -30,22 +31,20 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
 
   const { data: existing } = await supabase
     .from('places')
-    .select('id, category_id, lat')
+    .select('id, category_id, lat, photo_ref')
     .eq('google_place_id', input.googlePlaceId)
     .single()
 
   if (existing) {
-    const needsCategoryUpdate = !existing.category_id && categoryId
-    const needsLatUpdate = !existing.lat && input.lat
-    if (needsCategoryUpdate && needsLatUpdate) {
-      await supabase
-        .from('places')
-        .update({ category_id: categoryId, lat: input.lat, lng: input.lng })
-        .eq('id', existing.id)
-    } else if (needsCategoryUpdate) {
-      await supabase.from('places').update({ category_id: categoryId }).eq('id', existing.id)
-    } else if (needsLatUpdate) {
-      await supabase.from('places').update({ lat: input.lat, lng: input.lng }).eq('id', existing.id)
+    const updates: { category_id?: string; lat?: number; lng?: number; photo_ref?: string } = {}
+    if (!existing.category_id && categoryId) updates.category_id = categoryId
+    if (!existing.lat && input.lat) {
+      updates.lat = input.lat
+      updates.lng = input.lng ?? undefined
+    }
+    if (!existing.photo_ref && input.photoRef) updates.photo_ref = input.photoRef
+    if (Object.keys(updates).length > 0) {
+      await supabase.from('places').update(updates).eq('id', existing.id)
     }
     return existing.id
   }
@@ -59,6 +58,7 @@ export async function getOrCreatePlace(input: AddToBacklogInput): Promise<string
       category_id: categoryId,
       lat: input.lat ?? null,
       lng: input.lng ?? null,
+      photo_ref: input.photoRef ?? null,
     })
     .select('id')
     .single()

@@ -55,7 +55,8 @@ export function makeTripTools(supabase: DB, userId: string) {
       execute: async ({ tripId }) => {
         const { data: trip, error } = await supabase
           .from('trips')
-          .select(`
+          .select(
+            `
             id, title, destination, start_date, end_date, status,
             itinerary_days (
               id, day_date, day_number,
@@ -64,7 +65,8 @@ export function makeTripTools(supabase: DB, userId: string) {
                 places ( id, name, address, google_place_id )
               )
             )
-          `)
+          `,
+          )
           .eq('id', tripId)
           .single()
 
@@ -107,7 +109,8 @@ export function makeTripTools(supabase: DB, userId: string) {
     }),
 
     update_trip: tool({
-      description: 'Update trip title, destination, or dates. Always confirm with user before calling.',
+      description:
+        'Update trip title, destination, or dates. Always confirm with user before calling.',
       inputSchema: z.object({
         tripId: z.string().uuid(),
         title: z.string().optional(),

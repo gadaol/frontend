@@ -18,7 +18,13 @@ interface Props {
 
 type PendingAction = 'kakao' | 'google' | null
 
-export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotPassword, errorMessage, redirectTo }: Props) {
+export default function SocialLoginView({
+  onEmailClick,
+  onFindAccount,
+  onForgotPassword,
+  errorMessage,
+  redirectTo,
+}: Props) {
   const t = useTranslations('auth')
   const supabase = createClient()
   const locale = useLocale()
@@ -53,7 +59,7 @@ export default function SocialLoginView({ onEmailClick, onFindAccount, onForgotP
     <div className="flex flex-1 flex-col bg-[linear-gradient(170deg,var(--color-hero-top)_0%,var(--color-hero-bot)_100%)]">
       <div className="flex flex-col items-center px-7 pt-12 pb-8 text-center">
         <Logo size={48} variant="dark" className="mb-3" />
-        <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">gadaol</div>
+        <div className="mb-2 text-4xl font-extrabold tracking-tighter text-white">Gadarog</div>
         <div className="text-sm text-white/45">{t('tagline')}</div>
       </div>
 

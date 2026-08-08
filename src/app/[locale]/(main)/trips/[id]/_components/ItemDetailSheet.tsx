@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
 import type { TripExpense } from '../page'
 
 type ItineraryItemDB = {
@@ -12,6 +13,7 @@ type ItineraryItemDB = {
   places?: {
     name: string
     address: string | null
+    photo_ref?: string | null
     place_categories: { name: string } | null
   } | null
 }
@@ -51,7 +53,6 @@ export default function ItemDetailSheet({
   const isPlace = item.item_type === 'place'
   const catLabel = item.places?.place_categories?.name ?? '기타'
   const category = getCategoryInfoByLabel(catLabel)
-  const Icon = category.icon
 
   const allExpenses = [
     ...expenses,
@@ -135,11 +136,12 @@ export default function ItemDetailSheet({
         {/* 헤더 */}
         {isPlace ? (
           <div className="flex items-center gap-3 px-4 pt-3 pb-4">
-            <div
-              className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${category.bg}`}
-            >
-              <Icon size={24} className={category.color} />
-            </div>
+            <PlacePhoto
+              photoRef={item.places?.photo_ref}
+              categoryStyle={category}
+              iconSize={24}
+              className="h-12 w-12 flex-shrink-0 rounded-xl"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-ink truncate text-[16px] font-bold">
                 {item.places?.name ?? '장소'}

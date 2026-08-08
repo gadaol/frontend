@@ -51,7 +51,9 @@ export default async function JoinPage({ searchParams }: Props) {
           <p className="text-primary mb-1 text-[13px] font-medium">여행 초대</p>
           <h1 className="text-ink mb-1 text-[22px] font-bold">{trip.title}</h1>
           {trip.destination && <p className="text-ink3 mb-4 text-[14px]">📍 {trip.destination}</p>}
-          <p className="text-ink3 mb-8 text-[14px]">이 여행에 참여하려면 가다올 회원이어야 해요.</p>
+          <p className="text-ink3 mb-8 text-[14px]">
+            이 여행에 참여하려면 가다로그 회원이어야 해요.
+          </p>
           <a
             href={`/${locale}?redirectTo=${encodeURIComponent(joinPath)}`}
             className="bg-primary block w-full rounded-2xl py-4 text-center text-[16px] font-bold text-white"

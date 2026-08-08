@@ -4,8 +4,8 @@ import { useState, useTransition, useRef } from 'react'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import { createTrip } from '@/app/actions/trip'
-import { MapPinIcon } from '@/components/icons'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
+import DestinationInput from '@/components/features/trips/DestinationInput'
 import { createClient } from '@/lib/supabase/client'
 import { COVER_PRESETS } from '@/utils/coverPresets'
 import AIItinerarySheet from './_components/AIItinerarySheet'
@@ -141,18 +141,7 @@ export default function NewTripPage() {
         {/* 목적지 */}
         <div>
           <label className="text-ink mb-2 block text-[13px] font-semibold">목적지</label>
-          <div className="relative">
-            <MapPinIcon size={16} className="text-ink3 absolute top-1/2 left-4 -translate-y-1/2" />
-            <input
-              name="destination"
-              type="text"
-              maxLength={60}
-              placeholder="예: 제주도, 도쿄, 파리"
-              className={`${INPUT_CLASS} pl-10`}
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            />
-          </div>
+          <DestinationInput name="destination" value={destination} onChange={setDestination} />
         </div>
 
         {/* 날짜 */}
@@ -187,15 +176,29 @@ export default function NewTripPage() {
           <button
             type="button"
             onClick={() => setShowAISheet(true)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3.5 text-left transition-colors active:bg-primary/10"
+            className="border-primary/30 bg-primary/5 active:bg-primary/10 flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors"
           >
             <span className="text-[22px]">✨</span>
             <div>
-              <p className="text-[14px] font-bold text-primary">AI 일정 자동 생성</p>
-              <p className="text-[12px] text-ink3">AI가 {destination} 여행 일정을 자동으로 짜드려요</p>
+              <p className="text-primary text-[14px] font-bold">AI 일정 자동 생성</p>
+              <p className="text-ink3 text-[12px]">
+                AI가 {destination} 여행 일정을 자동으로 짜드려요
+              </p>
             </div>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="ml-auto text-primary/50">
-              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="text-primary/50 ml-auto"
+            >
+              <path
+                d="M6 4l4 4-4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         )}

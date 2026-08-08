@@ -32,7 +32,14 @@ interface Props {
   onClose: () => void
 }
 
-export default function AIItinerarySheet({ title, destination, startDate, endDate, coverUrl, onClose }: Props) {
+export default function AIItinerarySheet({
+  title,
+  destination,
+  startDate,
+  endDate,
+  coverUrl,
+  onClose,
+}: Props) {
   const locale = useLocale()
   const router = useRouter()
 
@@ -61,7 +68,14 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
       const res = await fetch('/api/ai/itinerary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destination, startDate, endDate, style: selectedStyles, companion, locale }),
+        body: JSON.stringify({
+          destination,
+          startDate,
+          endDate,
+          style: selectedStyles,
+          companion,
+          locale,
+        }),
         signal: abortRef.current.signal,
       })
       if (!res.ok || !res.body) throw new Error('failed')
@@ -127,11 +141,9 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
                 await addItineraryItem(tripId, day.day_date, day.day_number, placeId)
               }
             } else {
-              const memo = [
-                item.place_name,
-                item.visit_time && `(${item.visit_time})`,
-                item.memo,
-              ].filter(Boolean).join(' ')
+              const memo = [item.place_name, item.visit_time && `(${item.visit_time})`, item.memo]
+                .filter(Boolean)
+                .join(' ')
               await addMemoItem(tripId, day.day_date, day.day_number, memo)
             }
           } catch {
@@ -155,19 +167,26 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
 
   return (
     <>
-      <div className="fixed inset-0 z-[80] bg-black/40" onClick={() => { if (!saving) onClose() }} />
+      <div
+        className="fixed inset-0 z-[80] bg-black/40"
+        onClick={() => {
+          if (!saving) onClose()
+        }}
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-[81] flex max-h-[92dvh] flex-col rounded-t-3xl bg-white">
         {/* 핸들 */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+        <div className="flex flex-shrink-0 justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-gray-200" />
         </div>
 
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 pb-3 pt-1 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center justify-between px-5 pt-1 pb-3">
           <div>
-            <p className="text-[18px] font-bold text-ink">✨ AI 일정 자동 생성</p>
-            <p className="text-[12px] text-ink3">{destination} · {startDate} ~ {endDate}</p>
+            <p className="text-ink text-[18px] font-bold">✨ AI 일정 자동 생성</p>
+            <p className="text-ink3 text-[12px]">
+              {destination} · {startDate} ~ {endDate}
+            </p>
           </div>
           {!saving && (
             <button
@@ -175,21 +194,26 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
               className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1l12 12M13 1L1 13" stroke="#666" strokeWidth="1.8" strokeLinecap="round" />
+                <path
+                  d="M1 1l12 12M13 1L1 13"
+                  stroke="#666"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           )}
         </div>
 
-        <div className="h-px bg-border flex-shrink-0" />
+        <div className="bg-border h-px flex-shrink-0" />
 
         <div className="flex-1 overflow-y-auto">
           {/* 옵션 선택 — 아직 생성 안 됐을 때만 */}
           {!itinerary && !streaming && (
-            <div className="px-5 py-4 space-y-4">
+            <div className="space-y-4 px-5 py-4">
               {/* 여행 스타일 */}
               <div>
-                <p className="text-[13px] font-semibold text-ink mb-2">여행 스타일 (복수 선택)</p>
+                <p className="text-ink mb-2 text-[13px] font-semibold">여행 스타일 (복수 선택)</p>
                 <div className="flex flex-wrap gap-2">
                   {STYLES.map((s) => (
                     <button
@@ -198,7 +222,7 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
                       className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
                         selectedStyles.includes(s.key)
                           ? 'bg-primary text-white'
-                          : 'bg-gray-100 text-ink2'
+                          : 'text-ink2 bg-gray-100'
                       }`}
                     >
                       {s.label}
@@ -209,14 +233,14 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
 
               {/* 동행 */}
               <div>
-                <p className="text-[13px] font-semibold text-ink mb-2">동행</p>
+                <p className="text-ink mb-2 text-[13px] font-semibold">동행</p>
                 <div className="flex gap-2">
                   {COMPANIONS.map((c) => (
                     <button
                       key={c.key}
                       onClick={() => setCompanion(c.key)}
                       className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                        companion === c.key ? 'bg-primary text-white' : 'bg-gray-100 text-ink2'
+                        companion === c.key ? 'bg-primary text-white' : 'text-ink2 bg-gray-100'
                       }`}
                     >
                       {c.label}
@@ -230,51 +254,50 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
           {/* 스트리밍 중 raw 텍스트 */}
           {streaming && !itinerary && (
             <div className="px-5 py-4">
-              <div className="flex items-center gap-2 mb-3 text-[13px] text-ink3">
-                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="text-ink3 mb-3 flex items-center gap-2 text-[13px]">
+                <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
                 AI가 일정을 짜고 있어요...
               </div>
-              <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-ink3 font-mono opacity-60">
-                {streamText.slice(0, 400)}{streamText.length > 400 ? '...' : ''}
+              <p className="text-ink3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap opacity-60">
+                {streamText.slice(0, 400)}
+                {streamText.length > 400 ? '...' : ''}
               </p>
             </div>
           )}
 
           {/* 파싱 오류 */}
           {parseError && (
-            <div className="px-5 py-4 text-center text-[13px] text-ink3">
+            <div className="text-ink3 px-5 py-4 text-center text-[13px]">
               일정 생성에 실패했어요. 다시 시도해주세요.
             </div>
           )}
 
           {/* 생성된 일정 미리보기 */}
           {itinerary && (
-            <div className="px-5 py-4 space-y-3">
-              <div className="rounded-2xl bg-primary/5 px-4 py-3">
-                <p className="text-[13px] font-bold text-primary">{itinerary.title}</p>
-                <p className="mt-1 text-[12px] text-ink3 leading-relaxed">{itinerary.summary}</p>
+            <div className="space-y-3 px-5 py-4">
+              <div className="bg-primary/5 rounded-2xl px-4 py-3">
+                <p className="text-primary text-[13px] font-bold">{itinerary.title}</p>
+                <p className="text-ink3 mt-1 text-[12px] leading-relaxed">{itinerary.summary}</p>
               </div>
 
               {itinerary.days.map((day) => (
-                <div key={day.day_number} className="rounded-2xl border border-border p-4">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-bold text-white">
+                <div key={day.day_number} className="border-border rounded-2xl border p-4">
+                  <div className="mb-2.5 flex items-center gap-2">
+                    <span className="bg-primary rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white">
                       {day.day_number}일차
                     </span>
-                    <span className="text-[12px] text-ink3">{day.day_date}</span>
-                    <span className="text-[12px] font-medium text-ink">· {day.theme}</span>
+                    <span className="text-ink3 text-[12px]">{day.day_date}</span>
+                    <span className="text-ink text-[12px] font-medium">· {day.theme}</span>
                   </div>
                   <div className="space-y-2">
                     {day.items.map((item) => (
                       <div key={item.order_index} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 flex-shrink-0 text-[11px] font-semibold text-primary w-10">
+                        <span className="text-primary mt-0.5 w-10 flex-shrink-0 text-[11px] font-semibold">
                           {item.visit_time}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-[13px] font-semibold text-ink">{item.place_name}</p>
-                          {item.memo && (
-                            <p className="text-[11px] text-ink3">{item.memo}</p>
-                          )}
+                          <p className="text-ink text-[13px] font-semibold">{item.place_name}</p>
+                          {item.memo && <p className="text-ink3 text-[11px]">{item.memo}</p>}
                         </div>
                       </div>
                     ))}
@@ -287,34 +310,37 @@ export default function AIItinerarySheet({ title, destination, startDate, endDat
           {/* 저장 진행 */}
           {saving && (
             <div className="flex flex-col items-center gap-3 py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
-              <p className="text-[14px] font-medium text-ink">{saveStep}</p>
+              <div className="border-primary h-8 w-8 animate-spin rounded-full border-3 border-t-transparent" />
+              <p className="text-ink text-[14px] font-medium">{saveStep}</p>
             </div>
           )}
         </div>
 
         {/* 하단 버튼 */}
         {!saving && (
-          <div className="flex-shrink-0 border-t border-border px-4 py-3 pb-safe">
+          <div className="border-border pb-safe flex-shrink-0 border-t px-4 py-3">
             {!itinerary ? (
               <button
                 onClick={generate}
                 disabled={!canGenerate || streaming}
-                className="w-full rounded-2xl bg-primary py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
+                className="bg-primary w-full rounded-2xl py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
               >
                 {streaming ? '일정 생성 중...' : 'AI 일정 생성하기'}
               </button>
             ) : (
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setItinerary(null); setStreamText('') }}
-                  className="flex-1 rounded-2xl border border-border py-3.5 text-[14px] font-semibold text-ink2"
+                  onClick={() => {
+                    setItinerary(null)
+                    setStreamText('')
+                  }}
+                  className="border-border text-ink2 flex-1 rounded-2xl border py-3.5 text-[14px] font-semibold"
                 >
                   다시 생성
                 </button>
                 <button
                   onClick={applyItinerary}
-                  className="flex-[2] rounded-2xl bg-primary py-3.5 text-[14px] font-bold text-white"
+                  className="bg-primary flex-[2] rounded-2xl py-3.5 text-[14px] font-bold text-white"
                 >
                   이 일정으로 여행 만들기
                 </button>
