@@ -1,4 +1,4 @@
-import { generateObject } from 'ai'
+import { streamObject } from 'ai'
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
@@ -249,12 +249,13 @@ export async function POST(req: NextRequest) {
       .join('\n')
   })()
 
-  const { object } = await generateObject({
+  const stream = streamObject({
     model: cerebras(MODELS.default),
     system,
     prompt,
     schema: RecommendSchema,
   })
+  const object = await stream.object
 
   void supabase.from('recommendation_logs').insert({
     user_id: user.id,

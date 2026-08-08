@@ -168,8 +168,8 @@ export default function HomeAISection() {
               <div className="flex-1 overflow-y-auto">
                 {/* 로딩 */}
                 {loading && (
-                  <div className="flex flex-col items-center justify-center gap-3 py-16">
-                    <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+                  <div className="flex flex-col items-center justify-center gap-3 px-5 py-12">
+                    <div className="border-primary h-7 w-7 animate-spin rounded-full border-2 border-t-transparent" />
                     <p className="text-ink3 text-[13px]">
                       {isKo ? 'AI가 취향을 분석 중이에요...' : 'Analyzing your preferences...'}
                     </p>
@@ -178,15 +178,28 @@ export default function HomeAISection() {
 
                 {/* 에러 */}
                 {error && !loading && (
-                  <div className="flex flex-col items-center justify-center gap-3 py-16">
-                    <p className="text-ink3 text-[14px]">
-                      {isKo
-                        ? '추천을 불러오지 못했어요.'
-                        : 'Failed to load recommendations.'}
-                    </p>
+                  <div className="flex flex-col items-center gap-4 px-5 py-12">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                          stroke="#999"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-ink text-[15px] font-semibold">
+                        {isKo ? '추천을 불러오지 못했어요' : 'Failed to load'}
+                      </p>
+                      <p className="text-ink3 mt-1 text-[13px]">
+                        {isKo ? '잠시 후 다시 시도해주세요' : 'Please try again later'}
+                      </p>
+                    </div>
                     <button
                       onClick={fetchRecommend}
-                      className="bg-primary rounded-2xl px-5 py-2.5 text-[14px] font-semibold text-white"
+                      className="bg-primary rounded-2xl px-6 py-2.5 text-[14px] font-semibold text-white"
                     >
                       {isKo ? '다시 시도' : 'Retry'}
                     </button>
