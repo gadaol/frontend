@@ -17,21 +17,27 @@
     "relaxed": "여유롭게",
     "fast": "빠르게",
     "planned": "계획파",
-    "spontaneous": "즉흥파"
+    "spontaneous": "즉흥파",
+    "photo": "사진 중심"
   },
   "place": {
     "restaurant": "맛집",
-    "nature": "자연",
     "cafe": "카페",
+    "nature": "자연",
     "landmark": "관광지",
     "shopping": "쇼핑",
-    "activity": "액티비티"
+    "activity": "액티비티",
+    "culture": "박물관·전시",
+    "night": "야경·야간",
+    "healing": "온천·스파",
+    "market": "로컬 시장"
   },
   "companion": {
     "solo": "혼자",
     "couple": "둘이서",
     "family": "가족과",
-    "friends": "친구들과"
+    "friends": "친구들과",
+    "pet": "반려동물과"
   },
   "step3Label": "STEP 3 / 3",
   "step3Title": "전화번호 인증",

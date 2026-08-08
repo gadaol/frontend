@@ -7,29 +7,35 @@ import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 
-type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
-type PlaceKey = 'restaurant' | 'nature' | 'cafe' | 'landmark' | 'shopping' | 'activity'
-type CompanionKey = 'solo' | 'couple' | 'family' | 'friends'
+type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous' | 'photo'
+type PlaceKey = 'restaurant' | 'cafe' | 'nature' | 'landmark' | 'shopping' | 'activity' | 'culture' | 'night' | 'healing' | 'market'
+type CompanionKey = 'solo' | 'couple' | 'family' | 'friends' | 'pet'
 
 const PACE_OPTIONS: { key: PaceKey; label: string }[] = [
   { key: 'relaxed', label: '여유롭게' },
   { key: 'fast', label: '빠르게' },
   { key: 'planned', label: '계획파' },
   { key: 'spontaneous', label: '즉흥파' },
+  { key: 'photo', label: '사진 중심' },
 ]
 const PLACE_OPTIONS: { key: PlaceKey; label: string }[] = [
   { key: 'restaurant', label: '맛집' },
-  { key: 'nature', label: '자연' },
   { key: 'cafe', label: '카페' },
+  { key: 'nature', label: '자연' },
   { key: 'landmark', label: '관광지' },
   { key: 'shopping', label: '쇼핑' },
   { key: 'activity', label: '액티비티' },
+  { key: 'culture', label: '박물관·전시' },
+  { key: 'night', label: '야경·야간' },
+  { key: 'healing', label: '온천·스파' },
+  { key: 'market', label: '로컬 시장' },
 ]
 const COMPANION_OPTIONS: { key: CompanionKey; label: string }[] = [
   { key: 'solo', label: '혼자' },
   { key: 'couple', label: '둘이서' },
   { key: 'family', label: '가족과' },
   { key: 'friends', label: '친구들과' },
+  { key: 'pet', label: '반려동물과' },
 ]
 
 interface Props {

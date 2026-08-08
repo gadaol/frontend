@@ -7,13 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import StepIndicator from './StepIndicator'
 
-type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
-type PlaceKey = 'restaurant' | 'nature' | 'cafe' | 'landmark' | 'shopping' | 'activity'
-type CompanionKey = 'solo' | 'couple' | 'family' | 'friends'
+type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous' | 'photo'
+type PlaceKey = 'restaurant' | 'cafe' | 'nature' | 'landmark' | 'shopping' | 'activity' | 'culture' | 'night' | 'healing' | 'market'
+type CompanionKey = 'solo' | 'couple' | 'family' | 'friends' | 'pet'
 
-const PACE_KEYS: PaceKey[] = ['relaxed', 'fast', 'planned', 'spontaneous']
-const PLACE_KEYS: PlaceKey[] = ['restaurant', 'nature', 'cafe', 'landmark', 'shopping', 'activity']
-const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends']
+const PACE_KEYS: PaceKey[] = ['relaxed', 'fast', 'planned', 'spontaneous', 'photo']
+const PLACE_KEYS: PlaceKey[] = ['restaurant', 'cafe', 'nature', 'landmark', 'shopping', 'activity', 'culture', 'night', 'healing', 'market']
+const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends', 'pet']
 
 interface Props {
   nickname: string

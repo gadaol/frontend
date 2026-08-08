@@ -7,14 +7,15 @@ import { createClient } from '@/lib/supabase/server'
 import type { Locale } from '@/lib/ai/characters'
 
 const COMPANION_LABELS: Record<string, string> = {
-  solo: '혼자', couple: '둘이서', family: '가족과', friends: '친구들과',
+  solo: '혼자', couple: '둘이서', family: '가족과', friends: '친구들과', pet: '반려동물과',
 }
 const PACE_LABELS: Record<string, string> = {
-  relaxed: '여유롭게', fast: '빠르게', planned: '계획파', spontaneous: '즉흥파',
+  relaxed: '여유롭게', fast: '빠르게', planned: '계획파', spontaneous: '즉흥파', photo: '사진 중심',
 }
 const PLACE_LABELS: Record<string, string> = {
-  restaurant: '맛집', nature: '자연', cafe: '카페',
-  landmark: '관광지', shopping: '쇼핑', activity: '액티비티',
+  restaurant: '맛집', cafe: '카페', nature: '자연', landmark: '관광지',
+  shopping: '쇼핑', activity: '액티비티', culture: '박물관·전시',
+  night: '야경·야간', healing: '온천·스파', market: '로컬 시장',
 }
 
 type PlaceWithCategory = { name: string; place_categories: { name: string } | null } | null

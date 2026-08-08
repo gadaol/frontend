@@ -17,21 +17,27 @@
     "relaxed": "Relaxed",
     "fast": "Fast-paced",
     "planned": "Planner",
-    "spontaneous": "Spontaneous"
+    "spontaneous": "Spontaneous",
+    "photo": "Photo-focused"
   },
   "place": {
     "restaurant": "Restaurants",
-    "nature": "Nature",
     "cafe": "Cafes",
+    "nature": "Nature",
     "landmark": "Landmarks",
     "shopping": "Shopping",
-    "activity": "Activities"
+    "activity": "Activities",
+    "culture": "Museums & Galleries",
+    "night": "Night Views",
+    "healing": "Wellness & Spa",
+    "market": "Local Markets"
   },
   "companion": {
     "solo": "Solo",
     "couple": "Couple",
     "family": "Family",
-    "friends": "Friends"
+    "friends": "Friends",
+    "pet": "With Pets"
   },
   "step3Label": "STEP 3 / 3",
   "step3Title": "Phone Verification",
