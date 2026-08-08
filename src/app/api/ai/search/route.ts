@@ -1,8 +1,8 @@
-import { streamText, isStepCount } from 'ai'
-import { NextRequest } from 'next/server'
+import { generateObject } from 'ai'
+import { NextRequest, NextResponse } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { getSearchPrompt } from '@/lib/ai/prompts/search'
-import { makePlaceTools } from '@/lib/ai/tools/place-tools'
+import { RecommendSchema } from '@/app/api/ai/recommend/route'
 import { createClient } from '@/lib/supabase/server'
 import type { Locale } from '@/lib/ai/characters'
 
@@ -23,14 +23,17 @@ export async function POST(req: NextRequest) {
 
   const system = [getSearchPrompt(locale), languageInstruction].join('\n\n')
 
-  const result = streamText({
-    model: cerebras(MODELS.default),
-    system,
-    messages: [{ role: 'user', content: query }],
-    tools: { search_places: makePlaceTools(supabase, user.id).search_places },
-    stopWhen: isStepCount(3),
-  })
-
-  const text = await result.text
-  return Response.json({ text })
+  try {
+    const { object } = await generateObject({
+      model: cerebras(MODELS.default),
+      system,
+      prompt: query,
+      schema: RecommendSchema,
+      abortSignal: AbortSignal.timeout(45_000),
+      maxRetries: 0,
+    })
+    return NextResponse.json(object)
+  } catch {
+    return NextResponse.json({ error: 'ai_failed' }, { status: 500 })
+  }
 }

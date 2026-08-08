@@ -126,14 +126,14 @@ export default function PlaceMapSearch({
 
   // AI 자연어 검색
   const [nlQuery, setNlQuery] = useState('')
-  const [nlPhase, setNlPhase] = useState<'idle' | 'streaming' | 'done' | 'error'>('idle')
-  const [nlText, setNlText] = useState('')
+  const [nlPhase, setNlPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [nlResult, setNlResult] = useState<RecommendResult | null>(null)
   const nlAbortRef = useRef<AbortController | null>(null)
 
   const fetchNLSearch = useCallback(async (q: string) => {
     if (!q.trim()) return
-    setNlText('')
-    setNlPhase('streaming')
+    setNlResult(null)
+    setNlPhase('loading')
     nlAbortRef.current?.abort()
     nlAbortRef.current = new AbortController()
     try {
@@ -144,8 +144,8 @@ export default function PlaceMapSearch({
         signal: nlAbortRef.current.signal,
       })
       if (!res.ok) throw new Error('failed')
-      const { text } = await res.json() as { text: string }
-      setNlText(text ?? '')
+      const data = await res.json() as RecommendResult
+      setNlResult(data)
       setNlPhase('done')
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setNlPhase('error')
@@ -155,7 +155,7 @@ export default function PlaceMapSearch({
   function resetNL() {
     nlAbortRef.current?.abort()
     setNlPhase('idle')
-    setNlText('')
+    setNlResult(null)
     setNlQuery('')
   }
 
@@ -520,35 +520,70 @@ export default function PlaceMapSearch({
               {nlPhase !== 'idle' && (
                 <>
                   <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-2">
-                    <p className="text-ink truncate text-[13px] font-semibold">"{nlQuery}"</p>
+                    <p className="text-ink3 truncate text-[11px]">"{nlQuery}"</p>
                     <button onClick={resetNL} className="text-primary flex-shrink-0 text-[12px] font-semibold">
                       {locale === 'ko' ? '다시 검색' : 'Reset'}
                     </button>
                   </div>
-                  <div
-                    className="overflow-y-auto px-4 py-3"
-                    style={{ maxHeight: 260, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 12 }}
-                  >
-                    {nlPhase === 'streaming' && (
-                      <div className="text-ink3 flex items-center gap-2 text-[13px]">
-                        <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-                        {locale === 'ko' ? '찾고 있어요...' : 'Searching...'}
+
+                  {nlPhase === 'loading' && (
+                    <div
+                      className="text-ink3 flex items-center gap-2.5 px-5 py-5 text-[13px]"
+                      style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 20 }}
+                    >
+                      <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                      {locale === 'ko' ? '장소를 찾고 있어요...' : 'Finding places...'}
+                    </div>
+                  )}
+
+                  {nlPhase === 'done' && nlResult && (
+                    <>
+                      {nlResult.intro && (
+                        <p className="text-ink3 px-4 pt-2.5 pb-1 text-[11px] leading-relaxed">{nlResult.intro}</p>
+                      )}
+                      <div
+                        className="overflow-y-auto divide-y divide-[#F0F0F0]"
+                        style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 8 }}
+                      >
+                        {nlResult.places.map((place, idx) => {
+                          const catStyle = getCategoryStyle(place.category as never)
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => setQuery(place.googleSearchQuery)}
+                              className="active:bg-bg2 flex w-full items-center gap-3 px-4 py-2.5 text-left"
+                            >
+                              <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: catStyle.hex }} />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-ink truncate text-[13px] font-semibold">{place.name}</p>
+                                <p className="text-ink3 truncate text-[11px]">{place.reason}</p>
+                              </div>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0 text-[#C4C8CF]">
+                                <path d="M5 2.5l4 4.5L5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                          )
+                        })}
                       </div>
-                    )}
-                    {nlPhase === 'done' && nlText && (
-                      <p className="text-ink2 whitespace-pre-wrap text-[13px] leading-relaxed">{nlText}</p>
-                    )}
-                    {nlPhase === 'done' && !nlText && (
+                    </>
+                  )}
+
+                  {nlPhase === 'done' && !nlResult?.places?.length && (
+                    <p className="text-ink3 px-4 py-4 text-[13px]">
+                      {locale === 'ko' ? '관련 장소를 찾지 못했어요.' : 'No matching places found.'}
+                    </p>
+                  )}
+
+                  {nlPhase === 'error' && (
+                    <div className="flex items-center justify-between px-4 py-4">
                       <p className="text-ink3 text-[13px]">
-                        {locale === 'ko' ? '관련 장소를 찾지 못했어요.' : 'No matching places found.'}
+                        {locale === 'ko' ? '검색하지 못했어요.' : 'Search failed.'}
                       </p>
-                    )}
-                    {nlPhase === 'error' && (
-                      <button onClick={() => fetchNLSearch(nlQuery)} className="text-primary mt-2 text-[13px] font-semibold">
+                      <button onClick={() => fetchNLSearch(nlQuery)} className="text-primary text-[13px] font-semibold">
                         {locale === 'ko' ? '다시 시도' : 'Retry'}
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </>
               )}
 
