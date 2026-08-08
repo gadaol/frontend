@@ -33,6 +33,7 @@ export default function AssistantPanel() {
 
   const [inputText, setInputText] = useState('')
   const [voiceMode, setVoiceMode] = useState(false)
+  const [isSummarizing, setIsSummarizing] = useState(false)
   const [notes, setNotes] = useState<VoiceNote[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -123,7 +124,7 @@ export default function AssistantPanel() {
 
   const voiceState: VoiceState = isSpeaking
     ? 'speaking'
-    : isLoading
+    : isLoading || isSummarizing
       ? 'thinking'
       : isListening
         ? 'listening'
@@ -156,6 +157,7 @@ export default function AssistantPanel() {
      * 요약이 돌아오면 그 한 문장만 말하고, 자세한 내용은 화면에 남긴다.
      * 요약이 실패하면 말이 아예 없어지는 게 더 나쁘니 전문으로 되돌린다.
      */
+    setIsSummarizing(true)
     void fetch('/api/ai/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -169,7 +171,10 @@ export default function AssistantPanel() {
         return note.spoken
       })
       .catch(() => null)
-      .then((spoken) => speak(spoken || assistantText))
+      .then((spoken) => {
+        setIsSummarizing(false)
+        return speak(spoken || assistantText)
+      })
       .then(() => {
         if (live.current.voice) startListening()
       })
