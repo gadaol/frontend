@@ -78,7 +78,7 @@ export default function PlaceMapSearch({
   const mapRef = useRef<google.maps.Map | null>(null)
   const markerRefs = useRef<Map<string, google.maps.Marker>>(new Map())
 
-  // AI 맞춤 추천
+  // AI 맞춤 추천 (카테고리 기반)
   const [selectedCats, setSelectedCats] = useState<string[]>([])
   const [aiPhase, setAiPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [aiResult, setAiResult] = useState<RecommendResult | null>(null)
@@ -124,9 +124,50 @@ export default function PlaceMapSearch({
     setAiResult(null)
   }
 
+  // AI 자연어 검색
+  const [nlQuery, setNlQuery] = useState('')
+  const [nlPhase, setNlPhase] = useState<'idle' | 'streaming' | 'done' | 'error'>('idle')
+  const [nlText, setNlText] = useState('')
+  const nlAbortRef = useRef<AbortController | null>(null)
+
+  const fetchNLSearch = useCallback(async (q: string) => {
+    if (!q.trim()) return
+    setNlText('')
+    setNlPhase('streaming')
+    nlAbortRef.current?.abort()
+    nlAbortRef.current = new AbortController()
+    try {
+      const res = await fetch('/api/ai/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, locale }),
+        signal: nlAbortRef.current.signal,
+      })
+      if (!res.ok || !res.body) throw new Error('failed')
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        setNlText((prev) => prev + decoder.decode(value, { stream: true }))
+      }
+      setNlPhase('done')
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') setNlPhase('error')
+    }
+  }, [locale])
+
+  function resetNL() {
+    nlAbortRef.current?.abort()
+    setNlPhase('idle')
+    setNlText('')
+    setNlQuery('')
+  }
+
   useEffect(() => {
     return () => {
       aiAbortRef.current?.abort()
+      nlAbortRef.current?.abort()
     }
   }, [])
 
@@ -480,9 +521,66 @@ export default function PlaceMapSearch({
               className="overflow-hidden transition-all duration-300 ease-in-out"
               style={{ maxHeight: showRecommendations ? 600 : 0 }}
             >
-              {/* idle: 카테고리 복수 선택 + AI 추천 버튼 */}
-              {aiPhase === 'idle' && (
+              {/* 자연어 검색 결과 */}
+              {nlPhase !== 'idle' && (
                 <>
+                  <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-2">
+                    <p className="text-ink truncate text-[13px] font-semibold">"{nlQuery}"</p>
+                    <button onClick={resetNL} className="text-primary flex-shrink-0 text-[12px] font-semibold">
+                      {locale === 'ko' ? '다시 검색' : 'Reset'}
+                    </button>
+                  </div>
+                  <div
+                    className="overflow-y-auto px-4 py-3"
+                    style={{ maxHeight: 260, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 12 }}
+                  >
+                    {nlText ? (
+                      <p className="text-ink2 whitespace-pre-wrap text-[13px] leading-relaxed">{nlText}</p>
+                    ) : (
+                      <div className="text-ink3 flex items-center gap-2 text-[13px]">
+                        <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                        {locale === 'ko' ? '찾고 있어요...' : 'Searching...'}
+                      </div>
+                    )}
+                    {nlPhase === 'error' && (
+                      <button onClick={() => fetchNLSearch(nlQuery)} className="text-primary mt-2 text-[13px] font-semibold">
+                        {locale === 'ko' ? '다시 시도' : 'Retry'}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* idle: 자연어 검색 입력 + 카테고리 복수 선택 + AI 추천 버튼 */}
+              {aiPhase === 'idle' && nlPhase === 'idle' && (
+                <>
+                  {/* 자연어 검색 입력 */}
+                  <div className="border-border border-b px-4 py-3">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (nlQuery.trim()) fetchNLSearch(nlQuery)
+                      }}
+                      className="bg-bg2 flex items-center gap-2 rounded-xl px-3 py-2"
+                    >
+                      <span className="text-[15px]">✨</span>
+                      <input
+                        type="text"
+                        value={nlQuery}
+                        onChange={(e) => setNlQuery(e.target.value)}
+                        placeholder={locale === 'ko' ? '어떤 곳을 찾고 계세요? (예: 뷰 좋은 카페)' : 'Describe a place (e.g. cozy café with a view)'}
+                        className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[13px] outline-none"
+                      />
+                      {nlQuery.trim() && (
+                        <button type="submit" className="text-primary flex-shrink-0">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      )}
+                    </form>
+                  </div>
+
                   {/* 카테고리 칩 (복수 선택) */}
                   <div className="border-border relative border-b">
                     <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
