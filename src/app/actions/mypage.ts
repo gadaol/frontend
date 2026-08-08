@@ -83,6 +83,31 @@ export async function logout() {
   redirect(`/${locale}`)
 }
 
+export async function updateTravelStyle({
+  travel_companion,
+  travel_pace,
+  travel_places,
+}: {
+  travel_companion: string[]
+  travel_pace: string[]
+  travel_places: string[]
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ travel_companion, travel_pace, travel_places })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
 export async function deleteAccount() {
   const supabase = await createClient()
   const {

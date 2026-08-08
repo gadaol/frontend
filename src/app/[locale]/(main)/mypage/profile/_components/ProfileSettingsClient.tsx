@@ -2,10 +2,35 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateName, uploadAvatar, deleteAvatar } from '@/app/actions/mypage'
+import { updateName, uploadAvatar, deleteAvatar, updateTravelStyle } from '@/app/actions/mypage'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
+
+type PaceKey = 'relaxed' | 'fast' | 'planned' | 'spontaneous'
+type PlaceKey = 'restaurant' | 'nature' | 'cafe' | 'landmark' | 'shopping' | 'activity'
+type CompanionKey = 'solo' | 'couple' | 'family' | 'friends'
+
+const PACE_OPTIONS: { key: PaceKey; label: string }[] = [
+  { key: 'relaxed', label: '여유롭게' },
+  { key: 'fast', label: '빠르게' },
+  { key: 'planned', label: '계획파' },
+  { key: 'spontaneous', label: '즉흥파' },
+]
+const PLACE_OPTIONS: { key: PlaceKey; label: string }[] = [
+  { key: 'restaurant', label: '맛집' },
+  { key: 'nature', label: '자연' },
+  { key: 'cafe', label: '카페' },
+  { key: 'landmark', label: '관광지' },
+  { key: 'shopping', label: '쇼핑' },
+  { key: 'activity', label: '액티비티' },
+]
+const COMPANION_OPTIONS: { key: CompanionKey; label: string }[] = [
+  { key: 'solo', label: '혼자' },
+  { key: 'couple', label: '둘이서' },
+  { key: 'family', label: '가족과' },
+  { key: 'friends', label: '친구들과' },
+]
 
 interface Props {
   displayName: string
@@ -13,6 +38,9 @@ interface Props {
   avatarUrl: string | null
   phone: string | null
   provider: string
+  travelCompanion: string[]
+  travelPace: string[]
+  travelPlaces: string[]
 }
 
 export default function ProfileSettingsClient({
@@ -21,14 +49,28 @@ export default function ProfileSettingsClient({
   avatarUrl,
   phone,
   provider,
+  travelCompanion,
+  travelPace,
+  travelPlaces,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [isStylePending, startStyleTransition] = useTransition()
 
   const [nameValue, setNameValue] = useState(displayName)
   const [nameError, setNameError] = useState('')
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
   const [avatarUploading, setAvatarUploading] = useState(false)
+
+  const [companion, setCompanion] = useState<string[]>(travelCompanion)
+  const [pace, setPace] = useState<string[]>(travelPace)
+  const [places, setPlaces] = useState<string[]>(travelPlaces)
+  const [styleSaved, setStyleSaved] = useState(false)
+
+  function toggle(list: string[], item: string, setter: (v: string[]) => void) {
+    setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
+    setStyleSaved(false)
+  }
 
   function handleSaveName() {
     if (!nameValue.trim()) {
@@ -43,6 +85,17 @@ export default function ProfileSettingsClient({
         setNameError('')
         router.back()
       }
+    })
+  }
+
+  function handleSaveStyle() {
+    startStyleTransition(async () => {
+      await updateTravelStyle({
+        travel_companion: companion,
+        travel_pace: pace,
+        travel_places: places,
+      })
+      setStyleSaved(true)
     })
   }
 
@@ -164,6 +217,79 @@ export default function ProfileSettingsClient({
         <Button onClick={handleSaveName} disabled={isPending} fullWidth>
           {isPending ? '저장 중...' : '저장'}
         </Button>
+
+        {/* 여행 취향 */}
+        <div className="mt-8 mb-2">
+          <p className="text-ink text-[15px] font-semibold">여행 취향</p>
+          <p className="text-ink3 mt-0.5 text-[12px]">AI 추천 정확도에 영향을 줘요</p>
+        </div>
+
+        <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white px-4 py-4 space-y-5">
+          <ChipSection
+            label="여행 페이스"
+            options={PACE_OPTIONS}
+            selected={pace}
+            onToggle={(v) => toggle(pace, v, setPace)}
+          />
+          <ChipSection
+            label="선호 장소"
+            options={PLACE_OPTIONS}
+            selected={places}
+            onToggle={(v) => toggle(places, v, setPlaces)}
+          />
+          <ChipSection
+            label="주로 함께하는 여행"
+            options={COMPANION_OPTIONS}
+            selected={companion}
+            onToggle={(v) => toggle(companion, v, setCompanion)}
+          />
+        </div>
+
+        <Button
+          onClick={handleSaveStyle}
+          disabled={isStylePending || styleSaved}
+          fullWidth
+          variant={styleSaved ? 'secondary' : 'primary'}
+        >
+          {isStylePending ? '저장 중...' : styleSaved ? '취향 저장됨 ✓' : '취향 저장'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ChipSection({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string
+  options: { key: string; label: string }[]
+  selected: string[]
+  onToggle: (v: string) => void
+}) {
+  return (
+    <div>
+      <div className="text-ink3 mb-2 text-[12px] font-semibold">{label}</div>
+      <div className="flex flex-wrap gap-2">
+        {options.map(({ key, label: optLabel }) => {
+          const active = selected.includes(key)
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onToggle(key)}
+              className={`h-9 rounded-full border-[1.5px] px-[14px] text-[13px] font-medium transition-colors ${
+                active
+                  ? 'border-primary bg-primary-light text-primary'
+                  : 'border-border text-ink2 bg-white'
+              }`}
+            >
+              {optLabel}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
