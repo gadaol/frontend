@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
@@ -8,9 +8,18 @@ import type { Tables } from '@/types/supabase'
 
 const PAGE_SIZE = 20
 
-const STATUS_LABEL: Record<string, { label: string; variant: 'orange' | 'green' }> = {
-  pending: { label: '답변 대기', variant: 'orange' },
-  answered: { label: '답변 완료', variant: 'green' },
+const STATUS_VARIANT: Record<string, 'orange' | 'green'> = {
+  pending: 'orange',
+  answered: 'green',
+}
+
+/** DB에 저장된 한국어 카테고리 → 번역 키 */
+export const INQUIRY_CAT_KEY: Record<string, string> = {
+  '서비스 이용': 'service',
+  '결제/구독': 'billing',
+  '오류/버그': 'bug',
+  계정: 'account',
+  기타: 'etc',
 }
 
 export default async function InquiriesPage({
@@ -20,6 +29,7 @@ export default async function InquiriesPage({
 }) {
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('inquiries')
   const { page: pageParam, q } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1', 10))
   const query = q?.trim() ?? ''
@@ -55,7 +65,7 @@ export default async function InquiriesPage({
   return (
     <div className="bg-bg2 flex min-h-dvh flex-col">
       <AppHeader
-        title="문의하기"
+        title={t('title')}
         onBack="router"
         border
         right={
@@ -63,7 +73,7 @@ export default async function InquiriesPage({
             href={`/${locale}/inquiries/new`}
             className="text-primary text-[14px] font-semibold"
           >
-            문의 작성
+            {t('newTitle')}
           </Link>
         }
       />
@@ -85,7 +95,7 @@ export default async function InquiriesPage({
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="문의 제목 검색"
+              placeholder={t('searchPlaceholder')}
               className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[13px] outline-none"
             />
           </div>
@@ -97,39 +107,43 @@ export default async function InquiriesPage({
         {!inquiries?.length ? (
           <div className="flex flex-col items-center justify-center gap-1.5 py-20">
             <p className="text-ink text-[14px] font-semibold">
-              {query ? `'${query}' 검색 결과가 없어요` : '문의 내역이 없어요'}
+              {query ? t('noResults', { query }) : t('empty')}
             </p>
             {query ? (
               <Link href={`/${locale}/inquiries`} className="text-primary text-[13px]">
-                전체 보기
+                {t('viewAll')}
               </Link>
             ) : (
               <Link
                 href={`/${locale}/inquiries/new`}
                 className="bg-primary mt-2 rounded-2xl px-5 py-2.5 text-[13px] font-semibold text-white"
               >
-                문의 작성하기
+                {t('writeNew')}
               </Link>
             )}
           </div>
         ) : (
           <ul className="divide-border divide-y">
             {inquiries.map((inq) => {
-              const st = STATUS_LABEL[inq.status] ?? STATUS_LABEL.pending
+              const answered = inq.status === 'answered'
               return (
                 <li key={inq.id}>
                   <Link
                     href={`/${locale}/inquiries/${inq.id}`}
                     className="flex items-center gap-2.5 px-4 py-3 active:bg-gray-50"
                   >
-                    <Badge variant="gray">{inq.category}</Badge>
+                    <Badge variant="gray">
+                      {t(`cat.${INQUIRY_CAT_KEY[inq.category] ?? 'etc'}` as never)}
+                    </Badge>
                     <span className="text-ink min-w-0 flex-1 truncate text-[13px] font-medium">
                       {inq.title}
                       {!inq.is_public && (
                         <span className="text-ink3 ml-1 text-[11px] font-normal">🔒</span>
                       )}
                     </span>
-                    <Badge variant={st.variant}>{st.label}</Badge>
+                    <Badge variant={STATUS_VARIANT[inq.status] ?? 'orange'}>
+                      {answered ? t('statusAnswered') : t('statusPending')}
+                    </Badge>
                     <span className="text-ink3 flex-shrink-0 text-[11px]">
                       {new Date(inq.created_at).toLocaleDateString('ko-KR', {
                         year: '2-digit',
@@ -209,7 +223,7 @@ export default async function InquiriesPage({
             </PagingLink>
           </div>
           <p className="text-ink3 mt-1 text-center text-[11px]">
-            {page} / {totalPages} 페이지 · 총 {count}건
+            {t('pageInfo', { page, total: totalPages, count: count ?? 0 })}
           </p>
         </div>
       )}

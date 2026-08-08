@@ -117,8 +117,8 @@ export default function PhoneStep({ onNext }: Props) {
             </svg>
           </div>
           <div>
-            <p className="text-primary text-[13px] font-bold">인증하면 1개월 Pro 무료체험</p>
-            <p className="text-[12px] text-[#5A7FBF]">무제한 여행 · AI 추천 · 광고 없음</p>
+            <p className="text-primary text-[13px] font-bold">{t('proPromo')}</p>
+            <p className="text-[12px] text-[#5A7FBF]">{t('proPromoDesc')}</p>
           </div>
         </div>
 
@@ -150,7 +150,7 @@ export default function PhoneStep({ onNext }: Props) {
                   {formatTime(timeLeft)}
                 </span>
               ) : (
-                <span className="text-error text-[13px]">만료됨</span>
+                <span className="text-error text-[13px]">{t('expired')}</span>
               )}
             </div>
             <div
@@ -165,11 +165,7 @@ export default function PhoneStep({ onNext }: Props) {
                 className="text-ink placeholder:text-ink3 disabled:text-ink3 flex-1 bg-transparent text-[15px] tracking-[0.15em] outline-none placeholder:tracking-normal"
               />
             </div>
-            {timeLeft === 0 && (
-              <p className="text-error mt-1.5 text-[12px]">
-                인증번호가 만료됐어요. 다시 받아주세요.
-              </p>
-            )}
+            {timeLeft === 0 && <p className="text-error mt-1.5 text-[12px]">{t('otpExpired')}</p>}
           </div>
         )}
 
@@ -177,8 +173,8 @@ export default function PhoneStep({ onNext }: Props) {
           <div className="bg-primary-light mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5">
             <span className="text-[20px]">🎉</span>
             <div>
-              <p className="text-primary text-[13px] font-bold">1개월 Pro 무료체험 시작!</p>
-              <p className="text-[12px] text-[#5A7FBF]">무제한 여행 · AI 추천 · 광고 없음</p>
+              <p className="text-primary text-[13px] font-bold">{t('proStarted')}</p>
+              <p className="text-[12px] text-[#5A7FBF]">{t('proPromoDesc')}</p>
             </div>
           </div>
         )}
@@ -187,10 +183,8 @@ export default function PhoneStep({ onNext }: Props) {
           <div className="bg-surface mb-4 flex items-start gap-3 rounded-2xl px-4 py-3.5">
             <span className="text-[18px]">ℹ️</span>
             <div>
-              <p className="text-ink text-[13px] font-bold">이 번호로 이미 무료체험을 사용했어요</p>
-              <p className="text-ink3 text-[12px] leading-relaxed">
-                Pro 기능은 구독 플랜으로 계속 이용할 수 있어요.
-              </p>
+              <p className="text-ink text-[13px] font-bold">{t('trialUsed')}</p>
+              <p className="text-ink3 text-[12px] leading-relaxed">{t('trialUsedDesc')}</p>
             </div>
           </div>
         )}
@@ -205,7 +199,7 @@ export default function PhoneStep({ onNext }: Props) {
 
         {trialResult === 'already_used' && (
           <Button onClick={onNext} fullWidth>
-            계속하기
+            {t('continue')}
           </Button>
         )}
       </div>

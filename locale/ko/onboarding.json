@@ -53,5 +53,13 @@
   "resendOtp": "재전송",
   "start": "시작하기 🎉",
   "finish": "시작하기 🎉",
-  "saving": "저장 중..."
+  "saving": "저장 중...",
+  "proPromo": "인증하면 1개월 Pro 무료체험",
+  "proPromoDesc": "무제한 여행 · AI 추천 · 광고 없음",
+  "expired": "만료됨",
+  "otpExpired": "인증번호가 만료됐어요. 다시 받아주세요.",
+  "proStarted": "1개월 Pro 무료체험 시작!",
+  "trialUsed": "이 번호로 이미 무료체험을 사용했어요",
+  "trialUsedDesc": "Pro 기능은 구독 플랜으로 계속 이용할 수 있어요.",
+  "continue": "계속하기"
 }

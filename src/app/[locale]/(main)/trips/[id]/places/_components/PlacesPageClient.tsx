@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
@@ -32,6 +33,7 @@ export default function PlacesPageClient({
   initialAvatar,
   initialName,
 }: Props) {
+  const t = useTranslations('trips')
   const router = useRouter()
   const [selected, setSelected] = useState<Map<string, GooglePlace>>(new Map())
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,7 +85,7 @@ export default function PlacesPageClient({
     router.back()
   }
 
-  const headerTitle = isCandidate ? '후보 장소 추가' : `Day ${dayNumber} 장소 추가`
+  const headerTitle = isCandidate ? t('addCandidate') : t('addToDay', { n: dayNumber })
   const selectedCount = selected.size
 
   return (
@@ -151,7 +153,11 @@ export default function PlacesPageClient({
                   cursor: 'pointer',
                 }}
               >
-                {isSelected ? '✓ 선택됨' : isCandidate ? '후보에 추가' : '일정에 추가'}
+                {isSelected
+                  ? t('selected')
+                  : isCandidate
+                    ? t('addToCandidates')
+                    : t('addToItinerary')}
               </button>
             )
           }}
@@ -167,12 +173,14 @@ export default function PlacesPageClient({
             {isSubmitting ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                <span>추가 중...</span>
+                <span>{t('adding')}</span>
               </>
             ) : (
               <span>
-                {isCandidate ? '후보' : `Day ${dayNumber}`}에{' '}
-                <span className="rounded-full bg-white/20 px-2">{selectedCount}개</span> 추가
+                {t('addNCount', {
+                  target: isCandidate ? t('candidate') : `Day ${dayNumber}`,
+                  count: selectedCount,
+                })}
               </span>
             )}
           </Button>

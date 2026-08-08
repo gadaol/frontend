@@ -29,5 +29,12 @@
     "nature": "Nature",
     "activity": "Activity",
     "etc": "Other"
-  }
+  },
+  "aiRecommendTitle": "AI picks",
+  "aiSearching": "Finding places that match your taste...",
+  "aiFailed": "Failed to load recommendations.",
+  "aiRefresh": "Refresh",
+  "aiCtaTitle": "Get AI Recommendations",
+  "aiCtaDesc": "Places matched to your taste",
+  "me": "Me"
 }

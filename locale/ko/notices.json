@@ -1,0 +1,15 @@
+{
+  "title": "공지사항",
+  "searchPlaceholder": "공지 제목 검색",
+  "noResults": "'{query}' 검색 결과가 없어요",
+  "empty": "등록된 공지사항이 없어요",
+  "viewAll": "전체 보기",
+  "pinned": "고정",
+  "pageInfo": "{page} / {total} 페이지 · 총 {count}건",
+  "cat": {
+    "notice": "공지",
+    "update": "업데이트",
+    "maintenance": "점검",
+    "event": "이벤트"
+  }
+}

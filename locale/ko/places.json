@@ -29,5 +29,12 @@
     "nature": "자연",
     "activity": "액티비티",
     "etc": "기타"
-  }
+  },
+  "aiRecommendTitle": "AI 추천 장소",
+  "aiSearching": "AI가 취향에 맞는 장소를 찾고 있어요...",
+  "aiFailed": "추천을 불러오지 못했어요.",
+  "aiRefresh": "다시 추천 받기",
+  "aiCtaTitle": "AI 맞춤 장소 추천",
+  "aiCtaDesc": "내 취향에 딱 맞는 장소를 찾아줄게요",
+  "me": "나"
 }

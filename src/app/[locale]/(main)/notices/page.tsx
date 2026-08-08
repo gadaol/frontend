@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
@@ -15,6 +15,14 @@ const CATEGORY_VARIANT: Record<string, NonNullable<BadgeProps['variant']>> = {
   이벤트: 'purple',
 }
 
+/** DB에 저장된 한국어 카테고리 → 번역 키 */
+const CATEGORY_KEY: Record<string, string> = {
+  공지: 'notice',
+  업데이트: 'update',
+  점검: 'maintenance',
+  이벤트: 'event',
+}
+
 export default async function NoticesPage({
   searchParams,
 }: {
@@ -22,6 +30,7 @@ export default async function NoticesPage({
 }) {
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('notices')
   const { page: pageParam, q } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1', 10))
   const query = q?.trim() ?? ''
@@ -51,7 +60,7 @@ export default async function NoticesPage({
 
   return (
     <div className="bg-bg2 flex min-h-dvh flex-col">
-      <AppHeader title="공지사항" onBack="router" border />
+      <AppHeader title={t('title')} onBack="router" border />
 
       {/* 검색 */}
       <div className="bg-bg border-border border-b px-4 py-2.5">
@@ -70,7 +79,7 @@ export default async function NoticesPage({
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="공지 제목 검색"
+              placeholder={t('searchPlaceholder')}
               className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[13px] outline-none"
             />
           </div>
@@ -82,11 +91,11 @@ export default async function NoticesPage({
         {!notices?.length ? (
           <div className="flex flex-col items-center justify-center gap-1.5 py-20">
             <p className="text-ink text-[14px] font-semibold">
-              {query ? `'${query}' 검색 결과가 없어요` : '등록된 공지사항이 없어요'}
+              {query ? t('noResults', { query }) : t('empty')}
             </p>
             {query && (
               <Link href={`/${locale}/notices`} className="text-primary text-[13px]">
-                전체 보기
+                {t('viewAll')}
               </Link>
             )}
           </div>
@@ -100,8 +109,10 @@ export default async function NoticesPage({
                     href={`/${locale}/notices/${notice.id}`}
                     className="flex items-center gap-2.5 px-4 py-3 active:bg-gray-50"
                   >
-                    {notice.is_pinned && <Badge variant="red">고정</Badge>}
-                    <Badge variant={variant}>{notice.category}</Badge>
+                    {notice.is_pinned && <Badge variant="red">{t('pinned')}</Badge>}
+                    <Badge variant={variant}>
+                      {t(`cat.${CATEGORY_KEY[notice.category] ?? 'notice'}` as never)}
+                    </Badge>
                     <span className="text-ink min-w-0 flex-1 truncate text-[13px] font-medium">
                       {notice.title}
                     </span>
@@ -184,7 +195,7 @@ export default async function NoticesPage({
             </PagingLink>
           </div>
           <p className="text-ink3 mt-1 text-center text-[11px]">
-            {page} / {totalPages} 페이지 · 총 {count}건
+            {t('pageInfo', { page, total: totalPages, count: count ?? 0 })}
           </p>
         </div>
       )}

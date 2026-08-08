@@ -53,5 +53,13 @@
   "resendOtp": "Resend",
   "start": "Let's go 🎉",
   "finish": "Let's go 🎉",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "proPromo": "Verify and get Pro free for a month",
+  "proPromoDesc": "Unlimited trips · AI picks · No ads",
+  "expired": "Expired",
+  "otpExpired": "That code expired. Please request a new one.",
+  "proStarted": "Your 1-month Pro trial has started!",
+  "trialUsed": "This number already used the free trial",
+  "trialUsedDesc": "You can keep Pro features with a subscription.",
+  "continue": "Continue"
 }

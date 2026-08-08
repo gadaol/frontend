@@ -4,6 +4,11 @@ import { useTranslations } from 'next-intl'
 
 import { useState, useEffect, useRef } from 'react'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import {
+  EXPENSE_CATEGORIES,
+  expenseCategoryKey,
+  type ExpenseCategory,
+} from '@/utils/expenseCategory'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
 import type { TripExpense } from '../page'
 
@@ -19,9 +24,6 @@ type ItineraryItemDB = {
     place_categories: { name: string } | null
   } | null
 }
-
-const EXPENSE_CATEGORIES = ['식비', '카페', '숙박', '교통', '입장료', '쇼핑', '기타'] as const
-type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 
 type PendingExpense = { tempId: string; amount: number; category: string; note: string | null }
 
@@ -42,6 +44,7 @@ export default function ItemDetailSheet({
   onAddExpense,
   onRemoveExpense,
 }: Props) {
+  const t = useTranslations('trips')
   const tp = useTranslations('places')
   const [memo, setMemo] = useState(item.memo ?? '')
   const [showExpenseForm, setShowExpenseForm] = useState(false)
@@ -147,7 +150,7 @@ export default function ItemDetailSheet({
             />
             <div className="min-w-0 flex-1">
               <p className="text-ink truncate text-[16px] font-bold">
-                {item.places?.name ?? '장소'}
+                {item.places?.name ?? t('placeFallback')}
               </p>
               <p className="text-[11px] font-semibold" style={{ color: category.hex }}>
                 {`#${tp(category.i18nKey as never)}`}
@@ -185,7 +188,7 @@ export default function ItemDetailSheet({
                 />
               </svg>
             </div>
-            <p className="text-ink flex-1 text-[16px] font-bold">메모</p>
+            <p className="text-ink flex-1 text-[16px] font-bold">{t('memoTitle')}</p>
             <button onClick={onClose} className="text-ink3 p-2">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
@@ -204,14 +207,16 @@ export default function ItemDetailSheet({
 
         {/* 메모 섹션 */}
         <div className="px-4 pt-4">
-          <p className="text-ink3 mb-2 text-[12px] font-semibold tracking-wide uppercase">메모</p>
+          <p className="text-ink3 mb-2 text-[12px] font-semibold tracking-wide uppercase">
+            {t('memoTitle')}
+          </p>
           <textarea
             className="border-border text-ink focus:border-primary w-full resize-none rounded-xl border bg-gray-50 px-3 py-2.5 text-[14px] transition-colors outline-none"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             onBlur={handleMemoBlur}
             rows={3}
-            placeholder={isPlace ? '이 장소에 대한 메모를 남겨보세요' : '메모를 입력하세요'}
+            placeholder={isPlace ? t('memoPlaceholderPlace') : t('memoPlaceholder')}
           />
         </div>
 
@@ -219,10 +224,12 @@ export default function ItemDetailSheet({
         <div className="mt-4 px-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <p className="text-ink3 text-[12px] font-semibold tracking-wide uppercase">경비</p>
+              <p className="text-ink3 text-[12px] font-semibold tracking-wide uppercase">
+                {t('tabExpense')}
+              </p>
               {totalAmount > 0 && (
                 <span className="text-ink2 text-[12px] font-bold">
-                  {totalAmount.toLocaleString()}원
+                  {t('amountWithUnit', { amount: totalAmount.toLocaleString() })}
                 </span>
               )}
             </div>
@@ -230,7 +237,7 @@ export default function ItemDetailSheet({
               onClick={() => setShowExpenseForm((v) => !v)}
               className={`text-[13px] font-semibold transition-colors ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
             >
-              {showExpenseForm ? '− 숨기기' : '+ 추가'}
+              {showExpenseForm ? t('hide') : t('add')}
             </button>
           </div>
 
@@ -255,13 +262,13 @@ export default function ItemDetailSheet({
                       )}
                     </div>
                     <span className="text-ink flex-shrink-0 text-[13px] font-bold">
-                      {expense.amount.toLocaleString()}원
+                      {t('amountWithUnit', { amount: expense.amount.toLocaleString() })}
                     </span>
                     {!isPending && (
                       <button
                         onClick={() => onRemoveExpense(expense.id)}
                         className="text-ink3 flex-shrink-0 p-1 hover:text-red-500"
-                        aria-label="경비 삭제"
+                        aria-label={t('deleteExpense')}
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                           <path
@@ -294,7 +301,7 @@ export default function ItemDetailSheet({
                         : 'border-border text-ink2 border bg-white'
                     }`}
                   >
-                    {cat}
+                    {t(expenseCategoryKey(cat) as never)}
                   </button>
                 ))}
               </div>
@@ -306,11 +313,11 @@ export default function ItemDetailSheet({
                   inputMode="numeric"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(e.target.value)}
-                  placeholder="금액"
+                  placeholder={t('amount')}
                   className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
                   autoFocus
                 />
-                <span className="text-ink3 flex-shrink-0 text-[13px]">원</span>
+                <span className="text-ink3 flex-shrink-0 text-[13px]">{t('currencyUnit')}</span>
               </div>
 
               {/* 메모 입력 */}
@@ -319,7 +326,7 @@ export default function ItemDetailSheet({
                   type="text"
                   value={expenseNote}
                   onChange={(e) => setExpenseNote(e.target.value)}
-                  placeholder="메모 (선택)"
+                  placeholder={t('memoOptional')}
                   className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
                 />
               </div>
@@ -329,7 +336,7 @@ export default function ItemDetailSheet({
                 disabled={addingExpense || !expenseAmount}
                 className="bg-primary w-full rounded-xl py-2.5 text-[14px] font-semibold text-white disabled:opacity-50"
               >
-                경비 추가
+                {t('addExpense')}
               </button>
             </div>
           )}

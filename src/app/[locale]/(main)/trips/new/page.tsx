@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import { createTrip } from '@/app/actions/trip'
@@ -14,6 +15,7 @@ const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
 
 export default function NewTripPage() {
+  const t = useTranslations('trips')
   const [isPending, startTransition] = useTransition()
   const [selectedCover, setSelectedCover] = useState(COVER_PRESETS[0])
   const [startDate, setStartDate] = useState('')
@@ -39,7 +41,7 @@ export default function NewTripPage() {
     }
     const { url, error } = await uploadCoverImage(file, user.id)
     if (url) setSelectedCover(url)
-    else setErrorMsg(error ?? '커버 이미지 업로드에 실패했어요')
+    else setErrorMsg(error ?? t('coverUploadFailed'))
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -57,7 +59,7 @@ export default function NewTripPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-white">
-      <AppHeader title="새 여행" onBack="router" />
+      <AppHeader title={t('newTitle')} onBack="router" />
 
       {/* 커버 미리보기 */}
       <div className="relative h-32 flex-shrink-0 overflow-hidden transition-all duration-500">
@@ -65,7 +67,7 @@ export default function NewTripPage() {
           <div className="h-full w-full" style={{ background: selectedCover }} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={selectedCover} alt="커버" className="h-full w-full object-cover" />
+          <img src={selectedCover} alt={t('cover')} className="h-full w-full object-cover" />
         )}
       </div>
 
@@ -76,7 +78,7 @@ export default function NewTripPage() {
       >
         {/* 커버 선택 */}
         <div>
-          <p className="text-ink mb-3 text-[13px] font-semibold">커버 선택</p>
+          <p className="text-ink mb-3 text-[13px] font-semibold">{t('coverSelect')}</p>
           <div className="grid grid-cols-5 gap-2">
             {/* 이미지 업로드 버튼 */}
             <button
@@ -127,14 +129,14 @@ export default function NewTripPage() {
         {/* 여행 제목 */}
         <div>
           <label className="text-ink mb-2 block text-[13px] font-semibold">
-            여행 제목 <span className="text-red-500">*</span>
+            {t('tripName')} <span className="text-red-500">*</span>
           </label>
           <input
             name="title"
             type="text"
             required
             maxLength={60}
-            placeholder="예: 제주도 힐링 여행"
+            placeholder={t('titlePlaceholderNew')}
             className={INPUT_CLASS}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -144,7 +146,7 @@ export default function NewTripPage() {
         {/* 목적지 */}
         <div>
           <label className="text-ink mb-2 block text-[13px] font-semibold">
-            목적지 <span className="text-ink3 font-normal">(선택)</span>
+            {t('destination')} <span className="text-ink3 font-normal">{t('optional')}</span>
           </label>
           <DestinationInput name="destination" value={destination} onChange={setDestination} />
         </div>
@@ -152,7 +154,7 @@ export default function NewTripPage() {
         {/* 날짜 */}
         <div>
           <label className="text-ink mb-2 block text-[13px] font-semibold">
-            여행 날짜 <span className="text-ink3 font-normal">(선택)</span>
+            {t('period')} <span className="text-ink3 font-normal">{t('optional')}</span>
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -175,7 +177,7 @@ export default function NewTripPage() {
               className="border-border text-ink focus:border-primary bg-bg2 flex-1 rounded-2xl border px-4 py-3.5 text-[15px] transition-colors outline-none focus:bg-white"
             />
           </div>
-          <p className="text-ink3 mt-1.5 text-[12px]">날짜는 나중에 설정할 수 있어요</p>
+          <p className="text-ink3 mt-1.5 text-[12px]">{t('dateLaterHint')}</p>
         </div>
 
         {/* AI 일정 자동 생성 버튼 */}
@@ -196,12 +198,10 @@ export default function NewTripPage() {
               <span className={`text-[22px] ${ready ? '' : 'opacity-40'}`}>✨</span>
               <div className="min-w-0 flex-1">
                 <p className={`text-[14px] font-bold ${ready ? 'text-primary' : 'text-ink3'}`}>
-                  AI 일정 자동 생성
+                  {t('aiCardTitle')}
                 </p>
                 <p className="text-ink3 text-[12px]">
-                  {ready
-                    ? `AI가 ${destination} 여행 일정을 자동으로 짜드려요`
-                    : '목적지와 날짜를 정하면 사용할 수 있어요'}
+                  {ready ? t('aiCardReady', { destination }) : t('aiCardNotReady')}
                 </p>
               </div>
               {ready && (
@@ -242,7 +242,7 @@ export default function NewTripPage() {
       {/* 하단 고정 버튼 */}
       <div className="border-border fixed right-0 bottom-0 left-0 border-t bg-white px-4 pt-3 pb-8">
         <Button form="new-trip-form" type="submit" disabled={isPending} fullWidth>
-          {isPending ? '만드는 중...' : '여행 만들기'}
+          {isPending ? t('creating') : t('create')}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { INQUIRY_CAT_KEY } from '../page'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import Badge from '@/components/ui/Badge'
@@ -9,15 +10,11 @@ type InquiryWithAnswer = Tables<'inquiries'> & {
   inquiry_answers: Tables<'inquiry_answers'>[]
 }
 
-const STATUS_LABEL: Record<string, { label: string; variant: 'orange' | 'green' }> = {
-  pending: { label: '답변 대기', variant: 'orange' },
-  answered: { label: '답변 완료', variant: 'green' },
-}
-
 export default async function InquiryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   const locale = await getLocale()
+  const t = await getTranslations('inquiries')
 
   const {
     data: { user },
@@ -33,22 +30,26 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
   if (!inquiry) notFound()
   if (inquiry.user_id !== user.id && !inquiry.is_public) notFound()
 
-  const st = STATUS_LABEL[inquiry.status] ?? STATUS_LABEL.pending
+  const answered = inquiry.status === 'answered'
   const answer = inquiry.inquiry_answers?.[0] ?? null
 
   return (
     <div className="bg-bg2 min-h-dvh">
-      <AppHeader title="문의 상세" onBack="router" border />
+      <AppHeader title={t('detailTitle')} onBack="router" border />
 
       <div className="flex flex-col gap-3 px-4 pt-5 pb-10">
         {/* 문의 내용 */}
         <div className="border-border rounded-2xl border bg-white px-5 py-5">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant="gray">{inquiry.category}</Badge>
-              {!inquiry.is_public && <span className="text-ink3 text-[11px]">비공개</span>}
+              <Badge variant="gray">
+                {t(`cat.${INQUIRY_CAT_KEY[inquiry.category] ?? 'etc'}` as never)}
+              </Badge>
+              {!inquiry.is_public && <span className="text-ink3 text-[11px]">{t('private')}</span>}
             </div>
-            <Badge variant={st.variant}>{st.label}</Badge>
+            <Badge variant={answered ? 'green' : 'orange'}>
+              {answered ? t('statusAnswered') : t('statusPending')}
+            </Badge>
           </div>
 
           <h1 className="text-ink mb-1 text-[16px] font-bold">{inquiry.title}</h1>
@@ -82,7 +83,7 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
                   />
                 </svg>
               </div>
-              <p className="text-primary text-[13px] font-semibold">가다로그 팀 답변</p>
+              <p className="text-primary text-[13px] font-semibold">{t('teamReply')}</p>
               <p className="text-ink3 ml-auto text-[12px]">
                 {new Date(answer.created_at).toLocaleDateString('ko-KR', {
                   month: 'long',
@@ -96,8 +97,8 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
           </div>
         ) : (
           <div className="border-border flex flex-col items-center gap-1.5 rounded-2xl border bg-white py-8">
-            <p className="text-ink text-[14px] font-semibold">답변을 준비 중이에요</p>
-            <p className="text-ink3 text-[12px]">빠른 시일 내에 답변 드릴게요</p>
+            <p className="text-ink text-[14px] font-semibold">{t('preparingTitle')}</p>
+            <p className="text-ink3 text-[12px]">{t('preparingDesc')}</p>
           </div>
         )}
       </div>

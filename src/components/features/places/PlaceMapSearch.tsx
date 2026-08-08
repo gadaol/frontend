@@ -111,8 +111,7 @@ export default function PlaceMapSearch({
       }
       setAiDone(true)
     } catch (e) {
-      if ((e as Error).name !== 'AbortError')
-        setAiText(locale === 'ko' ? '추천을 불러오지 못했어요.' : 'Failed to load recommendations.')
+      if ((e as Error).name !== 'AbortError') setAiText(t('aiFailed'))
     } finally {
       setAiLoading(false)
     }
@@ -273,7 +272,7 @@ export default function PlaceMapSearch({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={userAvatar}
-                      alt={userName ?? '나'}
+                      alt={userName ?? t('me')}
                       style={{
                         width: 36,
                         height: 36,
@@ -301,7 +300,7 @@ export default function PlaceMapSearch({
                         fontWeight: 700,
                       }}
                     >
-                      {userName?.[0] ?? '나'}
+                      {userName?.[0] ?? t('me')}
                     </div>
                   )}
                 </div>
@@ -440,7 +439,7 @@ export default function PlaceMapSearch({
               onClick={() => setShowRecommendations((v) => !v)}
               className="border-border flex w-full items-center justify-between border-b px-5 py-3"
             >
-              <span className="text-ink text-[14px] font-semibold">AI 추천 장소</span>
+              <span className="text-ink text-[14px] font-semibold">{t('aiRecommendTitle')}</span>
               <svg
                 width="18"
                 height="18"
@@ -499,9 +498,7 @@ export default function PlaceMapSearch({
                 {aiLoading && !aiText && (
                   <div className="text-ink3 flex items-center gap-2 py-1 text-[13px]">
                     <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
-                    {locale === 'ko'
-                      ? 'AI가 취향에 맞는 장소를 찾고 있어요...'
-                      : 'Finding places for you...'}
+                    {locale === 'ko' ? t('aiSearching') : 'Finding places for you...'}
                   </div>
                 )}
                 {aiText && (
@@ -536,7 +533,7 @@ export default function PlaceMapSearch({
                         strokeLinejoin="round"
                       />
                     </svg>
-                    {locale === 'ko' ? '다시 추천 받기' : 'Refresh'}
+                    {t('aiRefresh')}
                   </button>
                 )}
                 {!aiText && !aiLoading && !aiDone && (
@@ -549,13 +546,9 @@ export default function PlaceMapSearch({
                       <span className="text-[18px]">✨</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-[13px] font-bold text-white">
-                        {locale === 'ko' ? 'AI 맞춤 장소 추천' : 'Get AI Recommendations'}
-                      </p>
+                      <p className="text-[13px] font-bold text-white">{t('aiCtaTitle')}</p>
                       <p className="text-[11px] text-white/70">
-                        {locale === 'ko'
-                          ? '내 취향에 딱 맞는 장소를 찾아줄게요'
-                          : 'Places matched to your taste'}
+                        {locale === 'ko' ? t('aiCtaDesc') : 'Places matched to your taste'}
                       </p>
                     </div>
                     <svg

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useTransition, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { getCategoryInfoByLabel } from '@/utils/placeCategory'
+import { getCategoryInfoByLabel, getCategoryStyle } from '@/utils/placeCategory'
 import { removeFromBacklog } from '@/app/actions/backlog'
 import {
   createCollection,
@@ -31,6 +31,9 @@ type BacklogItem = {
   } | null
 }
 
+/** 카테고리 필터의 '전체' 상태값 — 화면 문구가 아니라 내부 키다 */
+const ALL = '__all__'
+
 interface Props {
   items: BacklogItem[]
   collections: BacklogCollection[]
@@ -40,12 +43,14 @@ export default function BacklogList({
   items: initialItems,
   collections: initialCollections,
 }: Props) {
+  const t = useTranslations('backlog')
+  const tc = useTranslations('common')
   const tp = useTranslations('places')
   const locale = useLocale()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null) // null = 전체
-  const [activeCategory, setActiveCategory] = useState('전체')
+  const [activeCategory, setActiveCategory] = useState(ALL)
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set())
   const [collections, setCollections] = useState<BacklogCollection[]>(initialCollections)
   const [, startTransition] = useTransition()
@@ -90,14 +95,14 @@ export default function BacklogList({
     const cats = new Set(
       collectionFiltered.map((item) => item.places?.place_categories?.name ?? '기타'),
     )
-    return ['전체', ...Array.from(cats)]
+    return [ALL, ...Array.from(cats)]
   }, [collectionFiltered])
 
   const filtered = useMemo(() => {
     return collectionFiltered.filter((item) => {
       const name = item.places?.name ?? ''
       const catName = item.places?.place_categories?.name ?? '기타'
-      const matchesTab = activeCategory === '전체' || catName === activeCategory
+      const matchesTab = activeCategory === ALL || catName === activeCategory
       const matchesQuery = query.trim() === '' || name.includes(query.trim())
       return matchesTab && matchesQuery
     })
@@ -159,7 +164,7 @@ export default function BacklogList({
   // 컬렉션 탭 데이터 (전체 + 각 컬렉션 + 미분류)
   const collectionTabItems = useMemo(() => {
     const tabs: Array<{ key: string | null; label: string; count: number }> = [
-      { key: null, label: '전체', count: items.length },
+      { key: null, label: t('all'), count: items.length },
       ...collections.map((c) => ({
         key: c.id,
         label: c.name,
@@ -168,10 +173,10 @@ export default function BacklogList({
     ]
     const noneCount = items.filter((i) => !i.collection_id).length
     if (noneCount > 0 && collections.length > 0) {
-      tabs.push({ key: '__none__', label: '미분류', count: noneCount })
+      tabs.push({ key: '__none__', label: t('uncategorized'), count: noneCount })
     }
     return tabs
-  }, [items, collections])
+  }, [items, collections, t])
 
   if (items.length === 0) {
     return (
@@ -180,16 +185,14 @@ export default function BacklogList({
           <MapPinIcon size={36} className="text-primary" />
         </div>
         <div>
-          <p className="text-ink mb-1 text-[16px] font-semibold">저장한 장소가 없어요</p>
-          <p className="text-ink3 text-[13px] leading-relaxed">
-            여행지를 탐색하고 가고 싶은 장소를 저장해보세요
-          </p>
+          <p className="text-ink mb-1 text-[16px] font-semibold">{t('empty')}</p>
+          <p className="text-ink3 text-[13px] leading-relaxed">{t('emptyDesc')}</p>
         </div>
         <Link
           href={`/${locale}/places`}
           className="bg-primary mt-2 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
         >
-          장소 탐색하기
+          {t('explore')}
         </Link>
       </div>
     )
@@ -211,7 +214,7 @@ export default function BacklogList({
                     key={String(tab.key)}
                     onClick={() => {
                       setActiveCollectionId(tab.key)
-                      setActiveCategory('전체')
+                      setActiveCategory(ALL)
                     }}
                     className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold transition-colors ${
                       isActive ? 'border-primary text-primary' : 'text-ink3 border-transparent'
@@ -279,14 +282,18 @@ export default function BacklogList({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="장소 이름으로 검색"
+            placeholder={t('searchPlaceholder')}
             className="text-ink placeholder:text-ink3 flex-1 bg-transparent text-[14px] outline-none"
             autoComplete="off"
           />
         </div>
         <Tabs
           variant="pill"
-          items={categoryTabs.map<TabItem<string>>((tab) => ({ key: tab, label: tab }))}
+          items={categoryTabs.map<TabItem<string>>((tab) => ({
+            key: tab,
+            // 탭 값은 DB 카테고리명이라 그대로 두고 라벨만 번역한다
+            label: tab === ALL ? t('all') : tp(getCategoryStyle(tab).i18nKey as never),
+          }))}
           value={activeCategory}
           onChange={setActiveCategory}
           className="pb-3"
@@ -298,8 +305,8 @@ export default function BacklogList({
         {filtered.length === 0 ? (
           <p className="text-ink3 py-12 text-center text-[14px]">
             {activeCollectionId !== null && collectionFiltered.length === 0
-              ? '이 컬렉션에 장소가 없어요'
-              : '검색 결과가 없어요'}
+              ? t('emptyInCollection')
+              : t('noResults')}
           </p>
         ) : (
           filtered.map((item) => {
@@ -321,7 +328,7 @@ export default function BacklogList({
                 <div className="flex min-w-0 flex-1 flex-col justify-between px-3.5 py-3">
                   <div>
                     <p className="text-ink truncate text-[14px] leading-tight font-bold">
-                      {item.places?.name ?? '알 수 없는 장소'}
+                      {item.places?.name ?? t('unknownPlace')}
                     </p>
                     {item.places?.address && (
                       <p className="text-ink3 mt-0.5 truncate text-[11px]">{item.places.address}</p>
@@ -346,7 +353,7 @@ export default function BacklogList({
                       setMovingItemId(item.id)
                     }}
                     className="flex h-8 w-8 items-center justify-center rounded-full active:opacity-50"
-                    aria-label="컬렉션 이동"
+                    aria-label={t('moveCollection')}
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                       <path
@@ -370,7 +377,7 @@ export default function BacklogList({
                       handleRemove(item.id)
                     }}
                     className="flex h-8 w-8 items-center justify-center rounded-full active:opacity-50"
-                    aria-label="백로그에서 제거"
+                    aria-label={t('removeFromBacklog')}
                   >
                     <BacklogIcon size={18} filled className="text-primary" />
                   </button>
@@ -406,7 +413,7 @@ export default function BacklogList({
             <div className="flex justify-center pt-3 pb-1">
               <div className="h-1 w-10 rounded-full bg-gray-200" />
             </div>
-            <p className="text-ink px-5 pt-1 pb-3 text-[16px] font-bold">컬렉션 이동</p>
+            <p className="text-ink px-5 pt-1 pb-3 text-[16px] font-bold">{t('moveCollection')}</p>
             <div className="divide-border divide-y overflow-y-auto" style={{ maxHeight: '60dvh' }}>
               {/* 미분류 */}
               <button
@@ -426,7 +433,7 @@ export default function BacklogList({
                     />
                   </svg>
                 </div>
-                <span className="text-ink2 text-[14px]">미분류</span>
+                <span className="text-ink2 text-[14px]">{t('uncategorized')}</span>
                 {items.find((i) => i.id === movingItemId)?.collection_id === null && (
                   <svg className="ml-auto" width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
@@ -487,7 +494,7 @@ export default function BacklogList({
                     strokeLinecap="round"
                   />
                 </svg>
-                새 컬렉션 만들기
+                {t('createCollection')}
               </button>
             </div>
           </div>
@@ -502,14 +509,14 @@ export default function BacklogList({
             onClick={() => setShowCreateSheet(false)}
           />
           <div className="fixed inset-x-0 bottom-0 z-[81] rounded-t-3xl bg-white px-5 pt-5 pb-8">
-            <p className="text-ink mb-4 text-[17px] font-bold">새 컬렉션</p>
+            <p className="text-ink mb-4 text-[17px] font-bold">{t('newCollection')}</p>
             <input
               ref={nameInputRef}
               type="text"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}
-              placeholder="컬렉션 이름 (예: 도쿄 여행)"
+              placeholder={t('collectionNamePlaceholder')}
               className="border-border bg-bg2 focus:border-primary mb-4 w-full rounded-xl border px-4 py-3 text-[15px] outline-none"
             />
             <div className="flex gap-3">
@@ -517,14 +524,14 @@ export default function BacklogList({
                 onClick={() => setShowCreateSheet(false)}
                 className="border-border text-ink h-[52px] flex-1 rounded-xl border text-[15px] font-medium"
               >
-                취소
+                {tc('cancel')}
               </button>
               <button
                 onClick={handleCreateCollection}
                 disabled={!newCollectionName.trim() || creating}
                 className="bg-primary h-[52px] flex-1 rounded-xl text-[15px] font-bold text-white disabled:opacity-40"
               >
-                {creating ? '만드는 중...' : '만들기'}
+                {creating ? t('creating') : t('create')}
               </button>
             </div>
           </div>
@@ -539,7 +546,7 @@ export default function BacklogList({
             onClick={() => setEditingCollection(null)}
           />
           <div className="fixed inset-x-0 bottom-0 z-[81] rounded-t-3xl bg-white px-5 pt-5 pb-8">
-            <p className="text-ink mb-4 text-[17px] font-bold">컬렉션 편집</p>
+            <p className="text-ink mb-4 text-[17px] font-bold">{t('editCollection')}</p>
             <input
               type="text"
               value={editName}
@@ -553,19 +560,19 @@ export default function BacklogList({
                 disabled={!editName.trim()}
                 className="bg-primary h-[52px] w-full rounded-xl text-[15px] font-bold text-white disabled:opacity-40"
               >
-                이름 변경
+                {t('renameCollection')}
               </button>
               <button
                 onClick={() => handleDeleteCollection(editingCollection)}
                 className="bg-error-light text-error h-[52px] w-full rounded-xl text-[15px] font-semibold"
               >
-                컬렉션 삭제
+                {t('deleteCollection')}
               </button>
               <button
                 onClick={() => setEditingCollection(null)}
                 className="border-border text-ink3 h-[52px] w-full rounded-xl border text-[15px]"
               >
-                취소
+                {tc('cancel')}
               </button>
             </div>
           </div>

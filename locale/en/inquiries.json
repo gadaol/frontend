@@ -17,5 +17,18 @@
     "account": "Account",
     "etc": "Other"
   },
-  "publicInquiryDesc": "Anyone can read public inquiries and their replies"
+  "publicInquiryDesc": "Anyone can read public inquiries and their replies",
+  "statusPending": "Awaiting reply",
+  "statusAnswered": "Answered",
+  "detailTitle": "Inquiry",
+  "private": "Private",
+  "teamReply": "Reply from Gadarog",
+  "preparingTitle": "We’re working on a reply",
+  "preparingDesc": "We’ll get back to you shortly",
+  "searchPlaceholder": "Search by subject",
+  "noResults": "No results for '{query}'",
+  "empty": "No inquiries yet",
+  "viewAll": "View all",
+  "writeNew": "Write an inquiry",
+  "pageInfo": "Page {page} of {total} · {count} total"
 }

@@ -2,26 +2,14 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { createTripReturnId, addItineraryItem, addMemoItem } from '@/app/actions/trip'
 import { getOrCreatePlace } from '@/app/actions/backlog'
 import type { GeneratedItinerary } from '@/app/api/ai/itinerary/route'
 
-const STYLES = [
-  { key: 'relaxed', label: '여유롭게' },
-  { key: 'active', label: '알차게' },
-  { key: 'food', label: '맛집 중심' },
-  { key: 'culture', label: '문화·역사' },
-  { key: 'nature', label: '자연·힐링' },
-  { key: 'photo', label: '사진 스팟' },
-]
+const STYLES = ['relaxed', 'active', 'food', 'culture', 'nature', 'photo']
 
-const COMPANIONS = [
-  { key: 'solo', label: '혼자' },
-  { key: 'couple', label: '둘이서' },
-  { key: 'family', label: '가족과' },
-  { key: 'friends', label: '친구들과' },
-]
+const COMPANIONS = ['solo', 'couple', 'family', 'friends']
 
 interface Props {
   title: string
@@ -50,6 +38,8 @@ export default function AIItinerarySheet({
   onClose,
 }: Props) {
   const locale = useLocale()
+  const t = useTranslations('trips')
+  const to = useTranslations('onboarding')
   const router = useRouter()
 
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
@@ -122,7 +112,7 @@ export default function AIItinerarySheet({
       let targetTripId = existingTripId
 
       if (!targetTripId) {
-        setSaveStep('여행 만드는 중...')
+        setSaveStep(t('ai.creatingTrip'))
         const fd = new FormData()
         fd.set('title', title || itinerary.title)
         fd.set('destination', destination)
@@ -138,7 +128,7 @@ export default function AIItinerarySheet({
       for (const day of itinerary.days) {
         // 이미 사용자가 채워둔 날은 건드리지 않는다
         if (skip.has(day.day_date)) continue
-        setSaveStep(`${day.day_number}일차 일정 저장 중...`)
+        setSaveStep(t('ai.savingDay', { n: day.day_number }))
         for (const item of day.items) {
           try {
             const searchRes = await fetch(
@@ -203,7 +193,7 @@ export default function AIItinerarySheet({
         {/* 헤더 */}
         <div className="flex flex-shrink-0 items-center justify-between px-5 pt-1 pb-3">
           <div>
-            <p className="text-ink text-[18px] font-bold">✨ AI 일정 자동 생성</p>
+            <p className="text-ink text-[18px] font-bold">{t('ai.title')}</p>
             <p className="text-ink3 text-[12px]">
               {destination} · {startDate} ~ {endDate}
             </p>
@@ -233,19 +223,19 @@ export default function AIItinerarySheet({
             <div className="space-y-4 px-5 py-4">
               {/* 여행 스타일 */}
               <div>
-                <p className="text-ink mb-2 text-[13px] font-semibold">여행 스타일 (복수 선택)</p>
+                <p className="text-ink mb-2 text-[13px] font-semibold">{t('ai.styleLabel')}</p>
                 <div className="flex flex-wrap gap-2">
-                  {STYLES.map((s) => (
+                  {STYLES.map((key) => (
                     <button
-                      key={s.key}
-                      onClick={() => toggleStyle(s.key)}
+                      key={key}
+                      onClick={() => toggleStyle(key)}
                       className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                        selectedStyles.includes(s.key)
+                        selectedStyles.includes(key)
                           ? 'bg-primary text-white'
                           : 'text-ink2 bg-gray-100'
                       }`}
                     >
-                      {s.label}
+                      {t(`ai.style.${key}` as never)}
                     </button>
                   ))}
                 </div>
@@ -253,17 +243,17 @@ export default function AIItinerarySheet({
 
               {/* 동행 */}
               <div>
-                <p className="text-ink mb-2 text-[13px] font-semibold">동행</p>
+                <p className="text-ink mb-2 text-[13px] font-semibold">{t('ai.companionLabel')}</p>
                 <div className="flex gap-2">
-                  {COMPANIONS.map((c) => (
+                  {COMPANIONS.map((key) => (
                     <button
-                      key={c.key}
-                      onClick={() => setCompanion(c.key)}
+                      key={key}
+                      onClick={() => setCompanion(key)}
                       className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                        companion === c.key ? 'bg-primary text-white' : 'text-ink2 bg-gray-100'
+                        companion === key ? 'bg-primary text-white' : 'text-ink2 bg-gray-100'
                       }`}
                     >
-                      {c.label}
+                      {to(`companion.${key}` as never)}
                     </button>
                   ))}
                 </div>
@@ -272,14 +262,14 @@ export default function AIItinerarySheet({
               {/* 추가 요청 — 칩으로 담기지 않는 구체적인 조건을 받는다 */}
               <div>
                 <p className="text-ink mb-2 text-[13px] font-semibold">
-                  더 알려주실 게 있나요?
-                  <span className="text-ink3 ml-1 font-normal">(선택)</span>
+                  {t('ai.notesLabel')}
+                  <span className="text-ink3 ml-1 font-normal">{t('ai.optional')}</span>
                 </p>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value.slice(0, 500))}
                   rows={3}
-                  placeholder="예: 아이랑 같이 가요. 걷는 건 많이 못 해요. 우니 꼭 먹고 싶어요."
+                  placeholder={t('ai.notesPlaceholder')}
                   className="border-border bg-bg2 text-ink placeholder:text-ink3 focus:border-primary w-full resize-none rounded-xl border px-3.5 py-3 text-[13px] leading-relaxed transition-colors outline-none"
                 />
                 {notes.length > 0 && (
@@ -294,7 +284,7 @@ export default function AIItinerarySheet({
             <div className="px-5 py-4">
               <div className="text-ink3 mb-3 flex items-center gap-2 text-[13px]">
                 <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
-                AI가 일정을 짜고 있어요...
+                {t('ai.working')}
               </div>
               <p className="text-ink3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap opacity-60">
                 {streamText.slice(0, 400)}
@@ -305,9 +295,7 @@ export default function AIItinerarySheet({
 
           {/* 파싱 오류 */}
           {parseError && (
-            <div className="text-ink3 px-5 py-4 text-center text-[13px]">
-              일정 생성에 실패했어요. 다시 시도해주세요.
-            </div>
+            <div className="text-ink3 px-5 py-4 text-center text-[13px]">{t('ai.failed')}</div>
           )}
 
           {/* 생성된 일정 미리보기 */}
@@ -322,7 +310,7 @@ export default function AIItinerarySheet({
                 <div key={day.day_number} className="border-border rounded-2xl border p-4">
                   <div className="mb-2.5 flex items-center gap-2">
                     <span className="bg-primary rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white">
-                      {day.day_number}일차
+                      {t('ai.dayN', { n: day.day_number })}
                     </span>
                     <span className="text-ink3 text-[12px]">{day.day_date}</span>
                     <span className="text-ink text-[12px] font-medium">· {day.theme}</span>
@@ -363,7 +351,7 @@ export default function AIItinerarySheet({
                 disabled={!canGenerate || streaming}
                 className="bg-primary w-full rounded-2xl py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
               >
-                {streaming ? '일정 생성 중...' : 'AI 일정 생성하기'}
+                {streaming ? t('ai.generating') : t('ai.generate')}
               </button>
             ) : (
               <div className="flex gap-2">
@@ -374,13 +362,13 @@ export default function AIItinerarySheet({
                   }}
                   className="border-border text-ink2 flex-1 rounded-2xl border py-3.5 text-[14px] font-semibold"
                 >
-                  다시 생성
+                  {t('ai.regenerate')}
                 </button>
                 <button
                   onClick={applyItinerary}
                   className="bg-primary flex-[2] rounded-2xl py-3.5 text-[14px] font-bold text-white"
                 >
-                  이 일정으로 여행 만들기
+                  {existingTripId ? t('ai.applyExisting') : t('ai.apply')}
                 </button>
               </div>
             )}

@@ -17,5 +17,18 @@
     "account": "계정",
     "etc": "기타"
   },
-  "publicInquiryDesc": "공개 시 다른 사용자도 문의와 답변을 볼 수 있어요"
+  "publicInquiryDesc": "공개 시 다른 사용자도 문의와 답변을 볼 수 있어요",
+  "statusPending": "답변 대기",
+  "statusAnswered": "답변 완료",
+  "detailTitle": "문의 상세",
+  "private": "비공개",
+  "teamReply": "가다로그 팀 답변",
+  "preparingTitle": "답변을 준비 중이에요",
+  "preparingDesc": "빠른 시일 내에 답변 드릴게요",
+  "searchPlaceholder": "문의 제목 검색",
+  "noResults": "'{query}' 검색 결과가 없어요",
+  "empty": "문의 내역이 없어요",
+  "viewAll": "전체 보기",
+  "writeNew": "문의 작성하기",
+  "pageInfo": "{page} / {total} 페이지 · 총 {count}건"
 }

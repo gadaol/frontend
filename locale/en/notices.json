@@ -1,0 +1,15 @@
+{
+  "title": "Announcements",
+  "searchPlaceholder": "Search announcements",
+  "noResults": "No results for '{query}'",
+  "empty": "No announcements yet",
+  "viewAll": "View all",
+  "pinned": "Pinned",
+  "pageInfo": "Page {page} of {total} · {count} total",
+  "cat": {
+    "notice": "Notice",
+    "update": "Update",
+    "maintenance": "Maintenance",
+    "event": "Event"
+  }
+}

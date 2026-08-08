@@ -52,6 +52,7 @@ interface Props {
 }
 
 export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName }: Props) {
+  const t = useTranslations('trips')
   const tp = useTranslations('places')
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
@@ -186,8 +187,8 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
           </svg>
         </div>
         <div>
-          <p className="text-ink mb-1 text-[15px] font-semibold">아직 장소가 없어요</p>
-          <p className="text-ink3 text-[13px]">일정에 장소를 추가하면 지도에 표시돼요</p>
+          <p className="text-ink mb-1 text-[15px] font-semibold">{t('noPlacesYet')}</p>
+          <p className="text-ink3 text-[13px]">{t('noPlacesDesc')}</p>
         </div>
       </div>
     )
@@ -262,7 +263,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={currentUserAvatar}
-                    alt={currentUserName ?? '나'}
+                    alt={currentUserName ?? tp('me')}
                     style={{
                       width: 36,
                       height: 36,
@@ -290,7 +291,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                       fontWeight: 700,
                     }}
                   >
-                    {currentUserName?.[0] ?? '나'}
+                    {currentUserName?.[0] ?? tp('me')}
                   </div>
                 )}
               </div>
@@ -325,7 +326,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                   </p>
                 )}
                 <p style={{ fontSize: 11, color: selectedPin.color, fontWeight: 600 }}>
-                  Day {selectedPin.dayNumber} · {selectedPin.orderIndex + 1}번째
+                  Day {selectedPin.dayNumber} · {t('nth', { n: selectedPin.orderIndex + 1 })}
                 </p>
               </div>
             </InfoWindow>
@@ -338,7 +339,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
             onClick={() => setSelectedDay(null)}
             className={`rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm transition-colors ${selectedDay === null ? 'bg-ink text-white' : 'text-ink3 bg-white'}`}
           >
-            전체
+            {t('allDays')}
           </button>
           {dayGroups.map(([dayNum, dayPins]) => (
             <button
@@ -359,7 +360,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
         <button
           onClick={() => setShowRoute((v) => !v)}
           className={`absolute right-3 bottom-16 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-colors ${showRoute ? 'bg-primary text-white' : 'text-ink3 bg-white'}`}
-          title={showRoute ? '경로 숨기기' : '경로 보기'}
+          title={showRoute ? t('hideRoute') : t('showRoute')}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
@@ -406,7 +407,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
           <div className="h-[5px] w-10 rounded-full bg-gray-300" />
           <div className="flex w-full items-center justify-between px-4 pb-1">
             <div className="flex items-center gap-2">
-              <span className="text-ink text-[14px] font-semibold">장소 목록</span>
+              <span className="text-ink text-[14px] font-semibold">{t('placeList')}</span>
               <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
                 {pins.length}
               </span>

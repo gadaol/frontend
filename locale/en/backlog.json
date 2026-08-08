@@ -9,5 +9,21 @@
   "from": "Saved in {trip}",
   "noTrip": "No trip assigned",
   "deleteConfirm": "Remove this place from your saved list?",
-  "count": "{count} places saved"
+  "count": "{count} places saved",
+  "all": "All",
+  "uncategorized": "Uncategorized",
+  "searchPlaceholder": "Search by place name",
+  "emptyInCollection": "Nothing in this collection yet",
+  "noResults": "No results",
+  "unknownPlace": "Unknown place",
+  "moveCollection": "Move to collection",
+  "removeFromBacklog": "Remove from saved",
+  "newCollection": "New collection",
+  "createCollection": "New collection",
+  "collectionNamePlaceholder": "Collection name (e.g. Tokyo trip)",
+  "creating": "Creating...",
+  "create": "Create",
+  "editCollection": "Edit collection",
+  "renameCollection": "Rename",
+  "deleteCollection": "Delete collection"
 }

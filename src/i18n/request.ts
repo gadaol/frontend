@@ -18,6 +18,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'backlog',
     'notifications',
     'inquiries',
+    'notices',
   ]
   const messages = Object.fromEntries(
     await Promise.all(
