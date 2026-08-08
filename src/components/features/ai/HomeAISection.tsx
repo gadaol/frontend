@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
 import { addRecommendedPlaceToBacklog } from '@/app/actions/backlog'
 import { getCategoryStyle } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
 import type { RecommendResult } from '@/app/api/ai/recommend/route'
 
 type SaveState = 'idle' | 'loading' | 'saved' | 'exists' | 'error'
@@ -18,6 +19,7 @@ export default function HomeAISection() {
   const [result, setResult] = useState<RecommendResult | null>(null)
   const [error, setError] = useState(false)
   const [saveStates, setSaveStates] = useState<Record<number, SaveState>>({})
+  const [photoRefs, setPhotoRefs] = useState<Record<number, string | null>>({})
   const abortRef = useRef<AbortController | null>(null)
   const openAssistant = useAssistantStore((s) => s.open)
 
@@ -27,6 +29,7 @@ export default function HomeAISection() {
     setLoading(true)
     setResult(null)
     setSaveStates({})
+    setPhotoRefs({})
     abortRef.current?.abort()
     abortRef.current = new AbortController()
     try {
@@ -45,6 +48,31 @@ export default function HomeAISection() {
       setLoading(false)
     }
   }
+
+  // AI 결과 뜨면 장소 사진 병렬 패치
+  useEffect(() => {
+    if (!result) return
+    const controller = new AbortController()
+
+    Promise.all(
+      result.places.map(async (place, idx) => {
+        try {
+          const res = await fetch(
+            `/api/places/search?q=${encodeURIComponent(place.googleSearchQuery)}`,
+            { signal: controller.signal },
+          )
+          if (!res.ok) return
+          const data = await res.json()
+          const photoRef: string | null = data.places?.[0]?.photos?.[0]?.name ?? null
+          setPhotoRefs((prev) => ({ ...prev, [idx]: photoRef }))
+        } catch {
+          // 사진 실패는 무시 — 이모지 폴백
+        }
+      }),
+    )
+
+    return () => controller.abort()
+  }, [result])
 
   function handleOpen() {
     setOpen(true)
@@ -214,28 +242,34 @@ export default function HomeAISection() {
                       <p className="text-ink2 text-[13px] leading-relaxed">{result.intro}</p>
                     </div>
 
-                    <div className="bg-border h-px mx-5" />
+                    <div className="bg-border mx-5 h-px" />
 
                     {/* 장소 카드 리스트 */}
-                    <div className="divide-border divide-y px-5">
+                    <div className="divide-y divide-[#F5F5F5] px-5">
                       {result.places.map((place, idx) => {
                         const catStyle = getCategoryStyle(place.category as never)
                         const saveState = saveStates[idx] ?? 'idle'
+                        const photoRef = photoRefs[idx]
+                        const hasPhoto = photoRef !== undefined // undefined = 아직 로딩 중
+
                         return (
                           <div key={idx} className="py-4">
-                            {/* 상단: 카테고리 + 이름 + 저장 버튼 */}
                             <div className="flex items-start gap-3">
-                              <div
-                                className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-                                style={{ backgroundColor: catStyle.hex + '18' }}
-                              >
-                                <span className="text-[16px]">
-                                  {getCategoryEmoji(place.category)}
-                                </span>
-                              </div>
+                              {/* 썸네일 — 로딩 중엔 스켈레톤, 완료 후 사진 or 이모지 */}
+                              {!hasPhoto ? (
+                                <div className="mt-0.5 h-11 w-11 flex-shrink-0 animate-pulse rounded-xl bg-gray-100" />
+                              ) : (
+                                <PlacePhoto
+                                  photoRef={photoRef}
+                                  categoryStyle={catStyle}
+                                  iconSize={18}
+                                  className="mt-0.5 h-11 w-11 flex-shrink-0 rounded-xl"
+                                />
+                              )}
+
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <p className="text-ink text-[15px] font-bold truncate">
+                                  <p className="text-ink truncate text-[15px] font-bold">
                                     {place.name}
                                   </p>
                                   <span
@@ -253,6 +287,7 @@ export default function HomeAISection() {
                                 </p>
                                 <p className="text-ink3 mt-1 text-[11px]">💡 {place.tip}</p>
                               </div>
+
                               <button
                                 onClick={() => handleSave(idx)}
                                 disabled={
@@ -260,16 +295,13 @@ export default function HomeAISection() {
                                   saveState === 'saved' ||
                                   saveState === 'exists'
                                 }
-                                className="flex-shrink-0 flex items-center gap-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all active:opacity-70"
+                                className="flex flex-shrink-0 items-center gap-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all active:opacity-70"
                                 style={
                                   saveState === 'saved' || saveState === 'exists'
-                                    ? { backgroundColor: '#10b981' + '18', color: '#10b981' }
+                                    ? { backgroundColor: '#10b98118', color: '#10b981' }
                                     : saveState === 'error'
-                                      ? { backgroundColor: '#ef4444' + '18', color: '#ef4444' }
-                                      : {
-                                          backgroundColor: '#0891b218',
-                                          color: 'var(--color-primary)',
-                                        }
+                                      ? { backgroundColor: '#ef444418', color: '#ef4444' }
+                                      : { backgroundColor: '#0891b218', color: '#0891b2' }
                                 }
                               >
                                 {saveState === 'loading' ? (
@@ -281,7 +313,7 @@ export default function HomeAISection() {
                                 ) : saveState === 'error' ? (
                                   isKo ? '실패' : 'Error'
                                 ) : (
-                                  <>{isKo ? '저장' : 'Save'}</>
+                                  isKo ? '저장' : 'Save'
                                 )}
                               </button>
                             </div>
@@ -321,27 +353,4 @@ export default function HomeAISection() {
         )}
     </>
   )
-}
-
-function getCategoryEmoji(category: string): string {
-  const map: Record<string, string> = {
-    식당: '🍽️',
-    카페: '☕',
-    자연: '🌿',
-    관광지: '🏛️',
-    쇼핑: '🛍️',
-    액티비티: '🎯',
-    박물관: '🖼️',
-    온천: '♨️',
-    기타: '📍',
-    restaurant: '🍽️',
-    cafe: '☕',
-    nature: '🌿',
-    landmark: '🏛️',
-    shopping: '🛍️',
-    activity: '🎯',
-    museum: '🖼️',
-    healing: '♨️',
-  }
-  return map[category] ?? '📍'
 }
