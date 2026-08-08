@@ -46,7 +46,7 @@ export default async function TripDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const [{ data: trip }, { data: profileRows }, { data: expenseRows }] = await Promise.all([
+  const [{ data: trip }, { data: profileRows }, { data: expenseRows }, { data: myProfile }] = await Promise.all([
     supabase
       .from('trips')
       .select(
@@ -68,6 +68,7 @@ export default async function TripDetailPage({
       .from('trip_expenses')
       .select('id, amount, category, note, item_id, day_id')
       .eq('trip_id', id),
+    supabase.from('profiles').select('name, avatar_url').eq('id', user.id).maybeSingle(),
   ])
 
   if (!trip) notFound()
@@ -82,6 +83,8 @@ export default async function TripDetailPage({
       trip={trip as TripDetail}
       memberProfiles={memberProfiles}
       currentUserId={user.id}
+      currentUserAvatar={myProfile?.avatar_url ?? null}
+      currentUserName={myProfile?.name ?? null}
       expenses={(expenseRows ?? []) as TripExpense[]}
     />
   )

@@ -210,6 +210,7 @@ export default function PlaceMapSearch({
             )}
             {myLocation && (
               <OverlayView
+                key={`myloc-${userAvatar ?? 'none'}-${userName ?? 'none'}`}
                 position={myLocation}
                 mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
               >

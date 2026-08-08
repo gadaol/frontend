@@ -38,6 +38,8 @@ interface Props {
   trip: TripDetail
   memberProfiles: MemberProfile[]
   currentUserId: string
+  currentUserAvatar: string | null
+  currentUserName: string | null
   expenses: TripExpense[]
 }
 
@@ -45,6 +47,8 @@ export default function TripDetailClient({
   trip,
   memberProfiles,
   currentUserId,
+  currentUserAvatar,
+  currentUserName,
   expenses: initialExpenses,
 }: Props) {
   const locale = useLocale()
@@ -388,8 +392,8 @@ export default function TripDetailClient({
           {activeTab === '장소' && (
             <PlacesMapTab
               trip={trip}
-              currentUserAvatar={profileMap.get(currentUserId)?.avatar_url ?? null}
-              currentUserName={profileMap.get(currentUserId)?.name ?? null}
+              currentUserAvatar={currentUserAvatar}
+              currentUserName={currentUserName}
             />
           )}
           {activeTab === '메이트' && (

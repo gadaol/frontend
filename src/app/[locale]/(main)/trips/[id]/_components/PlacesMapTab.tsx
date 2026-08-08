@@ -234,6 +234,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
           ))}
           {myLocation && (
             <OverlayView
+              key={`myloc-${currentUserAvatar ?? 'none'}`}
               position={myLocation}
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
             >
