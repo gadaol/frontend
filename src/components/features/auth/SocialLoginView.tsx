@@ -36,23 +36,38 @@ export default function SocialLoginView({
     return redirectTo ? `${base}?redirect_to=${encodeURIComponent(redirectTo)}` : base
   }
 
-  const handleAgree = async () => {
-    // 동의 쿠키 설정 (callback에서 terms_agreed_at 업데이트에 사용)
-    await fetch('/api/set-terms-cookie', { method: 'POST' })
-    setPendingAction(null)
+  async function startOAuth(provider: PendingAction) {
     setRedirecting(true)
-
-    if (pendingAction === 'kakao') {
+    if (provider === 'kakao') {
       await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: { redirectTo: callbackUrl(), scopes: 'profile_nickname profile_image' },
       })
-    } else if (pendingAction === 'google') {
+    } else if (provider === 'google') {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: callbackUrl() },
       })
     }
+  }
+
+  function handleSocialClick(provider: PendingAction) {
+    // 이미 동의한 기기에서는 TermsSheet 없이 바로 OAuth
+    if (typeof window !== 'undefined' && localStorage.getItem('terms_agreed')) {
+      startOAuth(provider)
+    } else {
+      setPendingAction(provider)
+    }
+  }
+
+  const handleAgree = async () => {
+    // 동의 기록 저장 — 이후 로그인에서 TermsSheet 생략
+    localStorage.setItem('terms_agreed', '1')
+    // 동의 쿠키 설정 (callback에서 terms_agreed_at 업데이트에 사용)
+    await fetch('/api/set-terms-cookie', { method: 'POST' })
+    const provider = pendingAction
+    setPendingAction(null)
+    await startOAuth(provider)
   }
 
   return (
@@ -73,12 +88,12 @@ export default function SocialLoginView({
         )}
 
         <div className="flex flex-col gap-3">
-          <Button variant="kakao" onClick={() => setPendingAction('kakao')} fullWidth>
+          <Button variant="kakao" onClick={() => handleSocialClick('kakao')} fullWidth>
             <KakaoIcon />
             {t('kakao')}
           </Button>
 
-          <Button variant="google" onClick={() => setPendingAction('google')} fullWidth>
+          <Button variant="google" onClick={() => handleSocialClick('google')} fullWidth>
             <GoogleIcon />
             {t('google')}
           </Button>
