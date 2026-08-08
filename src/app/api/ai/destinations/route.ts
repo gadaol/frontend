@@ -2,7 +2,7 @@ import { generateText } from 'ai'
 import { NextRequest } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { createClient } from '@/lib/supabase/server'
-import { getUserPlan, canAccess, planGateResponse, FEATURE_PLAN } from '@/lib/planGate'
+import { getUserPlan } from '@/lib/planGate'
 import type { Locale } from '@/lib/ai/characters'
 
 const COMPANION_LABELS: Record<string, string> = {
@@ -38,9 +38,6 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
-
-  const plan = await getUserPlan(supabase, user.id)
-  if (!canAccess(plan, FEATURE_PLAN.aiDestinations)) return planGateResponse(FEATURE_PLAN.aiDestinations)
 
   const {
     locale = 'ko',

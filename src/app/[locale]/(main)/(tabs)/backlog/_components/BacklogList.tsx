@@ -17,6 +17,9 @@ import { SearchIcon, MapPinIcon, BacklogIcon } from '@/components/icons'
 import Tabs, { type TabItem } from '@/components/ui/Tabs'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
 import PhotoBackfillTrigger from '@/components/features/places/PhotoBackfillTrigger'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 type BacklogItem = {
   id: string
@@ -54,6 +57,9 @@ export default function BacklogList({
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set())
   const [collections, setCollections] = useState<BacklogCollection[]>(initialCollections)
   const [, startTransition] = useTransition()
+
+  const plan = usePlanStore((s) => s.plan)
+  const [collectionUpgrade, setCollectionUpgrade] = useState(false)
 
   // 컬렉션 생성 시트
   const [showCreateSheet, setShowCreateSheet] = useState(false)
@@ -199,6 +205,14 @@ export default function BacklogList({
   }
 
   return (
+    <>
+    {collectionUpgrade && (
+      <UpgradeSheet
+        required="pro"
+        feature="컬렉션"
+        onClose={() => setCollectionUpgrade(false)}
+      />
+    )}
     <div className="flex flex-1 flex-col">
       <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
 
@@ -265,6 +279,7 @@ export default function BacklogList({
           {/* 컬렉션 추가 버튼 */}
           <button
             onClick={() => {
+              if (!canAccess(plan, FEATURE_PLAN.collection)) { setCollectionUpgrade(true); return }
               setShowCreateSheet(true)
               setTimeout(() => nameInputRef.current?.focus(), 50)
             }}
@@ -489,6 +504,7 @@ export default function BacklogList({
               <button
                 onClick={() => {
                   setMovingItemId(null)
+                  if (!canAccess(plan, FEATURE_PLAN.collection)) { setCollectionUpgrade(true); return }
                   setShowCreateSheet(true)
                   setTimeout(() => nameInputRef.current?.focus(), 50)
                 }}
@@ -589,5 +605,6 @@ export default function BacklogList({
         </>
       )}
     </div>
+    </>
   )
 }

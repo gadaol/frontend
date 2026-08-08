@@ -7,6 +7,9 @@ import { applyGeneratedItinerary } from '@/app/actions/trip'
 import PageLoading from '@/components/ui/PageLoading'
 import type { GeneratedItinerary } from '@/app/api/ai/itinerary/route'
 import { MapPinIcon } from '@/components/icons'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 const STYLES = ['relaxed', 'active', 'food', 'culture', 'nature', 'photo']
 
@@ -97,12 +100,18 @@ export default function AIItinerarySheet({
   const [itinerary, setItinerary] = useState<GeneratedItinerary | null>(null)
   const [parseError, setParseError] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [upgradeSheet, setUpgradeSheet] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const plan = usePlanStore((s) => s.plan)
 
   const canGenerate = !!destination && !!startDate && !!endDate && !streaming
 
   const generate = useCallback(async () => {
     if (!canGenerate) return
+    if (!canAccess(plan, FEATURE_PLAN.itinerary)) {
+      setUpgradeSheet(true)
+      return
+    }
     setItinerary(null)
     setParseError(false)
     setStreaming(true)
@@ -239,6 +248,13 @@ export default function AIItinerarySheet({
 
   return (
     <>
+      {upgradeSheet && (
+        <UpgradeSheet
+          required="plus"
+          feature="AI 일정 생성"
+          onClose={() => setUpgradeSheet(false)}
+        />
+      )}
       {/* 등록 중엔 앱 전체에서 쓰는 제출 오버레이를 그대로 쓴다
           (로그인/회원가입과 같은 패턴) */}
       <PageLoading visible={saving} />

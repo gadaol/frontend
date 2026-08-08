@@ -11,6 +11,7 @@ import DestinationInput from '@/components/features/trips/DestinationInput'
 import { createClient } from '@/lib/supabase/client'
 import { COVER_PRESETS } from '@/utils/coverPresets'
 import AIItinerarySheet from '@/components/features/trips/AIItinerarySheet'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
@@ -56,6 +57,7 @@ export default function NewTripPage() {
   const [endTime, setEndTime] = useState('')
   const [title, setTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [tripLimitSheet, setTripLimitSheet] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showAISheet, setShowAISheet] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -119,11 +121,23 @@ export default function NewTripPage() {
     fd.set('destinations', JSON.stringify(segments))
     startTransition(async () => {
       const result = await createTrip(fd)
-      if (result?.error) setErrorMsg(result.error)
+      if (result?.error === 'trip_limit_reached') {
+        setTripLimitSheet(true)
+      } else if (result?.error) {
+        setErrorMsg(result.error)
+      }
     })
   }
 
   return (
+    <>
+    {tripLimitSheet && (
+      <UpgradeSheet
+        required="pro"
+        feature="여행 3개 초과 생성"
+        onClose={() => setTripLimitSheet(false)}
+      />
+    )}
     <div className="flex min-h-full flex-col bg-white">
       <AppHeader title={t('newTitle')} onBack="router" />
 
@@ -386,5 +400,6 @@ export default function NewTripPage() {
         </Button>
       </div>
     </div>
+    </>
   )
 }

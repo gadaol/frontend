@@ -35,6 +35,9 @@ import {
   removeExpense,
 } from '@/app/actions/trip'
 import type { TripDetail, MemberProfile, TripExpense } from '../page'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 type Tab = 'itinerary' | 'cost' | 'places' | 'mates'
 
@@ -75,6 +78,8 @@ export default function TripDetailClient({
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
   const [memoOverrides, setMemoOverrides] = useState<Map<string, string>>(new Map())
   const [showAISheet, setShowAISheet] = useState(false)
+  const [expenseUpgrade, setExpenseUpgrade] = useState(false)
+  const plan = usePlanStore((s) => s.plan)
 
   function handleInvite() {
     router.push(`/${locale}/trips/${trip.id}/invite`)
@@ -181,6 +186,10 @@ export default function TripDetailClient({
   ): Promise<string | null> {
     const item = activeSheetItem
     if (!item) return null
+    if (!canAccess(plan, FEATURE_PLAN.expense)) {
+      setExpenseUpgrade(true)
+      return null
+    }
 
     const dayId =
       trip.itinerary_days.find((d) => d.itinerary_items.some((i) => i.id === item.id))?.id ?? null
@@ -258,6 +267,14 @@ export default function TripDetailClient({
     .slice(0, 10)
 
   return (
+    <>
+    {expenseUpgrade && (
+      <UpgradeSheet
+        required="pro"
+        feature="경비 추가"
+        onClose={() => setExpenseUpgrade(false)}
+      />
+    )}
     <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
       <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
       {/* 커버 */}
@@ -499,6 +516,7 @@ export default function TripDetailClient({
 
       <BottomNav />
     </div>
+    </>
   )
 }
 

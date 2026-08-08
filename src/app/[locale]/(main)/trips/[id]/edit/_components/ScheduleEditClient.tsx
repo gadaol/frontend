@@ -32,6 +32,9 @@ import DestinationInput from '@/components/features/trips/DestinationInput'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import ItemDetailSheet from '../../_components/ItemDetailSheet'
 import type { TripDetail, TripExpense } from '../../page'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
@@ -79,6 +82,8 @@ export default function ScheduleEditClient({
   const [activeTab, setActiveTab] = useState<EditTab>('info')
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
   const [activeSheetItem, setActiveSheetItem] = useState<ItemDB | null>(null)
+  const [expenseUpgrade, setExpenseUpgrade] = useState(false)
+  const plan = usePlanStore((s) => s.plan)
   const [memoOverrides, setMemoOverrides] = useState<Map<string, string>>(new Map())
 
   // 기본 정보 상태
@@ -316,6 +321,10 @@ export default function ScheduleEditClient({
     note: string,
   ): Promise<string | null> {
     if (!activeSheetItem) return null
+    if (!canAccess(plan, FEATURE_PLAN.expense)) {
+      setExpenseUpgrade(true)
+      return null
+    }
     const result = await addExpense({
       tripId: trip.id,
       dayId: activeItemDayId,
@@ -403,6 +412,14 @@ export default function ScheduleEditClient({
     .slice(0, 10)
 
   return (
+    <>
+    {expenseUpgrade && (
+      <UpgradeSheet
+        required="pro"
+        feature="경비 추가"
+        onClose={() => setExpenseUpgrade(false)}
+      />
+    )}
     <div className="bg-bg2 relative flex h-[100dvh] flex-col">
       <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
       {/* 헤더 */}
@@ -955,6 +972,7 @@ export default function ScheduleEditClient({
         />
       )}
     </div>
+    </>
   )
 }
 

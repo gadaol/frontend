@@ -10,6 +10,9 @@ import PlacePhoto from '@/components/features/places/PlacePhoto'
 import { createClient } from '@/lib/supabase/client'
 import type { GooglePlace } from '@/types/place'
 import type { RecommendResult } from '@/app/api/ai/recommend/route'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 export type { GooglePlace }
 
@@ -128,10 +131,16 @@ export default function PlaceMapSearch({
   const [nlQuery, setNlQuery] = useState('')
   const [nlPhase, setNlPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [nlResult, setNlResult] = useState<RecommendResult | null>(null)
+  const [upgradeSheet, setUpgradeSheet] = useState(false)
   const nlAbortRef = useRef<AbortController | null>(null)
+  const plan = usePlanStore((s) => s.plan)
 
   const fetchNLSearch = useCallback(async (q: string) => {
     if (!q.trim()) return
+    if (!canAccess(plan, FEATURE_PLAN.aiSearch)) {
+      setUpgradeSheet(true)
+      return
+    }
     setNlResult(null)
     setNlPhase('loading')
     nlAbortRef.current?.abort()
@@ -281,6 +290,14 @@ export default function PlaceMapSearch({
   }
 
   return (
+    <>
+    {upgradeSheet && (
+      <UpgradeSheet
+        required="pro"
+        feature="AI 장소 검색"
+        onClose={() => setUpgradeSheet(false)}
+      />
+    )}
     <div className="relative flex h-full flex-col">
       {/* 지도 */}
       <div className="absolute inset-0">
@@ -898,5 +915,6 @@ export default function PlaceMapSearch({
         </div>
       )}
     </div>
+    </>
   )
 }
