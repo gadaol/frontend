@@ -4,12 +4,18 @@ import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocale } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
-import { addRecommendedPlaceToBacklog } from '@/app/actions/backlog'
+import {
+  addRecommendedPlaceToBacklog,
+  addRecommendedPlaceToTrip,
+  getUserActiveTrips,
+} from '@/app/actions/backlog'
 import { getCategoryStyle } from '@/utils/placeCategory'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
 import type { RecommendResult } from '@/app/api/ai/recommend/route'
 
 type SaveState = 'idle' | 'loading' | 'saved' | 'exists' | 'error'
+type TripAddState = 'idle' | 'loading' | 'done' | 'error'
+type ActiveTrip = { id: string; title: string; destination: string | null; start_date: string | null }
 
 export default function HomeAISection() {
   const locale = useLocale() as 'ko' | 'en'
@@ -20,6 +26,13 @@ export default function HomeAISection() {
   const [error, setError] = useState(false)
   const [saveStates, setSaveStates] = useState<Record<number, SaveState>>({})
   const [photoRefs, setPhotoRefs] = useState<Record<number, string | null>>({})
+
+  // 여행에 추가 시트
+  const [tripSheet, setTripSheet] = useState<{ idx: number } | null>(null)
+  const [activeTrips, setActiveTrips] = useState<ActiveTrip[] | null>(null)
+  const [tripsLoading, setTripsLoading] = useState(false)
+  const [tripAddStates, setTripAddStates] = useState<Record<string, TripAddState>>({}) // key: `${idx}_${tripId}`
+
   const abortRef = useRef<AbortController | null>(null)
   const openAssistant = useAssistantStore((s) => s.open)
 
@@ -82,6 +95,7 @@ export default function HomeAISection() {
   function handleClose() {
     abortRef.current?.abort()
     setOpen(false)
+    setTripSheet(null)
   }
 
   async function handleSave(idx: number) {
@@ -100,6 +114,30 @@ export default function HomeAISection() {
     } else {
       setSaveStates((prev) => ({ ...prev, [idx]: 'error' }))
     }
+  }
+
+  async function handleOpenTripSheet(idx: number) {
+    setTripSheet({ idx })
+    if (activeTrips !== null) return
+    setTripsLoading(true)
+    const trips = await getUserActiveTrips()
+    setActiveTrips(trips)
+    setTripsLoading(false)
+  }
+
+  async function handleAddToTrip(idx: number, trip: ActiveTrip) {
+    if (!result) return
+    const place = result.places[idx]
+    const key = `${idx}_${trip.id}`
+    setTripAddStates((prev) => ({ ...prev, [key]: 'loading' }))
+    const res = await addRecommendedPlaceToTrip({
+      googleSearchQuery: place.googleSearchQuery,
+      fallbackName: place.name,
+      category: place.category,
+      tripId: trip.id,
+      tripStartDate: trip.start_date,
+    })
+    setTripAddStates((prev) => ({ ...prev, [key]: res.success ? 'done' : 'error' }))
   }
 
   function handleAskForTrip() {
@@ -250,12 +288,13 @@ export default function HomeAISection() {
                         const catStyle = getCategoryStyle(place.category as never)
                         const saveState = saveStates[idx] ?? 'idle'
                         const photoRef = photoRefs[idx]
-                        const hasPhoto = photoRef !== undefined // undefined = 아직 로딩 중
+                        const hasPhoto = photoRef !== undefined
+                        const isTripSheetOpen = tripSheet?.idx === idx
 
                         return (
                           <div key={idx} className="py-4">
                             <div className="flex items-start gap-3">
-                              {/* 썸네일 — 로딩 중엔 스켈레톤, 완료 후 사진 or 이모지 */}
+                              {/* 썸네일 */}
                               {!hasPhoto ? (
                                 <div className="mt-0.5 h-11 w-11 flex-shrink-0 animate-pulse rounded-xl bg-gray-100" />
                               ) : (
@@ -286,36 +325,119 @@ export default function HomeAISection() {
                                   {place.reason}
                                 </p>
                                 <p className="text-ink3 mt-1 text-[11px]">💡 {place.tip}</p>
-                              </div>
 
-                              <button
-                                onClick={() => handleSave(idx)}
-                                disabled={
-                                  saveState === 'loading' ||
-                                  saveState === 'saved' ||
-                                  saveState === 'exists'
-                                }
-                                className="flex flex-shrink-0 items-center gap-1 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all active:opacity-70"
-                                style={
-                                  saveState === 'saved' || saveState === 'exists'
-                                    ? { backgroundColor: '#10b98118', color: '#10b981' }
-                                    : saveState === 'error'
-                                      ? { backgroundColor: '#ef444418', color: '#ef4444' }
-                                      : { backgroundColor: '#0891b218', color: '#0891b2' }
-                                }
-                              >
-                                {saveState === 'loading' ? (
-                                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                ) : saveState === 'saved' ? (
-                                  <>✓ {isKo ? '저장됨' : 'Saved'}</>
-                                ) : saveState === 'exists' ? (
-                                  <>✓ {isKo ? '있음' : 'In list'}</>
-                                ) : saveState === 'error' ? (
-                                  isKo ? '실패' : 'Error'
-                                ) : (
-                                  isKo ? '저장' : 'Save'
+                                {/* 액션 버튼 행 */}
+                                <div className="mt-2.5 flex gap-2">
+                                  {/* 백로그 저장 */}
+                                  <button
+                                    onClick={() => handleSave(idx)}
+                                    disabled={
+                                      saveState === 'loading' ||
+                                      saveState === 'saved' ||
+                                      saveState === 'exists'
+                                    }
+                                    className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition-all active:opacity-70"
+                                    style={
+                                      saveState === 'saved' || saveState === 'exists'
+                                        ? { backgroundColor: '#10b98118', color: '#10b981' }
+                                        : saveState === 'error'
+                                          ? { backgroundColor: '#ef444418', color: '#ef4444' }
+                                          : { backgroundColor: '#0891b218', color: '#0891b2' }
+                                    }
+                                  >
+                                    {saveState === 'loading' ? (
+                                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                    ) : saveState === 'saved' ? (
+                                      <>✓ {isKo ? '백로그 저장됨' : 'In backlog'}</>
+                                    ) : saveState === 'exists' ? (
+                                      <>✓ {isKo ? '이미 백로그에 있음' : 'Already in backlog'}</>
+                                    ) : saveState === 'error' ? (
+                                      isKo ? '저장 실패' : 'Error'
+                                    ) : (
+                                      isKo ? '백로그에 저장' : 'Save to backlog'
+                                    )}
+                                  </button>
+
+                                  {/* 여행에 추가 */}
+                                  <button
+                                    onClick={() =>
+                                      isTripSheetOpen
+                                        ? setTripSheet(null)
+                                        : handleOpenTripSheet(idx)
+                                    }
+                                    className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition-all active:opacity-70"
+                                    style={{ backgroundColor: '#6366f118', color: '#6366f1' }}
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                                      <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                                      <path d="M3.5 1v2M7.5 1v2M1 5h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                                    </svg>
+                                    {isKo ? '여행에 추가' : 'Add to trip'}
+                                  </button>
+                                </div>
+
+                                {/* 여행 선택 인라인 */}
+                                {isTripSheetOpen && (
+                                  <div className="mt-2 overflow-hidden rounded-xl border border-[#6366f120] bg-[#6366f106]">
+                                    {tripsLoading ? (
+                                      <div className="flex items-center justify-center py-4">
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#6366f1] border-t-transparent" />
+                                      </div>
+                                    ) : !activeTrips || activeTrips.length === 0 ? (
+                                      <p className="px-3 py-3 text-[11px] text-gray-400">
+                                        {isKo ? '진행 중인 여행이 없어요' : 'No active trips'}
+                                      </p>
+                                    ) : (
+                                      <div className="divide-y divide-[#6366f110]">
+                                        {activeTrips.map((trip) => {
+                                          const key = `${idx}_${trip.id}`
+                                          const state = tripAddStates[key] ?? 'idle'
+                                          return (
+                                            <button
+                                              key={trip.id}
+                                              onClick={() => handleAddToTrip(idx, trip)}
+                                              disabled={state === 'loading' || state === 'done'}
+                                              className="flex w-full items-center justify-between px-3 py-2.5 text-left transition-all active:opacity-70"
+                                            >
+                                              <div className="min-w-0">
+                                                <p className="text-ink truncate text-[12px] font-semibold">
+                                                  {trip.title}
+                                                </p>
+                                                {trip.destination && (
+                                                  <p className="text-ink3 text-[10px]">
+                                                    {trip.destination}
+                                                  </p>
+                                                )}
+                                              </div>
+                                              <span
+                                                className="ml-2 flex-shrink-0 text-[10px] font-semibold"
+                                                style={{
+                                                  color:
+                                                    state === 'done'
+                                                      ? '#10b981'
+                                                      : state === 'error'
+                                                        ? '#ef4444'
+                                                        : '#6366f1',
+                                                }}
+                                              >
+                                                {state === 'loading' ? (
+                                                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#6366f1] border-t-transparent" />
+                                                ) : state === 'done' ? (
+                                                  isKo ? '추가됨 ✓' : 'Added ✓'
+                                                ) : state === 'error' ? (
+                                                  isKo ? '실패' : 'Error'
+                                                ) : (
+                                                  isKo ? '추가' : 'Add'
+                                                )}
+                                              </span>
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
-                              </button>
+                              </div>
                             </div>
                           </div>
                         )
@@ -325,7 +447,7 @@ export default function HomeAISection() {
                 )}
               </div>
 
-              {/* 하단 버튼 — 에러 상태엔 콘텐츠 안에 이미 버튼 있음 */}
+              {/* 하단 버튼 */}
               {!loading && result && (
                 <div className="border-border pb-safe flex-shrink-0 border-t px-4 py-3 flex gap-2">
                   <button
@@ -339,6 +461,7 @@ export default function HomeAISection() {
                     onClick={() => {
                       setResult(null)
                       setError(false)
+                      setTripSheet(null)
                       fetchRecommend()
                     }}
                     className="border-border text-ink2 rounded-2xl border px-4 py-3 text-[14px] font-semibold"
