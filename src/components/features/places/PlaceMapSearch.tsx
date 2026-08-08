@@ -348,7 +348,7 @@ export default function PlaceMapSearch({
                       lineHeight: 1.4,
                     }}
                   >
-                    {getCategoryInfo(selectedPlace.types).hashLabel}
+                    {`#${t(getCategoryInfo(selectedPlace.types).i18nKey as never)}`}
                   </p>
                   {selectedPlace.rating && (
                     <p style={{ fontSize: 12, color: '#555', margin: '3px 0 0' }}>
@@ -657,7 +657,7 @@ export default function PlaceMapSearch({
                             className="mt-0.5 truncate text-[11px] font-semibold"
                             style={{ color: category.hex }}
                           >
-                            {category.hashLabel}
+                            {`#${t(category.i18nKey as never)}`}
                           </p>
                         </div>
                       </button>

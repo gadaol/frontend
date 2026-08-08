@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import {
   GoogleMap,
@@ -50,6 +52,7 @@ interface Props {
 }
 
 export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName }: Props) {
+  const tp = useTranslations('places')
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
   })
@@ -480,7 +483,7 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
                               className="mt-0.5 text-[11px] font-semibold"
                               style={{ color: catInfo.hex }}
                             >
-                              {catInfo.hashLabel}
+                              {`#${tp(catInfo.i18nKey as never)}`}
                             </p>
                           </div>
                           <svg

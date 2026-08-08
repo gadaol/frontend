@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 import dayjs from '@/lib/dayjs'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
@@ -33,6 +33,7 @@ export default function VoteClient({
   candidates: initialCandidates,
   initialVotes,
 }: Props) {
+  const tp = useTranslations('places')
   const locale = useLocale()
   const router = useRouter()
   const [votes, setVotes] = useState<VoteRecord>(initialVotes)
@@ -199,7 +200,7 @@ export default function VoteClient({
                         className="mt-0.5 text-[11px] font-semibold"
                         style={{ color: category.hex }}
                       >
-                        {category.hashLabel}
+                        {`#${tp(category.i18nKey as never)}`}
                       </p>
                     </div>
                     <button

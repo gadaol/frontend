@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useState, useEffect, useRef } from 'react'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
@@ -40,6 +42,7 @@ export default function ItemDetailSheet({
   onAddExpense,
   onRemoveExpense,
 }: Props) {
+  const tp = useTranslations('places')
   const [memo, setMemo] = useState(item.memo ?? '')
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [expenseAmount, setExpenseAmount] = useState('')
@@ -147,7 +150,7 @@ export default function ItemDetailSheet({
                 {item.places?.name ?? '장소'}
               </p>
               <p className="text-[11px] font-semibold" style={{ color: category.hex }}>
-                {category.hashLabel}
+                {`#${tp(category.i18nKey as never)}`}
               </p>
             </div>
             <button onClick={onClose} className="text-ink3 p-2">

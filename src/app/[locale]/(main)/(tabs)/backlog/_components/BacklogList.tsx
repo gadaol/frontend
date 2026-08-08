@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useTransition, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { removeFromBacklog } from '@/app/actions/backlog'
 import {
@@ -40,6 +40,7 @@ export default function BacklogList({
   items: initialItems,
   collections: initialCollections,
 }: Props) {
+  const tp = useTranslations('places')
   const locale = useLocale()
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -328,7 +329,7 @@ export default function BacklogList({
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className={`text-[11px] font-semibold ${category.color}`}>
-                      {category.hashLabel}
+                      {`#${tp(category.i18nKey as never)}`}
                     </span>
                     {currentCollection && (
                       <span className="bg-primary/10 text-primary ml-2 max-w-[100px] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold">

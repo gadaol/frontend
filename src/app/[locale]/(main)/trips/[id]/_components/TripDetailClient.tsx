@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useTransition, useRef, useEffect, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
 import BottomNav from '@/components/common/BottomNav'
@@ -36,7 +36,7 @@ import {
 } from '@/app/actions/trip'
 import type { TripDetail, MemberProfile, TripExpense } from '../page'
 
-type Tab = '일정' | '비용' | '장소' | '메이트'
+type Tab = 'itinerary' | 'cost' | 'places' | 'mates'
 
 interface Props {
   trip: TripDetail
@@ -56,12 +56,13 @@ export default function TripDetailClient({
   expenses: initialExpenses,
 }: Props) {
   const locale = useLocale()
+  const t = useTranslations('trips')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
-  const TAB_VALUES: Tab[] = ['일정', '비용', '장소', '메이트']
-  const initialTab = (TAB_VALUES.find((t) => t === searchParams.get('tab')) ?? '일정') as Tab
+  const TAB_VALUES: Tab[] = ['itinerary', 'cost', 'places', 'mates']
+  const initialTab = (TAB_VALUES.find((v) => v === searchParams.get('tab')) ?? 'itinerary') as Tab
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
 
   function handleTabChange(tab: Tab) {
@@ -216,19 +217,19 @@ export default function TripDetailClient({
   const nights = numDays - 1
 
   const statusLabel = ongoing
-    ? '여행 중'
+    ? t('statusOngoing')
     : upcoming
       ? `D-${daysUntil(trip.start_date)}`
       : trip.start_date
-        ? '완료'
-        : '날짜 미정'
+        ? t('statusDone')
+        : t('noDate')
 
   const durationLabel =
-    numDays === 1 ? '당일치기' : trip.start_date ? `${nights}박 ${numDays}일` : ''
+    numDays === 1 ? t('dayTrip') : trip.start_date ? t('nights', { nights, days: numDays }) : ''
 
   const isOwner = trip.owner_id === currentUserId
 
-  const isMapTab = activeTab === '장소'
+  const isMapTab = activeTab === 'places'
   const openAssistant = useAssistantStore((s) => s.open)
 
   const backfillIds = trip.itinerary_days
@@ -278,7 +279,7 @@ export default function TripDetailClient({
           <p className="text-[13px] text-white/70">
             {trip.start_date
               ? `${formatDateRange(trip.start_date, trip.end_date, locale)}${durationLabel ? ` · ${durationLabel}` : ''}`
-              : '날짜 미정'}
+              : t('noDate')}
           </p>
         </div>
       </div>
@@ -331,8 +332,8 @@ export default function TripDetailClient({
             </button>
           </div>
           <button onClick={handleInvite} className="text-ink2 text-[13px]">
-            {trip.trip_members.length}명 참여 중 ·{' '}
-            <span className="text-primary font-medium">메이트 초대</span>
+            {t('membersJoined', { count: trip.trip_members.length })} ·{' '}
+            <span className="text-primary font-medium">{t('inviteMate')}</span>
           </button>
         </div>
 
@@ -363,7 +364,7 @@ export default function TripDetailClient({
                 />
               </svg>
             </div>
-            <span className="text-ink2 text-[11px] font-medium">일정 편집</span>
+            <span className="text-ink2 text-[11px] font-medium">{t('editItinerary')}</span>
           </Link>
           <Link
             href={`/${locale}/trips/${trip.id}/vote`}
@@ -379,17 +380,17 @@ export default function TripDetailClient({
                 />
               </svg>
             </div>
-            <span className="text-ink2 text-[11px] font-medium">투표</span>
+            <span className="text-ink2 text-[11px] font-medium">{t('vote')}</span>
           </Link>
         </div>
 
         {/* 탭 */}
         <Tabs
           items={[
-            { key: '일정' as Tab, label: '일정' },
-            { key: '비용' as Tab, label: '💰 비용' },
-            { key: '장소' as Tab, label: '장소' },
-            { key: '메이트' as Tab, label: '메이트' },
+            { key: 'itinerary' as Tab, label: t('tabItinerary') },
+            { key: 'cost' as Tab, label: t('tabCost') },
+            { key: 'places' as Tab, label: t('tabPlaces') },
+            { key: 'mates' as Tab, label: t('tabMates') },
           ]}
           value={activeTab}
           onChange={handleTabChange}
@@ -398,7 +399,7 @@ export default function TripDetailClient({
 
         {/* 탭 컨텐츠 */}
         <div className={isMapTab ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1 pb-20'}>
-          {activeTab === '일정' && (
+          {activeTab === 'itinerary' && (
             <ItineraryTab
               expectedDays={expectedDays}
               dayMap={effectiveDayMap}
@@ -416,7 +417,7 @@ export default function TripDetailClient({
               onGenerateAI={() => setShowAISheet(true)}
             />
           )}
-          {activeTab === '비용' && (
+          {activeTab === 'cost' && (
             <ExpenseTab
               expenses={localExpenses}
               expectedDays={expectedDays}
@@ -426,7 +427,7 @@ export default function TripDetailClient({
               locale={locale}
             />
           )}
-          {activeTab === '장소' && (
+          {activeTab === 'places' && (
             <div className="relative flex-1">
               <PlacesMapTab
                 trip={trip}
@@ -438,18 +439,18 @@ export default function TripDetailClient({
                 onClick={() =>
                   openAssistant({
                     prompt: trip.destination
-                      ? `${trip.destination} 여행에 추가할 장소를 추천해줘`
-                      : '이 여행에 추가할 좋은 장소를 추천해줘',
+                      ? t('aiRecommendPrompt', { destination: trip.destination })
+                      : t('aiRecommendPromptNoDest'),
                   })
                 }
                 className="bg-primary shadow-primary/30 absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold text-white shadow-lg"
               >
                 <span>✨</span>
-                AI 추천
+                {t('aiRecommend')}
               </button>
             </div>
           )}
-          {activeTab === '메이트' && (
+          {activeTab === 'mates' && (
             <MateTab
               members={trip.trip_members}
               profileMap={profileMap}
@@ -530,6 +531,7 @@ function ItineraryTab({
   destination: string | null
   onGenerateAI: () => void
 }) {
+  const t = useTranslations('trips')
   if (expectedDays.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
@@ -537,17 +539,15 @@ function ItineraryTab({
           <MapPinIcon size={30} className="text-primary" />
         </div>
         <div>
-          <p className="text-ink mb-1 text-[16px] font-semibold">일정이 없어요</p>
-          <p className="text-ink3 text-[13px] leading-relaxed">
-            여행 날짜를 설정하면 일정을 관리할 수 있어요
-          </p>
+          <p className="text-ink mb-1 text-[16px] font-semibold">{t('emptyItinerary')}</p>
+          <p className="text-ink3 text-[13px] leading-relaxed">{t('emptyItineraryDesc')}</p>
         </div>
         {isOwner && (
           <Link
             href={`/${locale}/trips/${tripId}/edit`}
             className="bg-primary mt-1 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white"
           >
-            날짜 설정하기
+            {t('setDates')}
           </Link>
         )}
       </div>
@@ -572,11 +572,9 @@ function ItineraryTab({
             ✨
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-bold text-white">AI로 일정 짜기</span>
+            <span className="block text-[13px] font-bold text-white">{t('aiGenerate')}</span>
             <span className="block text-[11px] text-white/70">
-              {destination
-                ? `${destination} 일정을 자동으로 채워드려요`
-                : '일정을 자동으로 채워드려요'}
+              {destination ? t('aiGenerateDesc', { destination }) : t('aiGenerateDescNoDest')}
             </span>
           </span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
@@ -603,11 +601,11 @@ function ItineraryTab({
                 Day {day.dayNumber}
               </span>
               <span className="text-ink3 text-[12px]">
-                {dayjs(day.dayDate).locale(locale).format('M월 D일 dddd')}
+                {dayjs(day.dayDate).locale(locale).format(t('dayHeaderFormat'))}
               </span>
               {dayTotal > 0 && (
                 <span className="text-ink2 ml-auto text-[11px] font-semibold">
-                  {dayTotal.toLocaleString()}원
+                  {t('amountWithUnit', { amount: dayTotal.toLocaleString() })}
                 </span>
               )}
             </div>
@@ -637,13 +635,13 @@ function ItineraryTab({
                     href={`/${locale}/trips/${tripId}/places?day=${day.dayNumber}&date=${day.dayDate}`}
                     className="border-border flex flex-1 items-center rounded-[10px] border border-dashed bg-transparent px-3 py-2.5"
                   >
-                    <span className="text-ink3 text-[13px]">+ 장소 추가</span>
+                    <span className="text-ink3 text-[13px]">{t('addPlaceInline')}</span>
                   </Link>
                   <button
                     onClick={() => onAddMemo(day.dayDate, day.dayNumber)}
                     className="border-border flex items-center rounded-[10px] border border-dashed bg-transparent px-3 py-2.5"
                   >
-                    <span className="text-ink3 text-[13px]">📝 메모</span>
+                    <span className="text-ink3 text-[13px]">{t('memoInline')}</span>
                   </button>
                 </div>
               </div>
@@ -671,6 +669,7 @@ function ExpenseTab({
   memberCount: number
   locale: string
 }) {
+  const t = useTranslations('trips')
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
   const perPerson = memberCount > 1 ? Math.ceil(totalExpenses / memberCount) : 0
 
@@ -688,8 +687,8 @@ function ExpenseTab({
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
         <span className="text-5xl">💸</span>
         <div>
-          <p className="text-ink mb-1 text-[16px] font-semibold">등록된 경비가 없어요</p>
-          <p className="text-ink3 text-[13px]">일정 탭에서 장소나 메모를 탭해 경비를 추가하세요</p>
+          <p className="text-ink mb-1 text-[16px] font-semibold">{t('emptyExpense')}</p>
+          <p className="text-ink3 text-[13px]">{t('emptyExpenseDesc')}</p>
         </div>
       </div>
     )
@@ -700,17 +699,21 @@ function ExpenseTab({
       {/* 총경비 카드 */}
       <div className="bg-primary-light mb-4 rounded-2xl px-4 py-4">
         <p className="text-primary mb-1.5 text-[11px] font-semibold tracking-wide uppercase">
-          총 경비
+          {t('totalCost')}
         </p>
         <div className="flex items-end justify-between">
           <p className="text-primary text-[26px] leading-none font-extrabold">
             {totalExpenses.toLocaleString()}
-            <span className="text-[15px] font-semibold">원</span>
+            <span className="text-[15px] font-semibold">{t('currencyUnit')}</span>
           </p>
           {perPerson > 0 && (
             <div className="text-right">
-              <p className="text-ink3 mb-0.5 text-[10px]">더치페이 ({memberCount}명)</p>
-              <p className="text-ink text-[17px] font-bold">{perPerson.toLocaleString()}원</p>
+              <p className="text-ink3 mb-0.5 text-[10px]">
+                {t('splitLabel', { count: memberCount })}
+              </p>
+              <p className="text-ink text-[17px] font-bold">
+                {t('amountWithUnit', { amount: perPerson.toLocaleString() })}
+              </p>
             </div>
           )}
         </div>
@@ -720,7 +723,7 @@ function ExpenseTab({
       {categoryTotals.length > 0 && (
         <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white">
           <p className="text-ink2 border-border border-b px-4 py-2.5 text-[12px] font-semibold">
-            카테고리별
+            {t('byCategory')}
           </p>
           {categoryTotals.map(([cat, amount], i) => (
             <div
@@ -729,7 +732,9 @@ function ExpenseTab({
             >
               <span className="text-ink text-[13px] font-semibold">{cat}</span>
               <div className="bg-border mx-1 h-px flex-1" />
-              <span className="text-ink2 text-[13px] font-bold">{amount.toLocaleString()}원</span>
+              <span className="text-ink2 text-[13px] font-bold">
+                {t('amountWithUnit', { amount: amount.toLocaleString() })}
+              </span>
               <span className="text-ink3 w-10 text-right text-[11px]">
                 {Math.round((amount / totalExpenses) * 100)}%
               </span>
@@ -739,7 +744,7 @@ function ExpenseTab({
       )}
 
       {/* 날짜별 */}
-      <p className="text-ink2 mb-2 text-[12px] font-semibold">날짜별</p>
+      <p className="text-ink2 mb-2 text-[12px] font-semibold">{t('byDate')}</p>
       {expectedDays.map((day) => {
         const db = dayMap.get(day.dayDate)
         const dayExpenses = db ? (expensesByDay.get(db.id) ?? []) : []
@@ -758,7 +763,7 @@ function ExpenseTab({
               </span>
               {dayTotal > 0 && (
                 <span className="text-primary ml-auto text-[13px] font-bold">
-                  {dayTotal.toLocaleString()}원
+                  {t('amountWithUnit', { amount: dayTotal.toLocaleString() })}
                 </span>
               )}
             </div>
@@ -776,14 +781,14 @@ function ExpenseTab({
                       </span>
                     )}
                     <span className="text-ink ml-auto flex-shrink-0 text-[13px] font-bold">
-                      {e.amount.toLocaleString()}원
+                      {t('amountWithUnit', { amount: e.amount.toLocaleString() })}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="border-border border-t px-4 py-2.5">
-                <p className="text-ink3 text-[12px]">경비 없음</p>
+                <p className="text-ink3 text-[12px]">{t('noExpenseShort')}</p>
               </div>
             )}
           </div>
@@ -809,11 +814,12 @@ function MateTab({
   currentUserId: string
   tripId: string
 }) {
+  const t = useTranslations('trips')
   const [, startTransition] = useTransition()
   const [kickedIds, setKickedIds] = useState<Set<string>>(new Set())
 
   function handleKick(userId: string, name: string | null) {
-    if (!confirm(`${name ?? '멤버'}를 내보낼까요?`)) return
+    if (!confirm(t('kickConfirm', { name: name ?? t('memberFallback') }))) return
     setKickedIds((prev) => new Set(prev).add(userId))
     startTransition(async () => {
       await kickMember(tripId, userId)
@@ -827,7 +833,7 @@ function MateTab({
       <div className="flex flex-col gap-3">
         {visible.map((m, i) => {
           const profile = profileMap.get(m.user_id)
-          const name = profile?.name ?? '알 수 없음'
+          const name = profile?.name ?? t('unknownMember')
           const avatarUrl = profile?.avatar_url ?? null
           return (
             <div key={m.user_id} className="flex items-center gap-3">
@@ -848,7 +854,9 @@ function MateTab({
               )}
               <div className="flex-1">
                 <p className="text-ink text-[14px] font-semibold">{name}</p>
-                <p className="text-ink3 text-[12px]">{m.role === 'owner' ? '방장' : '메이트'}</p>
+                <p className="text-ink3 text-[12px]">
+                  {m.role === 'owner' ? t('roleOwner') : t('roleMate')}
+                </p>
               </div>
               {isOwner && m.user_id !== currentUserId && m.role !== 'owner' && (
                 <button
@@ -875,7 +883,7 @@ function MateTab({
           <div className="border-border flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed">
             <PlusIcon size={16} className="text-ink3" />
           </div>
-          <span className="text-ink3 text-[14px]">메이트 초대하기</span>
+          <span className="text-ink3 text-[14px]">{t('inviteMateLong')}</span>
         </button>
       </div>
     </div>
@@ -1034,6 +1042,9 @@ function ItineraryItemRow({
   isDragging?: boolean
   onDragHandleTouchStart?: (e: React.TouchEvent) => void
 }) {
+  const t = useTranslations('trips')
+  const tp = useTranslations('places')
+  const tc = useTranslations('common')
   const timeRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef(0)
   const [swiped, setSwiped] = useState(false)
@@ -1120,9 +1131,9 @@ function ItineraryItemRow({
           onClick={() => onRemove(item.id)}
           className="absolute top-0 right-0 flex h-full items-center justify-center rounded-r-[10px] bg-red-500 text-[12px] font-semibold text-white active:bg-red-600"
           style={{ width: SWIPE_DELETE_WIDTH }}
-          aria-label="일정에서 제거"
+          aria-label={t('removeFromItinerary')}
         >
-          삭제
+          {tc('delete')}
         </button>
 
         {/* 슬라이드 카드 */}
@@ -1154,7 +1165,7 @@ function ItineraryItemRow({
               <path d="M8.5 2.5l3 3" stroke="#F59E0B" strokeWidth="1.3" />
             </svg>
             <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-amber-900">
-              {item.memo || <span className="text-amber-400 italic">탭해서 메모 입력...</span>}
+              {item.memo || <span className="text-amber-400 italic">{t('memoTapToEdit')}</span>}
             </p>
           </div>
         ) : (
@@ -1177,7 +1188,7 @@ function ItineraryItemRow({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 bg-white px-3 py-2.5">
               <p className="text-ink text-[13px] leading-snug font-semibold break-keep">
-                {item.places?.name ?? '알 수 없는 장소'}
+                {item.places?.name ?? t('unknownPlace')}
               </p>
               {item.places?.address && (
                 <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
@@ -1186,7 +1197,7 @@ function ItineraryItemRow({
                 <p className="text-ink2 truncate text-[11px] italic">&ldquo;{item.memo}&rdquo;</p>
               )}
               <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
-                {category.hashLabel}
+                {`#${tp(category.i18nKey as never)}`}
               </p>
             </div>
           </div>
@@ -1197,7 +1208,7 @@ function ItineraryItemRow({
       <button
         className="mb-1 flex flex-shrink-0 touch-none items-center self-stretch px-1 select-none"
         onTouchStart={onDragHandleTouchStart}
-        aria-label="순서 변경"
+        aria-label={t('reorder')}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <rect x="2" y="4" width="10" height="1.5" rx="0.75" fill="var(--color-ink3)" />

@@ -967,6 +967,7 @@ function TimelineItemRow({
   onTap: () => void
 }) {
   const t = useTranslations('trips')
+  const tp = useTranslations('places')
   const tc = useTranslations('common')
   const timeRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef(0)
@@ -1125,7 +1126,7 @@ function TimelineItemRow({
                 )}
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-[11px] font-semibold" style={{ color: category.hex }}>
-                    {category.hashLabel}
+                    {`#${tp(category.i18nKey as never)}`}
                   </p>
                 </div>
               </div>

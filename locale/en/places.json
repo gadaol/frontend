@@ -19,5 +19,15 @@
   "reviewCount": "Reviews",
   "call": "Call",
   "addToTrip": "Add to Trip",
-  "reviewsTitle": "Reviews"
+  "reviewsTitle": "Reviews",
+  "category": {
+    "restaurant": "Food",
+    "cafe": "Cafe",
+    "landmark": "Sights",
+    "hotel": "Stay",
+    "shopping": "Shopping",
+    "nature": "Nature",
+    "activity": "Activity",
+    "etc": "Other"
+  }
 }

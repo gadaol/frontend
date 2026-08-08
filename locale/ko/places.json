@@ -19,5 +19,15 @@
   "reviewCount": "리뷰",
   "call": "전화",
   "addToTrip": "일정에 추가",
-  "reviewsTitle": "리뷰"
+  "reviewsTitle": "리뷰",
+  "category": {
+    "restaurant": "식당",
+    "cafe": "카페",
+    "landmark": "관광지",
+    "hotel": "숙소",
+    "shopping": "쇼핑",
+    "nature": "자연",
+    "activity": "액티비티",
+    "etc": "기타"
+  }
 }
