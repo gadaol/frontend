@@ -143,14 +143,9 @@ export default function PlaceMapSearch({
         body: JSON.stringify({ query: q, locale }),
         signal: nlAbortRef.current.signal,
       })
-      if (!res.ok || !res.body) throw new Error('failed')
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        setNlText((prev) => prev + decoder.decode(value, { stream: true }))
-      }
+      if (!res.ok) throw new Error('failed')
+      const { text } = await res.json() as { text: string }
+      setNlText(text ?? '')
       setNlPhase('done')
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setNlPhase('error')
@@ -534,13 +529,19 @@ export default function PlaceMapSearch({
                     className="overflow-y-auto px-4 py-3"
                     style={{ maxHeight: 260, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 12 }}
                   >
-                    {nlText ? (
-                      <p className="text-ink2 whitespace-pre-wrap text-[13px] leading-relaxed">{nlText}</p>
-                    ) : (
+                    {nlPhase === 'streaming' && (
                       <div className="text-ink3 flex items-center gap-2 text-[13px]">
                         <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                         {locale === 'ko' ? '찾고 있어요...' : 'Searching...'}
                       </div>
+                    )}
+                    {nlPhase === 'done' && nlText && (
+                      <p className="text-ink2 whitespace-pre-wrap text-[13px] leading-relaxed">{nlText}</p>
+                    )}
+                    {nlPhase === 'done' && !nlText && (
+                      <p className="text-ink3 text-[13px]">
+                        {locale === 'ko' ? '관련 장소를 찾지 못했어요.' : 'No matching places found.'}
+                      </p>
                     )}
                     {nlPhase === 'error' && (
                       <button onClick={() => fetchNLSearch(nlQuery)} className="text-primary mt-2 text-[13px] font-semibold">

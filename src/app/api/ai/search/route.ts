@@ -31,5 +31,6 @@ export async function POST(req: NextRequest) {
     stopWhen: isStepCount(3),
   })
 
-  return result.toTextStreamResponse()
+  const text = await result.text
+  return Response.json({ text })
 }
