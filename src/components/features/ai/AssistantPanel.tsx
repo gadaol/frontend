@@ -189,6 +189,11 @@ export default function AssistantPanel() {
   }, [stopListening, stopSpeaking])
 
   function enterVoiceMode() {
+    // 기존 대화가 있으면 마지막 메시지를 이미 읽은 것으로 표시 — 인사말과 겹치지 않게
+    const lastMsg = messages.at(-1)
+    if (lastMsg?.role === 'assistant') {
+      lastSpokenIdRef.current = lastMsg.id
+    }
     setVoiceMode(true)
     live.current.voice = true
     // iOS는 사용자 제스처 안에서 첫 재생이 일어나야 이후 재생이 허용된다
