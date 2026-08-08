@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     endDate,
     startTime = '',
     endTime = '',
-    targetDates = [],
+    targetDays = [],
     excludePlaces = [],
     style = [],
     companion = '',
@@ -59,8 +59,12 @@ export async function POST(req: NextRequest) {
     startTime?: string
     /** 마지막날 일정을 끝내야 하는 시각 (출발 시간) */
     endTime?: string
-    /** 이 날짜들만 생성한다. 비면 전체 기간 */
-    targetDates?: string[]
+    /**
+     * 채울 날만 지정한다. 비면 전체 기간.
+     * day_number까지 함께 주는 이유: 날짜만 주면 모델이 1일차부터 새로
+     * 번호를 붙여서 "3,4일차를 채워야 하는데 1,2일차를 짜는" 일이 생긴다.
+     */
+    targetDays?: Array<{ dayNumber: number; dayDate: string }>
     /** 이미 여행에 담긴 장소명. 중복 추천을 막는다 */
     excludePlaces?: string[]
     style?: string[]
@@ -78,14 +82,18 @@ export async function POST(req: NextRequest) {
   const trimmedNotes = notes.trim().slice(0, 500)
   // 장소가 많은 여행이면 목록이 프롬프트를 잡아먹으므로 상한을 둔다
   const excludeStr = excludePlaces.slice(0, 40).join(', ')
+  const targetStr = targetDays.map((d) => `${d.dayNumber}일차(${d.dayDate})`).join(', ')
+  const targetStrEn = targetDays.map((d) => `day ${d.dayNumber} (${d.dayDate})`).join(', ')
 
   const userPrompt =
     locale === 'ko'
       ? [
           `목적지: ${destination}`,
-          targetDates.length > 0
-            ? `아래 날짜만 짜라. 다른 날짜는 절대 포함하지 마라: ${targetDates.join(', ')}`
-            : `기간: ${startDate} ~ ${endDate}`,
+          `전체 여행 기간: ${startDate} ~ ${endDate}`,
+          targetStr &&
+            `이 중 아래 날만 짜라. 나머지 날은 이미 일정이 있으니 절대 포함하지 마라.\n` +
+              `대상: ${targetStr}\n` +
+              `각 day의 day_number와 day_date는 위에 적힌 값을 그대로 써라. 1일차부터 새로 번호를 붙이지 마라.`,
           `스타일: ${style.join(', ')}`,
           `동행: ${companion}`,
           excludeStr && `이미 이 여행에 담긴 장소다. 절대 다시 추천하지 마라: ${excludeStr}`,
@@ -97,9 +105,11 @@ export async function POST(req: NextRequest) {
           .join('\n')
       : [
           `Destination: ${destination}`,
-          targetDates.length > 0
-            ? `Plan ONLY these dates, never include others: ${targetDates.join(', ')}`
-            : `Dates: ${startDate} to ${endDate}`,
+          `Full trip range: ${startDate} to ${endDate}`,
+          targetStrEn &&
+            `Plan ONLY these days — the others already have plans, never include them.\n` +
+              `Targets: ${targetStrEn}\n` +
+              `Use exactly the day_number and day_date listed above. Do not renumber from day 1.`,
           `Style: ${style.join(', ')}`,
           `Companion: ${companion}`,
           excludeStr && `Already in this trip — never recommend these again: ${excludeStr}`,

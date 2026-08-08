@@ -26,11 +26,11 @@ interface Props {
    */
   tripId?: string
   /**
-   * 채울 날짜(YYYY-MM-DD)만 지정한다. 비우면 전체 기간을 짠다.
-   * 이걸 넘기면 AI가 해당 날짜만 생성하므로, 미리보기에 적용되지 않을 날이
-   * 섞이지 않는다.
+   * 채울 날만 지정한다. 비우면 전체 기간을 짠다.
+   * 날짜와 일차를 함께 넘긴다 — 날짜만 주면 모델이 1일차부터 새로 번호를
+   * 붙여서 엉뚱한 날을 짜는 일이 있었다.
    */
-  targetDates?: string[]
+  targetDays?: Array<{ dayNumber: number; dayDate: string }>
   /** 이미 여행에 담긴 장소명. 같은 곳을 또 추천하지 않게 한다 */
   excludePlaces?: string[]
   onClose: () => void
@@ -45,7 +45,7 @@ export default function AIItinerarySheet({
   endTime = '',
   coverUrl,
   tripId: existingTripId,
-  targetDates = [],
+  targetDays = [],
   excludePlaces = [],
   onClose,
 }: Props) {
@@ -86,7 +86,7 @@ export default function AIItinerarySheet({
           endDate,
           startTime,
           endTime,
-          targetDates,
+          targetDays,
           excludePlaces,
           style: selectedStyles,
           companion,
@@ -125,7 +125,7 @@ export default function AIItinerarySheet({
     endDate,
     startTime,
     endTime,
-    targetDates,
+    targetDays,
     excludePlaces,
     selectedStyles,
     companion,
@@ -153,10 +153,12 @@ export default function AIItinerarySheet({
         targetTripId = id
       }
 
-      const allowed = targetDates.length > 0 ? new Set(targetDates) : null
+      // 모델이 day_number를 잘못 붙여도 날짜 기준으로 우리가 아는 일차를 쓴다
+      const dayNumberByDate = new Map(targetDays.map((d) => [d.dayDate, d.dayNumber]))
       for (const day of itinerary.days) {
         // 대상 날짜를 지정했으면 그 날만 저장한다 (모델이 다른 날을 끼워도 방어)
-        if (allowed && !allowed.has(day.day_date)) continue
+        if (dayNumberByDate.size > 0 && !dayNumberByDate.has(day.day_date)) continue
+        const dayNumber = dayNumberByDate.get(day.day_date) ?? day.day_number
         setSaveStep(t('ai.savingDay', { n: day.day_number }))
         for (const item of day.items) {
           try {
@@ -176,13 +178,13 @@ export default function AIItinerarySheet({
                 lng: found.location?.longitude ?? null,
               })
               if (placeId) {
-                await addItineraryItem(targetTripId, day.day_date, day.day_number, placeId)
+                await addItineraryItem(targetTripId, day.day_date, dayNumber, placeId)
               }
             } else {
               const memo = [item.place_name, item.visit_time && `(${item.visit_time})`, item.memo]
                 .filter(Boolean)
                 .join(' ')
-              await addMemoItem(targetTripId, day.day_date, day.day_number, memo)
+              await addMemoItem(targetTripId, day.day_date, dayNumber, memo)
             }
           } catch {
             // 개별 실패는 무시하고 계속

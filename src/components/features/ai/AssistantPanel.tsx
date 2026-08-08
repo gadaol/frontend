@@ -136,7 +136,7 @@ export default function AssistantPanel() {
     void fetch('/api/ai/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userText, assistantText, locale }),
+      body: JSON.stringify({ userText, assistantText, character, locale }),
     })
       .then((r) => r.json())
       .then((note: { title: string | null; points: string[]; spoken: string | null }) => {

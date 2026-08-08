@@ -2,7 +2,7 @@ import { generateText } from 'ai'
 import { NextRequest } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { createClient } from '@/lib/supabase/server'
-import type { Locale } from '@/lib/ai/characters'
+import { getCharacterPrompt, type CharacterId, type Locale } from '@/lib/ai/characters'
 
 /**
  * 음성 대화 한 턴을 두 갈래로 압축한다.
@@ -21,10 +21,13 @@ export async function POST(req: NextRequest) {
   const {
     userText,
     assistantText,
+    character = 'gada',
     locale = 'ko',
   } = (await req.json()) as {
     userText: string
     assistantText: string
+    /** spoken이 캐릭터 말투를 유지해야 해서 함께 받는다 */
+    character?: CharacterId
     locale?: Locale
   }
 
@@ -44,7 +47,8 @@ export async function POST(req: NextRequest) {
 1) spoken: 소리내어 읽어줄 한 문장. 40자 이내.
    - 답변의 핵심만. 목록·기호·이모지 금지.
    - 자세한 내용은 화면에 글로 보이니 말로는 요점만 짚고, 필요하면 되물어라.
-   - 예시: "동쪽 위주로 3박 코스 잡아봤어요. 우도도 넣을까요?"
+   - **위 캐릭터의 말투를 그대로 유지해라.** 중립적인 요약체로 바꾸지 마라.
+     (가다는 존댓말·부드럽게, 로그는 반말·짧고 툴툴대며)
 2) 화면에 남길 메모
    - title: 8자 이내 핵심 주제
    - points: 기억할 내용 1~3개, 각 20자 이내. 인사말 빼고 정보만.
@@ -61,7 +65,7 @@ Split it into two things.
 1) spoken: one short sentence to say out loud. Under 90 chars.
    - The gist only. No lists, symbols, or emoji.
    - The details are already on screen, so speak the point and ask a follow-up if useful.
-   - Example: "I mapped out three nights around the east side. Want Udo in there?"
+   - **Keep the character's voice above.** Do not flatten it into neutral summary prose.
 2) A note for the screen
    - title: under 20 chars
    - points: 1-3 items, under 40 chars each. Facts only, no pleasantries.
@@ -72,8 +76,9 @@ Return JSON only. Example:
   try {
     const { text } = await generateText({
       model: cerebras(MODELS.fast),
+      system: getCharacterPrompt(character, locale),
       messages: [{ role: 'user', content: prompt }],
-      maxOutputTokens: 200,
+      maxOutputTokens: 260,
     })
 
     const match = text.match(/\{[\s\S]*\}/)

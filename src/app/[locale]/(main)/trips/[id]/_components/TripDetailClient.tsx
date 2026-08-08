@@ -239,12 +239,12 @@ export default function TripDetailClient({
     [trip.itinerary_days],
   )
 
-  /** 아직 아무 일정도 없는 날짜. AI에는 이 날들만 짜게 시킨다 */
-  const emptyDates = useMemo(
+  /** 아직 아무 일정도 없는 날. AI에는 이 날들만 짜게 시킨다 (일차까지 함께) */
+  const emptyDays = useMemo(
     () =>
       expectedDays
         .filter((d) => (dayMap.get(d.dayDate)?.itinerary_items.length ?? 0) === 0)
-        .map((d) => d.dayDate),
+        .map((d) => ({ dayNumber: d.dayNumber, dayDate: d.dayDate })),
     [expectedDays, dayMap],
   )
 
@@ -504,7 +504,7 @@ export default function TripDetailClient({
           endTime={(trip.end_time ?? '').slice(0, 5)}
           coverUrl={trip.cover_url ?? ''}
           tripId={trip.id}
-          targetDates={emptyDates}
+          targetDays={emptyDays}
           excludePlaces={existingPlaceNames}
           onClose={() => setShowAISheet(false)}
         />
