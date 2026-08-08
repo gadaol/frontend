@@ -5,8 +5,11 @@ import { createClient } from '@/lib/supabase/server'
 import type { Locale } from '@/lib/ai/characters'
 
 /**
- * 음성 대화 한 턴을 채팅창에 남길 메모로 압축한다.
- * 대화는 흘러가고, 결론만 텍스트로 쌓이게 하는 게 목적.
+ * 음성 대화 한 턴을 두 갈래로 압축한다.
+ *
+ * - spoken: 스피커로 읽어줄 한 문장. 답변 전문을 그대로 읽으면 너무 길어서
+ *   듣는 사람이 놓친다.
+ * - title/points: 화면에 쌓아둘 메모. 자세한 내용은 눈으로 보게 한다.
  */
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!assistantText?.trim()) {
-    return Response.json({ title: null, points: [] })
+    return Response.json({ title: null, points: [], spoken: null })
   }
 
   const prompt =
@@ -36,21 +39,35 @@ export async function POST(req: NextRequest) {
 사용자: ${userText}
 답변: ${assistantText}
 
-이걸 나중에 다시 봤을 때 알아볼 수 있는 메모로 압축해줘.
-- title: 8자 이내 핵심 주제
-- points: 기억할 내용 1~3개, 각 20자 이내. 인사말이나 빈말은 빼고 정보만.
+두 가지로 나눠서 줘.
 
-JSON만 반환. 예시: {"title":"제주 3박4일","points":["동쪽 위주로 코스","우도 반나절 추천"]}`
+1) spoken: 소리내어 읽어줄 한 문장. 40자 이내.
+   - 답변의 핵심만. 목록·기호·이모지 금지.
+   - 자세한 내용은 화면에 글로 보이니 말로는 요점만 짚고, 필요하면 되물어라.
+   - 예시: "동쪽 위주로 3박 코스 잡아봤어요. 우도도 넣을까요?"
+2) 화면에 남길 메모
+   - title: 8자 이내 핵심 주제
+   - points: 기억할 내용 1~3개, 각 20자 이내. 인사말 빼고 정보만.
+
+JSON만 반환. 예시:
+{"spoken":"동쪽 위주로 3박 코스 잡아봤어요. 우도도 넣을까요?","title":"제주 3박4일","points":["동쪽 위주로 코스","우도 반나절 추천"]}`
       : `Here's one exchange from a travel voice chat.
 
 User: ${userText}
 Reply: ${assistantText}
 
-Compress it into a note that makes sense later.
-- title: under 20 chars
-- points: 1-3 items, under 40 chars each. Facts only, no pleasantries.
+Split it into two things.
 
-Return JSON only. Example: {"title":"Jeju 3 nights","points":["Focus on east side","Udo half-day"]}`
+1) spoken: one short sentence to say out loud. Under 90 chars.
+   - The gist only. No lists, symbols, or emoji.
+   - The details are already on screen, so speak the point and ask a follow-up if useful.
+   - Example: "I mapped out three nights around the east side. Want Udo in there?"
+2) A note for the screen
+   - title: under 20 chars
+   - points: 1-3 items, under 40 chars each. Facts only, no pleasantries.
+
+Return JSON only. Example:
+{"spoken":"I mapped out three nights around the east side. Want Udo in there?","title":"Jeju 3 nights","points":["Focus on east side","Udo half-day"]}`
 
   try {
     const { text } = await generateText({
@@ -60,14 +77,19 @@ Return JSON only. Example: {"title":"Jeju 3 nights","points":["Focus on east sid
     })
 
     const match = text.match(/\{[\s\S]*\}/)
-    if (!match) return Response.json({ title: null, points: [] })
+    if (!match) return Response.json({ title: null, points: [], spoken: null })
 
-    const parsed = JSON.parse(match[0]) as { title?: string; points?: string[] }
+    const parsed = JSON.parse(match[0]) as {
+      title?: string
+      points?: string[]
+      spoken?: string
+    }
     return Response.json({
       title: parsed.title ?? null,
       points: (parsed.points ?? []).slice(0, 3),
+      spoken: parsed.spoken?.trim() || null,
     })
   } catch {
-    return Response.json({ title: null, points: [] })
+    return Response.json({ title: null, points: [], spoken: null })
   }
 }

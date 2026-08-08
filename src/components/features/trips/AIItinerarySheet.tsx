@@ -31,6 +31,8 @@ interface Props {
    * 섞이지 않는다.
    */
   targetDates?: string[]
+  /** 이미 여행에 담긴 장소명. 같은 곳을 또 추천하지 않게 한다 */
+  excludePlaces?: string[]
   onClose: () => void
 }
 
@@ -44,6 +46,7 @@ export default function AIItinerarySheet({
   coverUrl,
   tripId: existingTripId,
   targetDates = [],
+  excludePlaces = [],
   onClose,
 }: Props) {
   const locale = useLocale()
@@ -84,6 +87,7 @@ export default function AIItinerarySheet({
           startTime,
           endTime,
           targetDates,
+          excludePlaces,
           style: selectedStyles,
           companion,
           notes,
@@ -122,6 +126,7 @@ export default function AIItinerarySheet({
     startTime,
     endTime,
     targetDates,
+    excludePlaces,
     selectedStyles,
     companion,
     notes,

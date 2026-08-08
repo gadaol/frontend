@@ -56,22 +56,23 @@ export interface STTEngine {
 }
 
 /**
- * 가다는 밝고 빠르게, 로그는 낮고 느리게.
+ * 가다는 높고 빠르게, 로그는 낮고 조금 느리게 — 둘의 차이는 유지한다.
  *
  * 한국어 보이스는 기기에 하나뿐인 경우가 많아(macOS/iOS는 "유나" 단독)
  * 실질적인 캐릭터 구분은 pitch/rate가 전담한다. 그래서 차이를 넉넉히 벌려뒀다.
+ * 다만 둘 다 기본값(1.0)보다 빠르게 둔다 — 기본 속도로는 듣기 답답하다.
  * 보이스 이름은 OS 언어에 따라 현지화되므로 한글·영문 표기를 모두 넣는다.
  */
 export const VOICE_PROFILES: Record<CharacterId, VoiceProfile> = {
   gada: {
     pitch: 1.35,
-    rate: 1.08,
+    rate: 1.32,
     volume: 1,
     preferredVoices: ['유나', 'Yuna', 'Google 한국의', 'Samantha'],
   },
   rog: {
     pitch: 0.62,
-    rate: 0.9,
+    rate: 1.14,
     volume: 1,
     preferredVoices: ['유나', 'Yuna', 'Google 한국의', 'Daniel'],
   },

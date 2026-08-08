@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     startTime = '',
     endTime = '',
     targetDates = [],
+    excludePlaces = [],
     style = [],
     companion = '',
     notes = '',
@@ -60,6 +61,8 @@ export async function POST(req: NextRequest) {
     endTime?: string
     /** 이 날짜들만 생성한다. 비면 전체 기간 */
     targetDates?: string[]
+    /** 이미 여행에 담긴 장소명. 중복 추천을 막는다 */
+    excludePlaces?: string[]
     style?: string[]
     companion?: string
     /** 사용자가 자유롭게 적은 추가 요청 (가고 싶은 곳, 피하고 싶은 것 등) */
@@ -73,6 +76,8 @@ export async function POST(req: NextRequest) {
 
   // 자유 입력은 길이를 제한해 프롬프트가 통째로 밀려나지 않게 한다
   const trimmedNotes = notes.trim().slice(0, 500)
+  // 장소가 많은 여행이면 목록이 프롬프트를 잡아먹으므로 상한을 둔다
+  const excludeStr = excludePlaces.slice(0, 40).join(', ')
 
   const userPrompt =
     locale === 'ko'
@@ -83,6 +88,7 @@ export async function POST(req: NextRequest) {
             : `기간: ${startDate} ~ ${endDate}`,
           `스타일: ${style.join(', ')}`,
           `동행: ${companion}`,
+          excludeStr && `이미 이 여행에 담긴 장소다. 절대 다시 추천하지 마라: ${excludeStr}`,
           startTime && `첫날은 ${startTime}부터 일정 시작 가능 (그 이전 시간은 비워둘 것)`,
           endTime && `마지막날은 ${endTime}까지 일정 종료 (이후 시간은 비워둘 것)`,
           trimmedNotes && `추가 요청(최우선 반영): ${trimmedNotes}`,
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
             : `Dates: ${startDate} to ${endDate}`,
           `Style: ${style.join(', ')}`,
           `Companion: ${companion}`,
+          excludeStr && `Already in this trip — never recommend these again: ${excludeStr}`,
           startTime && `Day 1 can only start at ${startTime} — leave earlier hours empty`,
           endTime && `The last day must wrap up by ${endTime} — leave later hours empty`,
           trimmedNotes && `Additional requests (prioritize these): ${trimmedNotes}`,

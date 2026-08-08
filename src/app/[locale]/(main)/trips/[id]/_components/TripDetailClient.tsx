@@ -229,6 +229,16 @@ export default function TripDetailClient({
 
   const isOwner = trip.owner_id === currentUserId
 
+  /** 이미 담긴 장소명. AI가 같은 곳을 또 추천하지 않도록 넘긴다 */
+  const existingPlaceNames = useMemo(
+    () =>
+      trip.itinerary_days
+        .flatMap((d) => d.itinerary_items)
+        .map((i) => i.places?.name)
+        .filter((n): n is string => !!n),
+    [trip.itinerary_days],
+  )
+
   /** 아직 아무 일정도 없는 날짜. AI에는 이 날들만 짜게 시킨다 */
   const emptyDates = useMemo(
     () =>
@@ -495,6 +505,7 @@ export default function TripDetailClient({
           coverUrl={trip.cover_url ?? ''}
           tripId={trip.id}
           targetDates={emptyDates}
+          excludePlaces={existingPlaceNames}
           onClose={() => setShowAISheet(false)}
         />
       )}

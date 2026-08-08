@@ -128,21 +128,28 @@ export default function AssistantPanel() {
     const userMsg = [...messages].reverse().find((m) => m.role === 'user')
     const userText = userMsg ? textOf(userMsg) : ''
 
-    void speak(assistantText).then(() => {
-      if (live.current.voice) startListening()
-    })
-
+    /*
+     * 답변 전문을 그대로 읽으면 너무 길어 듣는 사람이 놓친다.
+     * 요약이 돌아오면 그 한 문장만 말하고, 자세한 내용은 화면에 남긴다.
+     * 요약이 실패하면 말이 아예 없어지는 게 더 나쁘니 전문으로 되돌린다.
+     */
     void fetch('/api/ai/summarize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userText, assistantText, locale }),
     })
       .then((r) => r.json())
-      .then((note: { title: string | null; points: string[] }) => {
-        if (!note.title && note.points.length === 0) return
-        setNotes((prev) => [...prev, { id: last.id, ...note }])
+      .then((note: { title: string | null; points: string[]; spoken: string | null }) => {
+        if (note.title || note.points.length > 0) {
+          setNotes((prev) => [...prev, { id: last.id, title: note.title, points: note.points }])
+        }
+        return note.spoken
       })
-      .catch(() => {})
+      .catch(() => null)
+      .then((spoken) => speak(spoken || assistantText))
+      .then(() => {
+        if (live.current.voice) startListening()
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceMode, isLoading, messages, speak, startListening, locale])
 
