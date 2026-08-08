@@ -68,12 +68,14 @@ export const VOICE_PROFILES: Record<CharacterId, VoiceProfile> = {
     pitch: 1.35,
     rate: 1.32,
     volume: 1,
+    voiceId: 'nova',
     preferredVoices: ['유나', 'Yuna', 'Google 한국의', 'Samantha'],
   },
   rog: {
     pitch: 0.62,
     rate: 1.14,
     volume: 1,
+    voiceId: 'onyx',
     preferredVoices: ['유나', 'Yuna', 'Google 한국의', 'Daniel'],
   },
 }
