@@ -210,33 +210,41 @@ export default function BacklogList({
               {collectionTabItems.map((tab) => {
                 const isActive = activeCollectionId === tab.key
                 return (
-                  <button
+                  // 편집 버튼을 탭 버튼 안에 넣으면 button 중첩이라 하이드레이션이 깨진다.
+                  // 밑줄은 감싸는 div가 그리고, 두 버튼은 형제로 둔다.
+                  <div
                     key={String(tab.key)}
-                    onClick={() => {
-                      setActiveCollectionId(tab.key)
-                      setActiveCategory(ALL)
-                    }}
-                    className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-3.5 py-2.5 text-[13px] font-semibold transition-colors ${
-                      isActive ? 'border-primary text-primary' : 'text-ink3 border-transparent'
+                    className={`flex flex-shrink-0 items-center border-b-2 transition-colors ${
+                      isActive ? 'border-primary' : 'border-transparent'
                     }`}
                   >
-                    {tab.label}
-                    <span
-                      className={`text-[11px] font-medium ${isActive ? 'text-primary/70' : 'text-ink3/60'}`}
+                    <button
+                      onClick={() => {
+                        setActiveCollectionId(tab.key)
+                        setActiveCategory(ALL)
+                      }}
+                      className={`flex items-center gap-1.5 py-2.5 pl-3.5 text-[13px] font-semibold transition-colors ${
+                        isActive ? 'text-primary' : 'text-ink3'
+                      } ${tab.key !== null && tab.key !== '__none__' ? 'pr-1' : 'pr-3.5'}`}
                     >
-                      {tab.count}
-                    </span>
+                      {tab.label}
+                      <span
+                        className={`text-[11px] font-medium ${isActive ? 'text-primary/70' : 'text-ink3/60'}`}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
                     {tab.key !== null && tab.key !== '__none__' && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation()
+                        onClick={() => {
                           const col = collections.find((c) => c.id === tab.key)
                           if (col) {
                             setEditingCollection(col)
                             setEditName(col.name)
                           }
                         }}
-                        className="text-ink3/50 hover:text-ink3 ml-0.5"
+                        aria-label={t('editCollection')}
+                        className="text-ink3/50 hover:text-ink3 py-2.5 pr-3 pl-0.5"
                       >
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" />
@@ -249,7 +257,7 @@ export default function BacklogList({
                         </svg>
                       </button>
                     )}
-                  </button>
+                  </div>
                 )
               })}
             </div>
