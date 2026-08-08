@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { getItineraryPrompt } from '@/lib/ai/prompts/itinerary'
 import { createClient } from '@/lib/supabase/server'
+import { getUserPlan, canAccess, planGateResponse, FEATURE_PLAN } from '@/lib/planGate'
 import type { Locale } from '@/lib/ai/characters'
 
 const ItineraryItemSchema = z.object({
@@ -46,6 +47,9 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, FEATURE_PLAN.itinerary)) return planGateResponse(FEATURE_PLAN.itinerary)
 
   const {
     destination,

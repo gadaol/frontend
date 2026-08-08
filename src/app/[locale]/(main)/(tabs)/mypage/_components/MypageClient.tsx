@@ -14,6 +14,8 @@ import { PLAN_LABEL, type Plan } from '@/utils/plans'
 import { useAssistantStore } from '@/lib/ai/store'
 import CharacterFigure from '@/components/features/ai/CharacterFigure'
 import { CHARACTER_META, type CharacterId } from '@/lib/ai/characters'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 
 /** 라벨은 현재 보고 있는 UI 언어로 통일한다 (한국어/영어 ↔ Korean/English) */
 const LOCALES = [
@@ -78,6 +80,7 @@ export default function MypageClient({
   const [showPhoneSheet, setShowPhoneSheet] = useState(false)
   const [currentSubscription, setCurrentSubscription] = useState(subscription)
   const [subscribedToast, setSubscribedToast] = useState(false)
+  const [upgradeSheet, setUpgradeSheet] = useState<{ required: Plan; feature: string } | null>(null)
 
   // 마운트 시 1회만 체크 — router.replace로 searchParams 바뀌어도 재실행 안 됨
   useEffect(() => {
@@ -98,7 +101,23 @@ export default function MypageClient({
       : 'free'
   const planLabel = getPlanLabel(currentSubscription, t)
 
+  function handleSetCharacter(id: CharacterId) {
+    if (id === 'rog' && !canAccess(plan, FEATURE_PLAN.characterRog)) {
+      setUpgradeSheet({ required: 'pro', feature: '로그 캐릭터' })
+      return
+    }
+    setCharacter(id)
+  }
+
   return (
+    <>
+    {upgradeSheet && (
+      <UpgradeSheet
+        required={upgradeSheet.required}
+        feature={upgradeSheet.feature}
+        onClose={() => setUpgradeSheet(null)}
+      />
+    )}
     <div className="bg-bg2 min-h-dvh pb-10">
       {/* 결제 완료 토스트 */}
       {subscribedToast && (
@@ -426,7 +445,7 @@ export default function MypageClient({
               return (
                 <button
                   key={id}
-                  onClick={() => setCharacter(id)}
+                  onClick={() => handleSetCharacter(id)}
                   className={`flex flex-1 flex-col items-center gap-2 rounded-2xl border-2 py-4 transition-all ${
                     active ? 'border-primary bg-primary-light' : 'border-border bg-bg2'
                   }`}
@@ -586,6 +605,7 @@ export default function MypageClient({
         />
       )}
     </div>
+    </>
   )
 }
 

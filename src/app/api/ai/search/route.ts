@@ -4,6 +4,7 @@ import { cerebras, MODELS } from '@/lib/ai/client'
 import { getSearchPrompt } from '@/lib/ai/prompts/search'
 import { RecommendSchema } from '@/app/api/ai/recommend/route'
 import { createClient } from '@/lib/supabase/server'
+import { getUserPlan, canAccess, planGateResponse, FEATURE_PLAN } from '@/lib/planGate'
 import type { Locale } from '@/lib/ai/characters'
 
 export async function POST(req: NextRequest) {
@@ -12,6 +13,9 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, FEATURE_PLAN.aiSearch)) return planGateResponse(FEATURE_PLAN.aiSearch)
 
   const { query, locale = 'ko' } = (await req.json()) as {
     query: string

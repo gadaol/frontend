@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getUserPlan, canAccess, FEATURE_PLAN } from '@/lib/planGate'
 
 export type BacklogCollection = {
   id: string
@@ -31,6 +32,9 @@ export async function createCollection(name: string): Promise<{ id: string } | {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, FEATURE_PLAN.collection)) return { error: 'plan_required' }
 
   const { data: existing } = await supabase
     .from('backlog_collections')

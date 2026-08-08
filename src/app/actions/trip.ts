@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { searchPlacesText } from '@/lib/googlePlaces'
+import { getUserPlan, canAccess, FEATURE_PLAN, FREE_TRIP_LIMIT } from '@/lib/planGate'
 
 export async function createTrip(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -27,6 +28,15 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const destinations = destinationsRaw ? (() => { try { return JSON.parse(destinationsRaw) } catch { return null } })() : null
 
   if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, 'pro')) {
+    const { count } = await supabase
+      .from('trips')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.id)
+    if ((count ?? 0) >= FREE_TRIP_LIMIT) return { error: 'trip_limit_reached' }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: trip, error } = await (supabase as any)
@@ -651,6 +661,9 @@ export async function addExpense(data: {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, FEATURE_PLAN.expense)) return { error: 'plan_required' }
 
   const { data: member } = await supabase
     .from('trip_members')

@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { getUserPlan, canAccess, FEATURE_PLAN } from '@/lib/planGate'
 
 function adminClient() {
   return createAdminClient(
@@ -143,6 +144,9 @@ export async function sendDirectInvite(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
   if (targetUserId === user.id) return { error: 'cannot_invite_self' }
+
+  const plan = await getUserPlan(supabase, user.id)
+  if (!canAccess(plan, FEATURE_PLAN.invite)) return { error: 'plan_required' }
 
   const admin = adminClient()
 

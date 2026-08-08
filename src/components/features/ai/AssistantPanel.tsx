@@ -5,7 +5,10 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from 'ai'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
+import { usePlanStore } from '@/lib/planStore'
+import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
 import { useVoice } from '@/hooks/useVoice'
+import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
 import CharacterAvatar from './CharacterAvatar'
 import CharacterFigure from './CharacterFigure'
 import VoiceMode, { type VoiceNote } from './VoiceMode'
@@ -27,9 +30,11 @@ const SUGGESTION_KEYS = ['nearby', 'plan', 'solo'] as const
 export default function AssistantPanel() {
   const { isOpen, close, character, setCharacter, initialPrompt, clearInitialPrompt } =
     useAssistantStore()
+  const plan = usePlanStore((s) => s.plan)
   const locale = useLocale() as 'ko' | 'en'
   const isKo = locale === 'ko'
   const t = useTranslations('ai')
+  const [upgradeSheet, setUpgradeSheet] = useState<{ required: 'pro' | 'plus'; feature: string } | null>(null)
 
   const [inputText, setInputText] = useState('')
   const [voiceMode, setVoiceMode] = useState(false)
@@ -189,6 +194,10 @@ export default function AssistantPanel() {
   }, [stopListening, stopSpeaking])
 
   function enterVoiceMode() {
+    if (!canAccess(plan, FEATURE_PLAN.voice)) {
+      setUpgradeSheet({ required: 'plus', feature: '음성 모드' })
+      return
+    }
     // 기존 대화가 있으면 마지막 메시지를 이미 읽은 것으로 표시 — 인사말과 겹치지 않게
     const lastMsg = messages.at(-1)
     if (lastMsg?.role === 'assistant') {
@@ -200,6 +209,14 @@ export default function AssistantPanel() {
     void speak(pickVoiceGreeting(character, locale)).then(() => {
       if (live.current.voice) startListening()
     })
+  }
+
+  function handleSetCharacter(c: CharacterId) {
+    if (c === 'rog' && !canAccess(plan, FEATURE_PLAN.characterRog)) {
+      setUpgradeSheet({ required: 'pro', feature: '로그 캐릭터' })
+      return
+    }
+    setCharacter(c)
   }
 
   function toggleMic() {
@@ -336,6 +353,14 @@ export default function AssistantPanel() {
   const meta = CHARACTER_META[character]
 
   return (
+    <>
+    {upgradeSheet && (
+      <UpgradeSheet
+        required={upgradeSheet.required}
+        feature={upgradeSheet.feature}
+        onClose={() => setUpgradeSheet(null)}
+      />
+    )}
     <div
       className={`fixed inset-0 z-[100] flex flex-col bg-white transition-transform duration-300 ease-out ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
@@ -377,7 +402,7 @@ export default function AssistantPanel() {
               {(['gada', 'rog'] as CharacterId[]).map((c) => (
                 <button
                   key={c}
-                  onClick={() => setCharacter(c)}
+                  onClick={() => handleSetCharacter(c)}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all ${
                     character === c ? 'text-ink bg-white shadow-sm' : 'text-ink3'
                   }`}
@@ -690,6 +715,7 @@ export default function AssistantPanel() {
         />
       )}
     </div>
+    </>
   )
 }
 
