@@ -300,7 +300,7 @@ export const CHARACTER_META: Record<
 > = {
   gada: {
     name: { ko: '가다', en: 'Gada' },
-    tagline: { ko: '느낌 먼저, 정보는 그 다음이에요', en: 'Vibes first, logistics second' },
+    tagline: { ko: '감성으로 먼저 읽는 여행 메이트', en: 'Vibes first, logistics second' },
     greeting: {
       ko: '요즘 어디가 끌리세요?\n막연해도 괜찮아요. 느낌부터 같이 얘기해봐요.',
       en: "Anywhere calling to you lately?\nVague is fine — let's start with the feeling.",
@@ -313,7 +313,7 @@ export const CHARACTER_META: Record<
   },
   rog: {
     name: { ko: '로그', en: 'Rog' },
-    tagline: { ko: '이동 시간, 휴무일, 예약 — 빈틈 먼저 잡는다', en: 'Finds the gaps before you leave' },
+    tagline: { ko: '팩트만. 감성은 다른 데 가서.', en: 'Facts only. Take your feelings elsewhere.' },
     greeting: {
       ko: '...계획 잡아줄게.\n어디 가는 거야, 며칠이야.',
       en: "...Let's get your plan sorted.\nWhere to, how many days.",
