@@ -1,8 +1,8 @@
-import { streamText, isStepCount } from 'ai'
-import { NextRequest } from 'next/server'
+import { generateObject } from 'ai'
+import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { getRecommendPrompt } from '@/lib/ai/prompts/recommend'
-import { makePlaceTools } from '@/lib/ai/tools/place-tools'
 import { createClient } from '@/lib/supabase/server'
 import type { Locale } from '@/lib/ai/characters'
 
@@ -40,6 +40,30 @@ function formatPlace(p: PlaceWithCategory): string | null {
   return p.place_categories?.name ? `${p.name}(${p.place_categories.name})` : p.name
 }
 
+export const RecommendSchema = z.object({
+  intro: z.string().describe('사용자에게 건네는 추천 인사말 (1~2문장, 왜 이런 곳들을 골랐는지)'),
+  places: z
+    .array(
+      z.object({
+        name: z.string().describe('장소명 (공식 명칭)'),
+        category: z
+          .string()
+          .describe('카테고리: 식당/카페/자연/관광지/쇼핑/액티비티/박물관/온천/기타 중 하나'),
+        reason: z
+          .string()
+          .describe('이 사용자에게 맞는 구체적인 이유 (1~2문장. 취향·백로그·행동 데이터와 연결)'),
+        tip: z.string().describe('방문 팁: 최적 시간대, 예약 여부, 주의사항 등 (1문장)'),
+        googleSearchQuery: z
+          .string()
+          .describe('Google Places 검색어 ("장소명 도시명" 형식, 정확한 공식 명칭 사용)'),
+      }),
+    )
+    .min(5)
+    .max(8),
+})
+
+export type RecommendResult = z.infer<typeof RecommendSchema>
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const {
@@ -50,10 +74,12 @@ export async function POST(req: NextRequest) {
   const {
     tripId,
     destination,
+    categories = [],
     locale = 'ko',
   } = (await req.json()) as {
     tripId?: string
     destination?: string
+    categories?: string[]
     locale?: Locale
   }
 
@@ -110,7 +136,6 @@ export async function POST(req: NextRequest) {
   const profile = profileResult.data
   const sections: string[] = []
 
-  // 1. 사용자 취향 (온보딩/마이페이지 설정값)
   const prefLines = [
     profile?.travel_companion?.length
       ? `동행: ${profile.travel_companion.map((k) => COMPANION_LABELS[k] ?? k).join(', ')}`
@@ -124,7 +149,6 @@ export async function POST(req: NextRequest) {
   ].filter(Boolean)
   if (prefLines.length) sections.push(`[사용자 취향]\n${prefLines.join('\n')}`)
 
-  // 2. 백로그 — 직접 저장한 장소 (의도 가장 높음)
   const backlogNames = (backlogResult.data ?? [])
     .map((b) => formatPlace(b.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
@@ -134,7 +158,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // 3. 좋아요한 장소 — 명확한 선호
   const likedNames = (likedResult.data ?? [])
     .map((v) => formatPlace(v.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
@@ -142,7 +165,6 @@ export async function POST(req: NextRequest) {
     sections.push(`[좋아요한 장소 — 선호 확실]\n${likedNames.map((n) => `- ${n}`).join('\n')}`)
   }
 
-  // 4. 싫어요한 장소 — 추천 제외
   const dislikedNames = (dislikedResult.data ?? [])
     .map((v) => formatPlace(v.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
@@ -150,7 +172,6 @@ export async function POST(req: NextRequest) {
     sections.push(`[싫어요한 장소 — 추천 제외]\n${dislikedNames.map((n) => `- ${n}`).join('\n')}`)
   }
 
-  // 5. AI로 탐색/추가한 장소
   const interactionNames = (interactionsResult.data ?? [])
     .map((i) => {
       const p = i.places as PlaceWithCategory
@@ -163,14 +184,9 @@ export async function POST(req: NextRequest) {
     sections.push(`[AI로 탐색한 장소]\n${interactionNames.map((n) => `- ${n}`).join('\n')}`)
   }
 
-  // 6. 완료된 여행 — 실제 다녀온 장소
   type CompletedTrip = {
     destination: string | null
-    itinerary_days: {
-      itinerary_items: {
-        places: PlaceWithCategory
-      }[]
-    }[]
+    itinerary_days: { itinerary_items: { places: PlaceWithCategory }[] }[]
   }
   const visitedLines = ((completedTripsResult.data as CompletedTrip[]) ?? [])
     .map((trip) => {
@@ -188,7 +204,6 @@ export async function POST(req: NextRequest) {
   }
 
   const userContext = sections.join('\n\n')
-
   const languageInstruction =
     locale === 'ko' ? '반드시 한국어로 답하세요.' : 'Always respond in English.'
 
@@ -196,36 +211,56 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join('\n\n')
 
+  const catFilter =
+    categories.length > 0
+      ? locale === 'ko'
+        ? `카테고리 필터: 반드시 ${categories.join(', ')} 위주로 추천한다. 다른 카테고리는 포함하지 않는다.`
+        : `Category filter: only recommend places in ${categories.join(', ')}. Do not include other categories.`
+      : ''
+
   const prompt = (() => {
     if (destination) {
-      return locale === 'ko'
-        ? `${destination} 여행에 맞는 장소를 추천해줘.`
-        : `Recommend places for a trip to ${destination}.`
+      return [
+        locale === 'ko'
+          ? `${destination} 여행에 맞는 장소를 추천해줘.`
+          : `Recommend places for a trip to ${destination}.`,
+        catFilter,
+      ]
+        .filter(Boolean)
+        .join('\n')
     }
     if (tripId) {
-      return locale === 'ko'
-        ? `여행 ID ${tripId}에 추가할 장소를 추천해줘.`
-        : `Recommend places to add to trip ${tripId}.`
+      return [
+        locale === 'ko'
+          ? `여행 ID ${tripId}에 추가할 장소를 추천해줘.`
+          : `Recommend places to add to trip ${tripId}.`,
+        catFilter,
+      ]
+        .filter(Boolean)
+        .join('\n')
     }
-    return locale === 'ko'
-      ? '내 취향과 지금까지 관심 보인 장소들을 바탕으로 가장 잘 맞는 장소를 추천해줘.'
-      : 'Recommend places that best match my preferences and past interests.'
+    return [
+      locale === 'ko'
+        ? '내 취향과 지금까지 관심 보인 장소들을 바탕으로 가장 잘 맞는 장소를 추천해줘.'
+        : 'Recommend places that best match my preferences and past interests.',
+      catFilter,
+    ]
+      .filter(Boolean)
+      .join('\n')
   })()
 
-  const result = streamText({
+  const { object } = await generateObject({
     model: cerebras(MODELS.default),
     system,
-    messages: [{ role: 'user', content: prompt }],
-    tools: { search_places: makePlaceTools(supabase, user.id).search_places },
-    stopWhen: isStepCount(3),
-    onFinish: async ({ text }) => {
-      await supabase.from('recommendation_logs').insert({
-        user_id: user.id,
-        trip_id: tripId ?? null,
-        recommended_places: { summary: text.slice(0, 500) },
-      })
-    },
+    prompt,
+    schema: RecommendSchema,
   })
 
-  return result.toTextStreamResponse()
+  void supabase.from('recommendation_logs').insert({
+    user_id: user.id,
+    trip_id: tripId ?? null,
+    recommended_places: { categories, destination, placeCount: object.places.length },
+  })
+
+  return NextResponse.json(object)
 }

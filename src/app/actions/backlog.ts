@@ -97,6 +97,30 @@ export async function addToBacklog(input: AddToBacklogInput) {
   return { success: true, id: item.id }
 }
 
+export async function addRecommendedPlaceToBacklog({
+  googleSearchQuery,
+  fallbackName,
+  category,
+}: {
+  googleSearchQuery: string
+  fallbackName: string
+  category: string
+}): Promise<{ success?: boolean; alreadyExists?: boolean; error?: string }> {
+  const { searchPlacesText } = await import('@/lib/googlePlaces')
+  const places = await searchPlacesText(googleSearchQuery)
+  if (!places || places.length === 0) return { error: 'place_not_found' }
+
+  const place = places[0]
+  return addToBacklog({
+    googlePlaceId: place.id,
+    name: place.displayName.text,
+    address: place.formattedAddress ?? null,
+    categoryName: category || null,
+    lat: place.location?.latitude ?? null,
+    lng: place.location?.longitude ?? null,
+  })
+}
+
 export async function removeFromBacklog(backlogItemId: string) {
   const supabase = await createClient()
 

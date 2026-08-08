@@ -5,11 +5,11 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, OverlayView } from '@react-google-maps/api'
 import { SearchIcon, ChevronRightIcon } from '@/components/icons'
-import MarkdownContent from '@/components/ui/MarkdownContent'
 import { getCategoryInfo, getCategoryStyle, getMarkerColor } from '@/utils/placeCategory'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
 import { createClient } from '@/lib/supabase/client'
 import type { GooglePlace } from '@/types/place'
+import type { RecommendResult } from '@/app/api/ai/recommend/route'
 
 export type { GooglePlace }
 
@@ -77,17 +77,16 @@ export default function PlaceMapSearch({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
-  // AI 추천 스트리밍
-  const [aiText, setAiText] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiDone, setAiDone] = useState(false)
+  // AI 맞춤 추천
+  const [selectedCats, setSelectedCats] = useState<string[]>([])
+  const [aiPhase, setAiPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [aiResult, setAiResult] = useState<RecommendResult | null>(null)
   const aiAbortRef = useRef<AbortController | null>(null)
 
   const fetchAIRecommend = useCallback(async () => {
-    if (aiLoading) return
-    setAiText('')
-    setAiDone(false)
-    setAiLoading(true)
+    if (aiPhase === 'loading') return
+    setAiResult(null)
+    setAiPhase('loading')
     aiAbortRef.current?.abort()
     aiAbortRef.current = new AbortController()
     try {
@@ -96,27 +95,33 @@ export default function PlaceMapSearch({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locale,
+          categories: selectedCats,
           ...(tripId && { tripId }),
           ...(destination && { destination }),
         }),
         signal: aiAbortRef.current.signal,
       })
-      if (!res.ok || !res.body) throw new Error('failed')
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      while (true) {
-        const { done: streamDone, value } = await reader.read()
-        if (streamDone) break
-        setAiText((prev) => prev + decoder.decode(value, { stream: true }))
-      }
-      setAiDone(true)
+      if (!res.ok) throw new Error('failed')
+      const data: RecommendResult = await res.json()
+      setAiResult(data)
+      setAiPhase('done')
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') setAiText(t('aiFailed'))
-    } finally {
-      setAiLoading(false)
+      if ((e as Error).name !== 'AbortError') setAiPhase('error')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale])
+  }, [locale, selectedCats, tripId, destination])
+
+  function toggleCat(label: string) {
+    setSelectedCats((prev) =>
+      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
+    )
+  }
+
+  function resetAI() {
+    aiAbortRef.current?.abort()
+    setAiPhase('idle')
+    setAiResult(null)
+  }
 
   useEffect(() => {
     return () => {
@@ -434,7 +439,7 @@ export default function PlaceMapSearch({
       {!hasSearched && query.length < 2 && (
         <div className="relative z-10 mt-auto min-h-0">
           <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
-            {/* 헤더 (항상 노출 — 토글) */}
+            {/* 헤더 토글 */}
             <button
               onClick={() => setShowRecommendations((v) => !v)}
               className="border-border flex w-full items-center justify-between border-b px-5 py-3"
@@ -462,113 +467,185 @@ export default function PlaceMapSearch({
               className="overflow-hidden transition-all duration-300 ease-in-out"
               style={{ maxHeight: showRecommendations ? 600 : 0 }}
             >
-              {/* 카테고리 칩 */}
-              <div className="border-border relative border-b">
-                <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                  <div className="flex gap-2 px-4 py-3 pr-10">
-                    {CATEGORY_CHIPS.map((cat) => {
-                      const CatIcon = cat.icon
+              {/* idle: 카테고리 복수 선택 + AI 추천 버튼 */}
+              {aiPhase === 'idle' && (
+                <>
+                  {/* 카테고리 칩 (복수 선택) */}
+                  <div className="border-border relative border-b">
+                    <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                      <div className="flex gap-2 px-4 py-3 pr-10">
+                        {CATEGORY_CHIPS.map((cat) => {
+                          const CatIcon = cat.icon
+                          const isSelected = selectedCats.includes(cat.label)
+                          return (
+                            <button
+                              key={cat.label}
+                              onClick={() => toggleCat(cat.label)}
+                              className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70"
+                              style={{
+                                borderColor: cat.hex,
+                                color: isSelected ? 'white' : cat.hex,
+                                backgroundColor: isSelected ? cat.hex : cat.hex + '14',
+                              }}
+                            >
+                              <CatIcon size={13} className="flex-shrink-0" />
+                              {cat.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    <div className="pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-white to-transparent" />
+                  </div>
+
+                  {/* AI 맞춤 추천 버튼 */}
+                  <div className="px-4 py-3">
+                    <button
+                      onClick={fetchAIRecommend}
+                      className="flex w-full items-center gap-3 rounded-2xl p-3.5 text-left transition-opacity active:opacity-90"
+                      style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
+                    >
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
+                        <span className="text-[16px]">✨</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-bold text-white">
+                          {selectedCats.length > 0
+                            ? `${selectedCats.join('·')} ${locale === 'ko' ? '맞춤 추천' : 'recommendations'}`
+                            : locale === 'ko'
+                              ? 'AI 맞춤 추천 장소'
+                              : 'AI Recommendations'}
+                        </p>
+                        <p className="text-[11px] text-white/70">
+                          {selectedCats.length > 0
+                            ? locale === 'ko'
+                              ? '선택한 카테고리 기반으로 추천'
+                              : 'Based on selected categories'
+                            : locale === 'ko'
+                              ? '카테고리 선택 후 추천 받기'
+                              : 'Select categories above to filter'}
+                        </p>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
+                        <path
+                          d="M6 3.5l4.5 4.5L6 12.5"
+                          stroke="rgba(255,255,255,0.6)"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* 로딩 */}
+              {aiPhase === 'loading' && (
+                <div
+                  className="text-ink3 flex items-center gap-2.5 px-5 py-5 text-[13px]"
+                  style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 20 }}
+                >
+                  <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                  {locale === 'ko' ? '장소를 찾고 있어요...' : 'Finding places for you...'}
+                </div>
+              )}
+
+              {/* AI 결과: 컴팩트 카드 */}
+              {aiPhase === 'done' && aiResult && (
+                <>
+                  {/* 필터 태그 + 다시 선택 */}
+                  <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedCats.length > 0 ? (
+                        selectedCats.map((cat) => {
+                          const s = getCategoryStyle(cat as never)
+                          return (
+                            <span
+                              key={cat}
+                              className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                              style={{ backgroundColor: s.hex + '18', color: s.hex }}
+                            >
+                              {cat}
+                            </span>
+                          )
+                        })
+                      ) : (
+                        <span className="text-ink3 text-[11px]">
+                          {locale === 'ko' ? '취향 기반 추천' : 'Personalized picks'}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={resetAI}
+                      className="text-primary flex-shrink-0 text-[12px] font-semibold"
+                    >
+                      {locale === 'ko' ? '다시 선택' : 'Reset'}
+                    </button>
+                  </div>
+
+                  {/* 컴팩트 카드 리스트 */}
+                  <div
+                    className="overflow-y-auto divide-y divide-[#F0F0F0]"
+                    style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 8 }}
+                  >
+                    {aiResult.places.map((place, idx) => {
+                      const catStyle = getCategoryStyle(place.category as never)
                       return (
                         <button
-                          key={cat.label}
-                          onClick={() => setQuery(cat.label)}
-                          className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold active:opacity-70"
-                          style={{
-                            borderColor: cat.hex + '50',
-                            color: cat.hex,
-                            backgroundColor: cat.hex + '14',
-                          }}
+                          key={idx}
+                          onClick={() => setQuery(place.googleSearchQuery)}
+                          className="active:bg-bg2 flex w-full items-center gap-3 px-4 py-2.5 text-left"
                         >
-                          <CatIcon size={13} className="flex-shrink-0" />
-                          {cat.label}
+                          <div
+                            className="h-2 w-2 flex-shrink-0 rounded-full"
+                            style={{ backgroundColor: catStyle.hex }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-ink truncate text-[13px] font-semibold">
+                              {place.name}
+                            </p>
+                            <p className="text-ink3 truncate text-[11px]">{place.reason}</p>
+                          </div>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            className="flex-shrink-0 text-[#C4C8CF]"
+                          >
+                            <path
+                              d="M5 2.5l4 4.5L5 11.5"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </button>
                       )
                     })}
                   </div>
-                </div>
-                {/* 우측 페이드 */}
-                <div className="pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-white to-transparent" />
-              </div>
+                </>
+              )}
 
-              {/* AI 취향 추천 스트리밍 */}
-              <div
-                className="overflow-y-auto px-4 pt-3"
-                style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
-              >
-                {aiLoading && !aiText && (
-                  <div className="text-ink3 flex items-center gap-2 py-1 text-[13px]">
-                    <div className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
-                    {locale === 'ko' ? t('aiSearching') : 'Finding places for you...'}
-                  </div>
-                )}
-                {aiText && (
-                  <>
-                    <MarkdownContent text={aiText} size="sm" />
-                    {aiLoading && (
-                      <span className="bg-ink3 ml-0.5 inline-block h-3.5 w-0.5 animate-pulse align-text-bottom" />
-                    )}
-                  </>
-                )}
-                {aiDone && (
-                  <button
-                    onClick={() => {
-                      setAiText('')
-                      setAiDone(false)
-                      fetchAIRecommend()
-                    }}
-                    className="border-border text-ink2 active:bg-bg2 mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M1.5 7A5.5 5.5 0 1 0 3 3.5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M1.5 2v1.5H3"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    {t('aiRefresh')}
-                  </button>
-                )}
-                {!aiText && !aiLoading && !aiDone && (
+              {/* 에러 */}
+              {aiPhase === 'error' && (
+                <div
+                  className="flex items-center justify-between px-4 py-4"
+                  style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
+                >
+                  <p className="text-ink3 text-[13px]">
+                    {locale === 'ko' ? '추천을 불러오지 못했어요.' : 'Failed to load.'}
+                  </p>
                   <button
                     onClick={fetchAIRecommend}
-                    className="my-1 flex w-full items-center gap-3 rounded-2xl p-3.5 text-left transition-opacity active:opacity-90"
-                    style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
+                    className="text-primary text-[13px] font-semibold"
                   >
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
-                      <span className="text-[18px]">✨</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-bold text-white">{t('aiCtaTitle')}</p>
-                      <p className="text-[11px] text-white/70">
-                        {locale === 'ko' ? t('aiCtaDesc') : 'Places matched to your taste'}
-                      </p>
-                    </div>
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="flex-shrink-0"
-                    >
-                      <path
-                        d="M6 3.5l4.5 4.5L6 12.5"
-                        stroke="rgba(255,255,255,0.6)"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    {locale === 'ko' ? '다시 시도' : 'Retry'}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
