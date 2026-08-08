@@ -20,6 +20,7 @@ export class OpenAITTS implements TTSEngine {
   readonly name = 'openai'
   private audio: HTMLAudioElement | null = null
   private blobUrl: string | null = null
+  private abortController: AbortController | null = null
 
   isSupported() {
     return typeof window !== 'undefined'
@@ -35,12 +36,14 @@ export class OpenAITTS implements TTSEngine {
 
     const cleaned = stripForSpeech(text)
     const voice = profile.voiceId ?? 'nova'
+    this.abortController = new AbortController()
 
     try {
       const res = await fetch('/api/ai/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: cleaned, voice }),
+        signal: this.abortController.signal,
       })
 
       if (!res.ok) {
@@ -74,12 +77,14 @@ export class OpenAITTS implements TTSEngine {
           resolve()
         })
       })
-    } catch {
-      onEnd?.()
+    } catch (e) {
+      if (!(e instanceof Error && e.name === 'AbortError')) onEnd?.()
     }
   }
 
   stop() {
+    this.abortController?.abort()
+    this.abortController = null
     if (this.audio) {
       this.audio.pause()
       this.audio.onplay = null
