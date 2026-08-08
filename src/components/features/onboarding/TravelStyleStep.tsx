@@ -95,7 +95,7 @@ export default function TravelStyleStep({ nickname, onBack, redirectTo }: Props)
               />
             </svg>
           </button>
-          <StepIndicator current={3} total={3} />
+          <StepIndicator current={4} total={4} />
         </div>
         <button onClick={() => finish(false)} className="text-ink3 text-[14px] font-medium">
           {t('skip')}

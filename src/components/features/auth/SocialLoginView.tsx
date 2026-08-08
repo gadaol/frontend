@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from 'next-intl'
 import Button from '@/components/ui/Button'
 import Logo from '@/components/common/Logo'
 import PageLoading from '@/components/ui/PageLoading'
-import TermsSheet from './TermsSheet'
 
 interface Props {
   onEmailClick: () => void
@@ -15,8 +14,6 @@ interface Props {
   errorMessage?: string | null
   redirectTo?: string | null
 }
-
-type PendingAction = 'kakao' | 'google' | null
 
 export default function SocialLoginView({
   onEmailClick,
@@ -29,45 +26,26 @@ export default function SocialLoginView({
   const supabase = createClient()
   const locale = useLocale()
   const [redirecting, setRedirecting] = useState(false)
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
 
   function callbackUrl() {
     const base = `${location.origin}/${locale}/auth/callback`
     return redirectTo ? `${base}?redirect_to=${encodeURIComponent(redirectTo)}` : base
   }
 
-  async function startOAuth(provider: PendingAction) {
+  async function handleKakao() {
     setRedirecting(true)
-    if (provider === 'kakao') {
-      await supabase.auth.signInWithOAuth({
-        provider: 'kakao',
-        options: { redirectTo: callbackUrl(), scopes: 'profile_nickname profile_image' },
-      })
-    } else if (provider === 'google') {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: callbackUrl() },
-      })
-    }
+    await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: callbackUrl(), scopes: 'profile_nickname profile_image' },
+    })
   }
 
-  function handleSocialClick(provider: PendingAction) {
-    // 이미 동의한 기기에서는 TermsSheet 없이 바로 OAuth
-    if (typeof window !== 'undefined' && localStorage.getItem('terms_agreed')) {
-      startOAuth(provider)
-    } else {
-      setPendingAction(provider)
-    }
-  }
-
-  const handleAgree = async () => {
-    // 동의 기록 저장 — 이후 로그인에서 TermsSheet 생략
-    localStorage.setItem('terms_agreed', '1')
-    // 동의 쿠키 설정 (callback에서 terms_agreed_at 업데이트에 사용)
-    await fetch('/api/set-terms-cookie', { method: 'POST' })
-    const provider = pendingAction
-    setPendingAction(null)
-    await startOAuth(provider)
+  async function handleGoogle() {
+    setRedirecting(true)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: callbackUrl() },
+    })
   }
 
   return (
@@ -88,12 +66,12 @@ export default function SocialLoginView({
         )}
 
         <div className="flex flex-col gap-3">
-          <Button variant="kakao" onClick={() => handleSocialClick('kakao')} fullWidth>
+          <Button variant="kakao" onClick={handleKakao} fullWidth>
             <KakaoIcon />
             {t('kakao')}
           </Button>
 
-          <Button variant="google" onClick={() => handleSocialClick('google')} fullWidth>
+          <Button variant="google" onClick={handleGoogle} fullWidth>
             <GoogleIcon />
             {t('google')}
           </Button>
@@ -121,9 +99,6 @@ export default function SocialLoginView({
         </div>
       </div>
 
-      {pendingAction && (
-        <TermsSheet onAgree={handleAgree} onCancel={() => setPendingAction(null)} />
-      )}
       <PageLoading visible={redirecting} />
     </div>
   )

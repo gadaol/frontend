@@ -49,7 +49,7 @@ export default function NicknameStep({ nickname, onChange, onBack, onNext }: Pro
               />
             </svg>
           </button>
-          <StepIndicator current={2} total={3} />
+          <StepIndicator current={3} total={4} />
         </div>
         <button onClick={onNext} className="text-ink3 text-[14px] font-medium">
           {t('skip')}

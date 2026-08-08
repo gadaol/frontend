@@ -96,7 +96,7 @@ export default function PhoneStep({ onNext }: Props) {
     <div className="flex flex-1 flex-col overflow-hidden">
       <PageLoading visible={sending || verifying} />
       <div className="flex items-center px-6 py-5">
-        <StepIndicator current={1} total={3} />
+        <StepIndicator current={2} total={4} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-8">
