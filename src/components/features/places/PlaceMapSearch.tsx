@@ -3,9 +3,10 @@
 import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, OverlayView } from '@react-google-maps/api'
 import { SearchIcon, ChevronRightIcon } from '@/components/icons'
 import { getCategoryInfo, getCategoryStyle, getMarkerColor } from '@/utils/placeCategory'
+import { createClient } from '@/lib/supabase/client'
 import type { GooglePlace } from '@/types/place'
 
 export type { GooglePlace }
@@ -65,6 +66,8 @@ export default function PlaceMapSearch({
   const [showRecommendations, setShowRecommendations] = useState(true)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locating, setLocating] = useState(false)
+  const [userAvatar, setUserAvatar] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
 
@@ -74,6 +77,24 @@ export default function PlaceMapSearch({
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map
+  }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('profiles')
+        .select('name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setUserAvatar(data.avatar_url)
+            setUserName(data.name)
+          }
+        })
+    })
   }, [])
 
   useEffect(() => {
@@ -188,17 +209,25 @@ export default function PlaceMapSearch({
               ) : null,
             )}
             {myLocation && (
-              <Marker
+              <OverlayView
                 position={myLocation}
-                icon={{
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 8,
-                  fillColor: '#4A90E2',
-                  fillOpacity: 1,
-                  strokeColor: '#fff',
-                  strokeWeight: 3,
-                }}
-              />
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              >
+                <div style={{ transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
+                  {userAvatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={userAvatar}
+                      alt={userName ?? '나'}
+                      style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 700 }}>
+                      {userName?.[0] ?? '나'}
+                    </div>
+                  )}
+                </div>
+              </OverlayView>
             )}
 
             {selectedPlace?.location && (
