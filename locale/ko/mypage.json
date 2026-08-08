@@ -36,7 +36,12 @@
       "plus": "Plus"
     },
     "benefits": {
-      "free": ["여행 최대 3개", "메이트 최대 2명", "AI 추천 3회/월", "백로그 무제한 저장"],
+      "free": [
+        "여행 최대 3개",
+        "메이트 최대 2명",
+        "AI 추천 3회/월",
+        "백로그 무제한 저장"
+      ],
       "pro": [
         "여행 무제한",
         "메이트 최대 10명",
@@ -55,5 +60,62 @@
         "광고 없음"
       ]
     }
-  }
+  },
+  "statsTrips": "참여 여행",
+  "statsPlaces": "저장 장소",
+  "sectionAccount": "계정",
+  "sectionApp": "앱",
+  "sectionLanguage": "언어",
+  "sectionAi": "AI 비서",
+  "profileSettings": "프로필 설정",
+  "notificationSettings": "알림 설정",
+  "notices": "공지사항",
+  "inquiries": "문의하기",
+  "currentPlanOf": "현재 {plan} 플랜",
+  "logoutConfirm": "정말 로그아웃 하시겠어요?",
+  "deleteTitle": "정말 탈퇴하시겠어요?",
+  "deleteWord": "탈퇴",
+  "deleteWordPrompt": "'탈퇴'를 입력해주세요",
+  "deleteSubmit": "탈퇴하기",
+  "processing": "처리 중...",
+  "aiPickMate": "함께할 AI 메이트를 선택해요",
+  "upgradeTo": "{plan}로 업그레이드",
+  "upgradeProDesc": "무제한 여행 · AI 일정 추천 · 광고 없음",
+  "upgradePlusDesc": "모든 Pro 혜택 + 우선 지원 · 팀 공유",
+  "planProTrial": "Pro(체험)",
+  "phone": {
+    "verifyTitle": "전화번호 인증",
+    "promoTitle": "전화번호 인증하고 1개월 Pro 무료",
+    "promoDesc": "인증 한 번으로 Pro 체험 혜택 받기",
+    "code": "인증번호",
+    "codePlaceholder": "인증번호 6자리",
+    "sending": "전송 중",
+    "resend": "재전송",
+    "verifying": "확인 중...",
+    "verified": "인증 완료",
+    "sendFailed": "인증번호 전송에 실패했어요. 다시 시도해주세요.",
+    "duplicate": "이미 다른 계정에 등록된 전화번호예요.",
+    "verifyFailed": "인증에 실패했어요. 번호를 확인해주세요.",
+    "successTitle": "인증 완료!",
+    "successDesc": "1개월 Pro 체험이 시작됐어요.",
+    "verifyDesc": "인증 완료 시 1개월 Pro 무료체험이 시작돼요."
+  },
+  "subscribed": {
+    "title": "구독이 시작됐어요! 🎉",
+    "desc": "Pro 혜택을 마음껏 누려보세요"
+  },
+  "upgrade": "업그레이드",
+  "deleteWarning": "탈퇴 시 모든 데이터가 삭제되며 복구할 수 없어요.",
+  "profileTitle": "프로필 설정",
+  "basic": "기본",
+  "name": "이름",
+  "loginAccount": "로그인 계정",
+  "stylePrefs": "여행 취향",
+  "stylePrefsDesc": "AI 추천 정확도에 영향을 줘요",
+  "styleSave": "취향 저장",
+  "styleSaved": "취향 저장됨 ✓",
+  "nameRequired": "이름을 입력해주세요",
+  "saveFailed": "저장에 실패했어요",
+  "saving": "저장 중...",
+  "primaryBadge": "기본"
 }

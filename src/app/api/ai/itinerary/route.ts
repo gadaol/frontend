@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     endDate,
     style = [],
     companion = '',
+    notes = '',
     locale = 'ko',
   } = (await req.json()) as {
     destination: string
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
     endDate: string
     style?: string[]
     companion?: string
+    /** 사용자가 자유롭게 적은 추가 요청 (가고 싶은 곳, 피하고 싶은 것 등) */
+    notes?: string
     locale?: Locale
   }
 
@@ -59,10 +62,29 @@ export async function POST(req: NextRequest) {
 
   const system = [getItineraryPrompt(locale), languageInstruction].join('\n\n')
 
+  // 자유 입력은 길이를 제한해 프롬프트가 통째로 밀려나지 않게 한다
+  const trimmedNotes = notes.trim().slice(0, 500)
+
   const userPrompt =
     locale === 'ko'
-      ? `목적지: ${destination}\n기간: ${startDate} ~ ${endDate}\n스타일: ${style.join(', ')}\n동행: ${companion}`
-      : `Destination: ${destination}\nDates: ${startDate} to ${endDate}\nStyle: ${style.join(', ')}\nCompanion: ${companion}`
+      ? [
+          `목적지: ${destination}`,
+          `기간: ${startDate} ~ ${endDate}`,
+          `스타일: ${style.join(', ')}`,
+          `동행: ${companion}`,
+          trimmedNotes && `추가 요청(최우선 반영): ${trimmedNotes}`,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : [
+          `Destination: ${destination}`,
+          `Dates: ${startDate} to ${endDate}`,
+          `Style: ${style.join(', ')}`,
+          `Companion: ${companion}`,
+          trimmedNotes && `Additional requests (prioritize these): ${trimmedNotes}`,
+        ]
+          .filter(Boolean)
+          .join('\n')
 
   const result = streamObject({
     model: cerebras(MODELS.default),

@@ -29,6 +29,13 @@ interface Props {
   startDate: string
   endDate: string
   coverUrl: string
+  /**
+   * 이미 만들어진 여행에 일정을 채워 넣을 때 그 여행 id.
+   * 없으면 새 여행을 만들면서 일정까지 함께 저장한다.
+   */
+  tripId?: string
+  /** 이미 일정이 있는 날짜(YYYY-MM-DD). 사용자가 짜둔 걸 덮지 않도록 건너뛴다 */
+  filledDates?: string[]
   onClose: () => void
 }
 
@@ -38,6 +45,8 @@ export default function AIItinerarySheet({
   startDate,
   endDate,
   coverUrl,
+  tripId: existingTripId,
+  filledDates = [],
   onClose,
 }: Props) {
   const locale = useLocale()
@@ -45,6 +54,7 @@ export default function AIItinerarySheet({
 
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [companion, setCompanion] = useState('solo')
+  const [notes, setNotes] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [streamText, setStreamText] = useState('')
   const [itinerary, setItinerary] = useState<GeneratedItinerary | null>(null)
@@ -74,6 +84,7 @@ export default function AIItinerarySheet({
           endDate,
           style: selectedStyles,
           companion,
+          notes,
           locale,
         }),
         signal: abortRef.current.signal,
@@ -101,24 +112,32 @@ export default function AIItinerarySheet({
     } finally {
       setStreaming(false)
     }
-  }, [canGenerate, destination, startDate, endDate, selectedStyles, companion, locale])
+  }, [canGenerate, destination, startDate, endDate, selectedStyles, companion, notes, locale])
 
   async function applyItinerary() {
     if (!itinerary || saving) return
     setSaving(true)
 
     try {
-      setSaveStep('여행 만드는 중...')
-      const fd = new FormData()
-      fd.set('title', title || itinerary.title)
-      fd.set('destination', destination)
-      fd.set('start_date', startDate)
-      fd.set('end_date', endDate)
-      fd.set('cover_url', coverUrl)
-      const { id: tripId, error } = await createTripReturnId(fd)
-      if (error || !tripId) throw new Error(error)
+      let targetTripId = existingTripId
 
+      if (!targetTripId) {
+        setSaveStep('여행 만드는 중...')
+        const fd = new FormData()
+        fd.set('title', title || itinerary.title)
+        fd.set('destination', destination)
+        fd.set('start_date', startDate)
+        fd.set('end_date', endDate)
+        fd.set('cover_url', coverUrl)
+        const { id, error } = await createTripReturnId(fd)
+        if (error || !id) throw new Error(error)
+        targetTripId = id
+      }
+
+      const skip = new Set(filledDates)
       for (const day of itinerary.days) {
+        // 이미 사용자가 채워둔 날은 건드리지 않는다
+        if (skip.has(day.day_date)) continue
         setSaveStep(`${day.day_number}일차 일정 저장 중...`)
         for (const item of day.items) {
           try {
@@ -138,13 +157,13 @@ export default function AIItinerarySheet({
                 lng: found.location?.longitude ?? null,
               })
               if (placeId) {
-                await addItineraryItem(tripId, day.day_date, day.day_number, placeId)
+                await addItineraryItem(targetTripId, day.day_date, day.day_number, placeId)
               }
             } else {
               const memo = [item.place_name, item.visit_time && `(${item.visit_time})`, item.memo]
                 .filter(Boolean)
                 .join(' ')
-              await addMemoItem(tripId, day.day_date, day.day_number, memo)
+              await addMemoItem(targetTripId, day.day_date, day.day_number, memo)
             }
           } catch {
             // 개별 실패는 무시하고 계속
@@ -152,7 +171,8 @@ export default function AIItinerarySheet({
         }
       }
 
-      router.push(`/${locale}/trips/${tripId}`)
+      router.replace(`/${locale}/trips/${targetTripId}`)
+      router.refresh()
     } catch {
       setSaving(false)
       setSaveStep('')
@@ -247,6 +267,24 @@ export default function AIItinerarySheet({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* 추가 요청 — 칩으로 담기지 않는 구체적인 조건을 받는다 */}
+              <div>
+                <p className="text-ink mb-2 text-[13px] font-semibold">
+                  더 알려주실 게 있나요?
+                  <span className="text-ink3 ml-1 font-normal">(선택)</span>
+                </p>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value.slice(0, 500))}
+                  rows={3}
+                  placeholder="예: 아이랑 같이 가요. 걷는 건 많이 못 해요. 우니 꼭 먹고 싶어요."
+                  className="border-border bg-bg2 text-ink placeholder:text-ink3 focus:border-primary w-full resize-none rounded-xl border px-3.5 py-3 text-[13px] leading-relaxed transition-colors outline-none"
+                />
+                {notes.length > 0 && (
+                  <p className="text-ink3 mt-1 text-right text-[11px]">{notes.length}/500</p>
+                )}
               </div>
             </div>
           )}

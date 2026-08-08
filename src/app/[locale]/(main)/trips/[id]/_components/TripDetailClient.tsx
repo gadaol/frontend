@@ -10,6 +10,7 @@ import BottomNav from '@/components/common/BottomNav'
 import Tabs from '@/components/ui/Tabs'
 import PlacesMapTab from './PlacesMapTab'
 import ItemDetailSheet from './ItemDetailSheet'
+import AIItinerarySheet from '@/components/features/trips/AIItinerarySheet'
 import { useAssistantStore } from '@/lib/ai/store'
 import { isGradient } from '@/utils/uploadCover'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
@@ -72,6 +73,7 @@ export default function TripDetailClient({
   const [activeSheetItem, setActiveSheetItem] = useState<ItineraryItemDB | null>(null)
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
   const [memoOverrides, setMemoOverrides] = useState<Map<string, string>>(new Map())
+  const [showAISheet, setShowAISheet] = useState(false)
 
   function handleInvite() {
     router.push(`/${locale}/trips/${trip.id}/invite`)
@@ -410,6 +412,8 @@ export default function TripDetailClient({
               locale={locale}
               isOwner={isOwner}
               expensesByDay={expensesByDay}
+              destination={trip.destination}
+              onGenerateAI={() => setShowAISheet(true)}
             />
           )}
           {activeTab === '비용' && (
@@ -470,6 +474,21 @@ export default function TripDetailClient({
         />
       )}
 
+      {showAISheet && trip.start_date && trip.end_date && (
+        <AIItinerarySheet
+          title={trip.title}
+          destination={trip.destination ?? ''}
+          startDate={trip.start_date}
+          endDate={trip.end_date}
+          coverUrl={trip.cover_url ?? ''}
+          tripId={trip.id}
+          filledDates={trip.itinerary_days
+            .filter((d) => d.itinerary_items.length > 0)
+            .map((d) => d.day_date)}
+          onClose={() => setShowAISheet(false)}
+        />
+      )}
+
       <BottomNav />
     </div>
   )
@@ -493,6 +512,8 @@ function ItineraryTab({
   locale,
   isOwner,
   expensesByDay,
+  destination,
+  onGenerateAI,
 }: {
   expectedDays: ExpectedDay[]
   dayMap: Map<string, DayDB>
@@ -506,6 +527,8 @@ function ItineraryTab({
   locale: string
   isOwner: boolean
   expensesByDay: Map<string, TripExpense[]>
+  destination: string | null
+  onGenerateAI: () => void
 }) {
   if (expectedDays.length === 0) {
     return (
@@ -531,8 +554,42 @@ function ItineraryTab({
     )
   }
 
+  const totalItems = expectedDays.reduce(
+    (n, day) => n + (dayMap.get(day.dayDate)?.itinerary_items.length ?? 0),
+    0,
+  )
+
   return (
     <div>
+      {/* 날짜는 잡혔는데 일정이 비어 있는 순간이 AI 생성 의도가 가장 뚜렷하다 */}
+      {isOwner && totalItems === 0 && (
+        <button
+          onClick={onGenerateAI}
+          className="mx-4 mt-3 mb-1 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl p-3.5 text-left active:opacity-90"
+          style={{ background: 'linear-gradient(135deg,#0891b2 0%,#6366f1 100%)' }}
+        >
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-[18px]">
+            ✨
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-bold text-white">AI로 일정 짜기</span>
+            <span className="block text-[11px] text-white/70">
+              {destination
+                ? `${destination} 일정을 자동으로 채워드려요`
+                : '일정을 자동으로 채워드려요'}
+            </span>
+          </span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
+            <path
+              d="M6 3.5l4.5 4.5L6 12.5"
+              stroke="rgba(255,255,255,0.6)"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
       {expectedDays.map((day) => {
         const dayDB = dayMap.get(day.dayDate)
         const dayExpenses = dayDB ? (expensesByDay.get(dayDB.id) ?? []) : []

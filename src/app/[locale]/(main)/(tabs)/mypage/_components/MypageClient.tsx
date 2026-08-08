@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { logout, deleteAccount } from '@/app/actions/mypage'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import AppHeader from '@/components/common/AppHeader'
@@ -27,9 +27,9 @@ interface Subscription {
   expires_at: string | null
 }
 
-function getPlanLabel(subscription: Subscription | null): string {
+function getPlanLabel(subscription: Subscription | null, t: (k: string) => string): string {
   if (!subscription || subscription.plan === 'free') return 'Free'
-  if (subscription.status === 'trial') return 'Pro(체험)'
+  if (subscription.status === 'trial') return t('planProTrial')
   if (subscription.plan === 'plus') return 'Plus'
   return 'Pro'
 }
@@ -55,6 +55,7 @@ export default function MypageClient({
   tripCount,
   placeCount,
 }: Props) {
+  const t = useTranslations('mypage')
   const router = useRouter()
   const locale = useLocale()
   const pathname = usePathname()
@@ -95,7 +96,7 @@ export default function MypageClient({
     currentSubscription?.plan === 'pro' || currentSubscription?.plan === 'plus'
       ? currentSubscription.plan
       : 'free'
-  const planLabel = getPlanLabel(currentSubscription)
+  const planLabel = getPlanLabel(currentSubscription, t)
 
   return (
     <div className="bg-bg2 min-h-dvh pb-10">
@@ -118,14 +119,14 @@ export default function MypageClient({
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-[15px] font-bold text-white">구독이 시작됐어요! 🎉</p>
-              <p className="mt-0.5 text-[13px] text-white/60">Pro 혜택을 마음껏 누려보세요</p>
+              <p className="text-[15px] font-bold text-white">{t('subscribed.title')}</p>
+              <p className="mt-0.5 text-[13px] text-white/60">{t('subscribed.desc')}</p>
             </div>
           </div>
         </div>
       )}
       <AppHeader
-        title="마이페이지"
+        title={t('title')}
         border
         right={
           <Link
@@ -196,7 +197,7 @@ export default function MypageClient({
                 strokeLinejoin="round"
               />
             </svg>
-            프로필 편집
+            {t('editProfile')}
           </button>
         </div>
 
@@ -209,9 +210,9 @@ export default function MypageClient({
         {/* 스탯 */}
         <div className="border-border grid grid-cols-3 border-t">
           {[
-            { num: tripCount, label: '참여 여행' },
-            { num: placeCount, label: '저장 장소' },
-            { num: planLabel, label: '현재 플랜' },
+            { num: tripCount, label: t('statsTrips') },
+            { num: placeCount, label: t('statsPlaces') },
+            { num: planLabel, label: t('subscription.currentPlan') },
           ].map((s, i) => (
             <div
               key={s.label}
@@ -259,12 +260,10 @@ export default function MypageClient({
           </div>
           <div className="relative flex-1 text-left">
             <p className="text-[14px] font-bold text-white">
-              {plan === 'free' ? 'Pro로 업그레이드' : 'Plus로 업그레이드'}
+              {t('upgradeTo', { plan: plan === 'free' ? 'Pro' : 'Plus' })}
             </p>
             <p className="text-[12px] text-white/60">
-              {plan === 'free'
-                ? '무제한 여행 · AI 일정 추천 · 광고 없음'
-                : '모든 Pro 혜택 + 우선 지원 · 팀 공유'}
+              {plan === 'free' ? t('upgradeProDesc') : t('upgradePlusDesc')}
             </p>
           </div>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -294,8 +293,8 @@ export default function MypageClient({
             </svg>
           </div>
           <div className="flex-1 text-left">
-            <p className="text-ink text-[13px] font-bold">전화번호 인증하고 1개월 Pro 무료</p>
-            <p className="text-ink3 text-[12px]">인증 한 번으로 Pro 체험 혜택 받기</p>
+            <p className="text-ink text-[13px] font-bold">{t('phone.promoTitle')}</p>
+            <p className="text-ink3 text-[12px]">{t('phone.promoDesc')}</p>
           </div>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
@@ -310,7 +309,7 @@ export default function MypageClient({
       )}
 
       {/* 계정 그룹 */}
-      <MenuGroup label="계정">
+      <MenuGroup label={t('sectionAccount')}>
         <MenuItem
           iconBg="var(--color-primary-light)"
           icon={
@@ -324,7 +323,7 @@ export default function MypageClient({
               />
             </svg>
           }
-          label="프로필 설정"
+          label={t('profileSettings')}
           onPress={() => router.push(`/${locale}/mypage/profile`)}
           right={<ChevronRight />}
         />
@@ -349,7 +348,7 @@ export default function MypageClient({
               />
             </svg>
           }
-          label="알림 설정"
+          label={t('notificationSettings')}
           onPress={() => router.push(`/${locale}/notifications/settings`)}
           right={<ChevronRight />}
         />
@@ -374,14 +373,14 @@ export default function MypageClient({
               />
             </svg>
           }
-          label="구독 관리"
-          sub={`현재 ${PLAN_LABEL[plan]} 플랜`}
+          label={t('subscription.title')}
+          sub={t('currentPlanOf', { plan: PLAN_LABEL[plan] })}
           onPress={() => router.push(`/${locale}/mypage/subscription`)}
           right={
             plan === 'free' ? (
               <div className="flex items-center gap-1.5">
                 <span className="bg-primary-light text-primary rounded-[10px] px-2 py-0.5 text-[11px] font-semibold">
-                  업그레이드
+                  {t('upgrade')}
                 </span>
                 <ChevronRight />
               </div>
@@ -396,9 +395,7 @@ export default function MypageClient({
       {/* 언어 — 선택지가 둘뿐이라 한 줄 토글로 둔다 */}
       <div className="mx-4 mt-3">
         <div className="border-border flex items-center justify-between rounded-2xl border bg-white px-4 py-3">
-          <span className="text-ink text-[14px] font-medium">
-            {locale === 'ko' ? '언어' : 'Language'}
-          </span>
+          <span className="text-ink text-[14px] font-medium">{t('sectionLanguage')}</span>
           <div className="bg-bg2 flex items-center gap-0.5 rounded-full p-0.5">
             {LOCALES.map(({ code, label }) => (
               <button
@@ -418,10 +415,10 @@ export default function MypageClient({
       {/* AI 비서 설정 */}
       <div className="mx-4 mt-3">
         <p className="text-ink3 mb-2 pl-1 text-[11px] font-semibold tracking-[1px] uppercase">
-          AI 비서
+          {t('sectionAi')}
         </p>
         <div className="border-border overflow-hidden rounded-2xl border bg-white p-4">
-          <p className="text-ink mb-3 text-[13px] font-medium">함께할 AI 메이트를 선택해요</p>
+          <p className="text-ink mb-3 text-[13px] font-medium">{t('aiPickMate')}</p>
           <div className="flex gap-3">
             {(['gada', 'rog'] as CharacterId[]).map((id) => {
               // 이 화면은 원래부터 한국어 하드코딩이라 ko 문구를 그대로 쓴다
@@ -450,7 +447,7 @@ export default function MypageClient({
       </div>
 
       {/* 앱 그룹 */}
-      <MenuGroup label="앱">
+      <MenuGroup label={t('sectionApp')}>
         <MenuItem
           iconBg="var(--color-primary-light)"
           icon={
@@ -464,7 +461,7 @@ export default function MypageClient({
               />
             </svg>
           }
-          label="공지사항"
+          label={t('notices')}
           onPress={() => router.push(`/${locale}/notices`)}
           right={<ChevronRight />}
         />
@@ -480,7 +477,7 @@ export default function MypageClient({
               />
             </svg>
           }
-          label="문의하기"
+          label={t('inquiries')}
           onPress={() => router.push(`/${locale}/inquiries`)}
           right={<ChevronRight />}
           last
@@ -519,7 +516,7 @@ export default function MypageClient({
               />
             </svg>
           </div>
-          <span className="text-error flex-1 text-left text-[14px] font-medium">로그아웃</span>
+          <span className="text-error flex-1 text-left text-[14px] font-medium">{t('logout')}</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
               d="M6 4l4 4-4 4"
@@ -536,14 +533,14 @@ export default function MypageClient({
         onClick={() => setShowDeleteConfirm(true)}
         className="text-ink3 mx-auto mb-2 block text-[13px]"
       >
-        회원탈퇴
+        {t('deleteAccount')}
       </button>
 
       {showLogoutConfirm && (
         <ConfirmSheet
-          title="로그아웃"
-          message="정말 로그아웃 하시겠어요?"
-          confirmLabel="로그아웃"
+          title={t('logout')}
+          message={t('logoutConfirm')}
+          confirmLabel={t('logout')}
           confirmColor="var(--color-error)"
           onCancel={() => setShowLogoutConfirm(false)}
           onConfirm={() =>
@@ -655,27 +652,29 @@ function DeleteConfirmSheet({
   onConfirm: () => void
   loading: boolean
 }) {
+  const t = useTranslations('mypage')
+  const tc = useTranslations('common')
   const [input, setInput] = useState('')
-  const confirmed = input === '탈퇴'
+  const confirmed = input === t('deleteWord')
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
-        <p className="text-ink mb-1.5 text-center text-[17px] font-bold">정말 탈퇴하시겠어요?</p>
+        <p className="text-ink mb-1.5 text-center text-[17px] font-bold">{t('deleteTitle')}</p>
         <p className="text-ink3 mb-4 text-center text-[14px] leading-relaxed">
-          탈퇴 시 모든 데이터가 삭제되며 복구할 수 없어요.
+          {t('deleteWarning')}
         </p>
         <div className="border-border mb-5 overflow-hidden rounded-2xl border px-4 py-3">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="'탈퇴'를 입력해주세요"
+            placeholder={t('deleteWordPrompt')}
             className="text-ink placeholder:text-ink3 w-full bg-transparent text-center text-[15px] outline-none"
           />
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={onCancel} className="flex-1">
-            취소
+            {tc('cancel')}
           </Button>
           <Button
             variant="danger"
@@ -683,7 +682,7 @@ function DeleteConfirmSheet({
             disabled={!confirmed || loading}
             className="flex-1"
           >
-            {loading ? '처리 중...' : '탈퇴하기'}
+            {loading ? t('processing') : t('deleteSubmit')}
           </Button>
         </div>
       </div>
@@ -705,6 +704,8 @@ function PhoneVerifySheet({
   onClose: () => void
   onVerified: (trialGranted: boolean) => void
 }) {
+  const t = useTranslations('mypage')
+  const tc = useTranslations('common')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -722,7 +723,7 @@ function PhoneVerifySheet({
       await api.post('/api/find-account/send', { phone: rawPhone })
       setOtpSent(true)
     } catch {
-      setError('인증번호 전송에 실패했어요. 다시 시도해주세요.')
+      setError(t('phone.sendFailed'))
     } finally {
       setSending(false)
     }
@@ -737,9 +738,9 @@ function PhoneVerifySheet({
       setTimeout(() => onVerified(res.data.trialGranted ?? false), 1500)
     } catch (err) {
       if (isApiError(err) && err.status === 409) {
-        setError('이미 다른 계정에 등록된 전화번호예요.')
+        setError(t('phone.duplicate'))
       } else {
-        setError('인증에 실패했어요. 번호를 확인해주세요.')
+        setError(t('phone.verifyFailed'))
       }
     } finally {
       setVerifying(false)
@@ -764,15 +765,13 @@ function PhoneVerifySheet({
                 />
               </svg>
             </div>
-            <p className="text-ink text-[17px] font-bold">인증 완료!</p>
-            <p className="text-ink3 text-center text-[14px]">1개월 Pro 체험이 시작됐어요.</p>
+            <p className="text-ink text-[17px] font-bold">{t('phone.successTitle')}</p>
+            <p className="text-ink3 text-center text-[14px]">{t('phone.successDesc')}</p>
           </div>
         ) : (
           <>
-            <p className="text-ink mb-1 text-[17px] font-bold">전화번호 인증</p>
-            <p className="text-ink3 mb-5 text-[13px]">
-              인증 완료 시 1개월 Pro 무료체험이 시작돼요.
-            </p>
+            <p className="text-ink mb-1 text-[17px] font-bold">{t('phone.verifyTitle')}</p>
+            <p className="text-ink3 mb-5 text-[13px]">{t('phone.verifyDesc')}</p>
 
             <div className="mb-3 flex gap-2">
               <div className="border-border flex h-[50px] flex-1 items-center rounded-xl border px-4">
@@ -786,7 +785,7 @@ function PhoneVerifySheet({
                 />
               </div>
               <Button onClick={handleSend} disabled={rawPhone.length < 10 || sending}>
-                {sending ? '전송 중' : otpSent ? '재전송' : '인증번호'}
+                {sending ? t('phone.sending') : otpSent ? t('phone.resend') : t('phone.code')}
               </Button>
             </div>
 
@@ -795,7 +794,7 @@ function PhoneVerifySheet({
                 <input
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="인증번호 6자리"
+                  placeholder={t('phone.codePlaceholder')}
                   inputMode="numeric"
                   className="text-ink placeholder:text-ink3 w-full bg-transparent text-[15px] tracking-widest outline-none placeholder:tracking-normal"
                 />
@@ -806,7 +805,7 @@ function PhoneVerifySheet({
 
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose} className="flex-1">
-                취소
+                {tc('cancel')}
               </Button>
               {otpSent && (
                 <Button
@@ -814,7 +813,7 @@ function PhoneVerifySheet({
                   disabled={otp.length < 6 || verifying}
                   className="flex-1"
                 >
-                  {verifying ? '확인 중...' : '인증 완료'}
+                  {verifying ? t('phone.verifying') : t('phone.verified')}
                 </Button>
               )}
             </div>
@@ -842,6 +841,8 @@ function ConfirmSheet({
   onConfirm: () => void
   loading: boolean
 }) {
+  const t = useTranslations('mypage')
+  const tc = useTranslations('common')
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 px-4 pb-8">
       <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6">
@@ -852,7 +853,7 @@ function ConfirmSheet({
             onClick={onCancel}
             className="border-border text-ink h-[52px] flex-1 rounded-xl border bg-white text-[15px] font-medium"
           >
-            취소
+            {tc('cancel')}
           </button>
           <button
             onClick={onConfirm}
@@ -860,7 +861,7 @@ function ConfirmSheet({
             className="h-[52px] flex-1 rounded-xl text-[15px] font-bold text-white disabled:opacity-60"
             style={{ backgroundColor: confirmColor }}
           >
-            {loading ? '처리 중...' : confirmLabel}
+            {loading ? t('processing') : confirmLabel}
           </button>
         </div>
       </div>

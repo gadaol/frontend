@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { updateName, uploadAvatar, deleteAvatar, updateTravelStyle } from '@/app/actions/mypage'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
@@ -21,32 +22,21 @@ type PlaceKey =
   | 'market'
 type CompanionKey = 'solo' | 'couple' | 'family' | 'friends' | 'pet'
 
-const PACE_OPTIONS: { key: PaceKey; label: string }[] = [
-  { key: 'relaxed', label: '여유롭게' },
-  { key: 'fast', label: '빠르게' },
-  { key: 'planned', label: '계획파' },
-  { key: 'spontaneous', label: '즉흥파' },
-  { key: 'photo', label: '사진 중심' },
+/** 라벨은 onboarding 네임스페이스가 이미 갖고 있어 키만 둔다 */
+const PACE_KEYS: PaceKey[] = ['relaxed', 'fast', 'planned', 'spontaneous', 'photo']
+const PLACE_KEYS: PlaceKey[] = [
+  'restaurant',
+  'cafe',
+  'nature',
+  'landmark',
+  'shopping',
+  'activity',
+  'culture',
+  'night',
+  'healing',
+  'market',
 ]
-const PLACE_OPTIONS: { key: PlaceKey; label: string }[] = [
-  { key: 'restaurant', label: '맛집' },
-  { key: 'cafe', label: '카페' },
-  { key: 'nature', label: '자연' },
-  { key: 'landmark', label: '관광지' },
-  { key: 'shopping', label: '쇼핑' },
-  { key: 'activity', label: '액티비티' },
-  { key: 'culture', label: '박물관·전시' },
-  { key: 'night', label: '야경·야간' },
-  { key: 'healing', label: '온천·스파' },
-  { key: 'market', label: '로컬 시장' },
-]
-const COMPANION_OPTIONS: { key: CompanionKey; label: string }[] = [
-  { key: 'solo', label: '혼자' },
-  { key: 'couple', label: '둘이서' },
-  { key: 'family', label: '가족과' },
-  { key: 'friends', label: '친구들과' },
-  { key: 'pet', label: '반려동물과' },
-]
+const COMPANION_KEYS: CompanionKey[] = ['solo', 'couple', 'family', 'friends', 'pet']
 
 interface Props {
   displayName: string
@@ -70,6 +60,9 @@ export default function ProfileSettingsClient({
   travelPlaces,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations('mypage')
+  const to = useTranslations('onboarding')
+  const tc = useTranslations('common')
   const [isPending, startTransition] = useTransition()
   const [isStylePending, startStyleTransition] = useTransition()
 
@@ -90,13 +83,13 @@ export default function ProfileSettingsClient({
 
   function handleSaveName() {
     if (!nameValue.trim()) {
-      setNameError('이름을 입력해주세요')
+      setNameError(t('nameRequired'))
       return
     }
     startTransition(async () => {
       const res = await updateName(nameValue)
       if (res?.error) {
-        setNameError('저장에 실패했어요')
+        setNameError(t('saveFailed'))
       } else {
         setNameError('')
         router.back()
@@ -136,7 +129,7 @@ export default function ProfileSettingsClient({
 
   return (
     <div className="bg-bg2 min-h-dvh">
-      <AppHeader title="프로필 설정" onBack="router" border />
+      <AppHeader title={t('profileTitle')} onBack="router" border />
 
       <div className="px-4 pt-6 pb-10">
         {/* 아바타 */}
@@ -173,7 +166,7 @@ export default function ProfileSettingsClient({
             />
           </label>
           <div className="flex items-center gap-3">
-            <span className="text-ink3 text-[12px]">프로필 사진 변경</span>
+            <span className="text-ink3 text-[12px]">{to('avatarHint')}</span>
             {currentAvatarUrl && (
               <button
                 type="button"
@@ -181,7 +174,7 @@ export default function ProfileSettingsClient({
                 disabled={avatarUploading}
                 className="text-error text-[12px] font-medium disabled:opacity-40"
               >
-                삭제
+                {tc('delete')}
               </button>
             )}
           </div>
@@ -190,7 +183,7 @@ export default function ProfileSettingsClient({
         {/* 이름 */}
         <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white">
           <div className="px-4 pt-4 pb-3">
-            <label className="text-ink3 mb-1.5 block text-[12px] font-semibold">이름</label>
+            <label className="text-ink3 mb-1.5 block text-[12px] font-semibold">{t('name')}</label>
             <input
               value={nameValue}
               onChange={(e) => {
@@ -199,7 +192,7 @@ export default function ProfileSettingsClient({
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
               className="text-ink w-full bg-transparent text-[15px] outline-none"
-              placeholder="이름을 입력하세요"
+              placeholder={t('namePlaceholder')}
               maxLength={20}
             />
             {nameError && <p className="mt-1 text-[12px] text-red-500">{nameError}</p>}
@@ -209,7 +202,7 @@ export default function ProfileSettingsClient({
         {/* 전화번호 */}
         {phone && (
           <>
-            <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">전화번호</p>
+            <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">{t('phoneNumber')}</p>
             <div className="border-border mb-5 overflow-hidden rounded-2xl border bg-white">
               <div className="px-4 py-3.5">
                 <p className="text-ink text-[15px]">
@@ -221,43 +214,50 @@ export default function ProfileSettingsClient({
         )}
 
         {/* 로그인 계정 */}
-        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">로그인 계정</p>
+        <p className="text-ink3 mb-2 pl-1 text-[12px] font-semibold">{t('loginAccount')}</p>
         <div className="border-border mb-6 overflow-hidden rounded-2xl border bg-white">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <ProviderIcon provider={provider} />
             <span className="text-ink flex-1 text-[14px]">
-              {provider === 'kakao' ? '카카오' : provider === 'google' ? 'Google' : '이메일'}
+              {provider === 'kakao'
+                ? t('provider.kakao')
+                : provider === 'google'
+                  ? t('provider.google')
+                  : t('provider.email')}
             </span>
-            <Badge variant="blue">기본</Badge>
+            <Badge variant="blue">{t('primaryBadge')}</Badge>
           </div>
         </div>
 
         <Button onClick={handleSaveName} disabled={isPending} fullWidth>
-          {isPending ? '저장 중...' : '저장'}
+          {isPending ? t('saving') : tc('save')}
         </Button>
 
         {/* 여행 취향 */}
         <div className="mt-8 mb-2">
-          <p className="text-ink text-[15px] font-semibold">여행 취향</p>
-          <p className="text-ink3 mt-0.5 text-[12px]">AI 추천 정확도에 영향을 줘요</p>
+          <p className="text-ink text-[15px] font-semibold">{t('stylePrefs')}</p>
+          <p className="text-ink3 mt-0.5 text-[12px]">{t('stylePrefsDesc')}</p>
         </div>
 
         <div className="border-border mb-5 space-y-5 overflow-hidden rounded-2xl border bg-white px-4 py-4">
           <ChipSection
-            label="여행 페이스"
-            options={PACE_OPTIONS}
+            label={to('paceLabel')}
+            keys={PACE_KEYS}
+            getLabel={(k) => to(`pace.${k}` as never)}
             selected={pace}
             onToggle={(v) => toggle(pace, v, setPace)}
           />
           <ChipSection
-            label="선호 장소"
-            options={PLACE_OPTIONS}
+            label={to('placeLabel')}
+            keys={PLACE_KEYS}
+            getLabel={(k) => to(`place.${k}` as never)}
             selected={places}
             onToggle={(v) => toggle(places, v, setPlaces)}
           />
           <ChipSection
-            label="주로 함께하는 여행"
-            options={COMPANION_OPTIONS}
+            label={to('companionLabel')}
+            keys={COMPANION_KEYS}
+            getLabel={(k) => to(`companion.${k}` as never)}
             selected={companion}
             onToggle={(v) => toggle(companion, v, setCompanion)}
           />
@@ -269,7 +269,7 @@ export default function ProfileSettingsClient({
           fullWidth
           variant={styleSaved ? 'secondary' : 'primary'}
         >
-          {isStylePending ? '저장 중...' : styleSaved ? '취향 저장됨 ✓' : '취향 저장'}
+          {isStylePending ? t('saving') : styleSaved ? t('styleSaved') : t('styleSave')}
         </Button>
       </div>
     </div>
@@ -278,12 +278,14 @@ export default function ProfileSettingsClient({
 
 function ChipSection({
   label,
-  options,
+  keys,
+  getLabel,
   selected,
   onToggle,
 }: {
   label: string
-  options: { key: string; label: string }[]
+  keys: readonly string[]
+  getLabel: (key: string) => string
   selected: string[]
   onToggle: (v: string) => void
 }) {
@@ -291,7 +293,8 @@ function ChipSection({
     <div>
       <div className="text-ink3 mb-2 text-[12px] font-semibold">{label}</div>
       <div className="flex flex-wrap gap-2">
-        {options.map(({ key, label: optLabel }) => {
+        {keys.map((key) => {
+          const optLabel = getLabel(key)
           const active = selected.includes(key)
           return (
             <button

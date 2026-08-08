@@ -8,7 +8,7 @@ import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import DestinationInput from '@/components/features/trips/DestinationInput'
 import { createClient } from '@/lib/supabase/client'
 import { COVER_PRESETS } from '@/utils/coverPresets'
-import AIItinerarySheet from './_components/AIItinerarySheet'
+import AIItinerarySheet from '@/components/features/trips/AIItinerarySheet'
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
@@ -37,8 +37,9 @@ export default function NewTripPage() {
       setUploading(false)
       return
     }
-    const url = await uploadCoverImage(file, user.id)
+    const { url, error } = await uploadCoverImage(file, user.id)
     if (url) setSelectedCover(url)
+    else setErrorMsg(error ?? '커버 이미지 업로드에 실패했어요')
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -125,7 +126,9 @@ export default function NewTripPage() {
 
         {/* 여행 제목 */}
         <div>
-          <label className="text-ink mb-2 block text-[13px] font-semibold">여행 제목</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">
+            여행 제목 <span className="text-red-500">*</span>
+          </label>
           <input
             name="title"
             type="text"
@@ -140,13 +143,17 @@ export default function NewTripPage() {
 
         {/* 목적지 */}
         <div>
-          <label className="text-ink mb-2 block text-[13px] font-semibold">목적지</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">
+            목적지 <span className="text-ink3 font-normal">(선택)</span>
+          </label>
           <DestinationInput name="destination" value={destination} onChange={setDestination} />
         </div>
 
         {/* 날짜 */}
         <div>
-          <label className="text-ink mb-2 block text-[13px] font-semibold">여행 날짜</label>
+          <label className="text-ink mb-2 block text-[13px] font-semibold">
+            여행 날짜 <span className="text-ink3 font-normal">(선택)</span>
+          </label>
           <div className="flex items-center gap-2">
             <input
               name="start_date"
@@ -172,36 +179,51 @@ export default function NewTripPage() {
         </div>
 
         {/* AI 일정 자동 생성 버튼 */}
-        {destination && startDate && endDate && (
-          <button
-            type="button"
-            onClick={() => setShowAISheet(true)}
-            className="border-primary/30 bg-primary/5 active:bg-primary/10 flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors"
-          >
-            <span className="text-[22px]">✨</span>
-            <div>
-              <p className="text-primary text-[14px] font-bold">AI 일정 자동 생성</p>
-              <p className="text-ink3 text-[12px]">
-                AI가 {destination} 여행 일정을 자동으로 짜드려요
-              </p>
-            </div>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="text-primary/50 ml-auto"
+        {/* AI 일정 생성 — 조건이 맞을 때만 튀어나오면 못 찾으므로 항상 두고 안내한다 */}
+        {(() => {
+          const ready = !!destination && !!startDate && !!endDate
+          return (
+            <button
+              type="button"
+              onClick={() => ready && setShowAISheet(true)}
+              disabled={!ready}
+              className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors ${
+                ready
+                  ? 'border-primary/30 bg-primary/5 active:bg-primary/10'
+                  : 'border-border bg-bg2'
+              }`}
             >
-              <path
-                d="M6 4l4 4-4 4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        )}
+              <span className={`text-[22px] ${ready ? '' : 'opacity-40'}`}>✨</span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-[14px] font-bold ${ready ? 'text-primary' : 'text-ink3'}`}>
+                  AI 일정 자동 생성
+                </p>
+                <p className="text-ink3 text-[12px]">
+                  {ready
+                    ? `AI가 ${destination} 여행 일정을 자동으로 짜드려요`
+                    : '목적지와 날짜를 정하면 사용할 수 있어요'}
+                </p>
+              </div>
+              {ready && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="text-primary/50 flex-shrink-0"
+                >
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
+          )
+        })()}
 
         {errorMsg && <p className="text-center text-[13px] text-red-500">{errorMsg}</p>}
       </form>

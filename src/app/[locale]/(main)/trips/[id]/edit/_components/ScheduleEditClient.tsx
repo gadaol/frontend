@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition, useRef, useEffect, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import {
   removeItineraryItem,
@@ -23,6 +23,11 @@ import PlacePhoto from '@/components/features/places/PlacePhoto'
 import PhotoBackfillTrigger from '@/components/features/places/PhotoBackfillTrigger'
 import Button from '@/components/ui/Button'
 import { COVER_PRESETS } from '@/utils/coverPresets'
+import {
+  EXPENSE_CATEGORIES,
+  expenseCategoryKey,
+  type ExpenseCategory,
+} from '@/utils/expenseCategory'
 import DestinationInput from '@/components/features/trips/DestinationInput'
 import ItemDetailSheet from '../../_components/ItemDetailSheet'
 import type { TripDetail, TripExpense } from '../../page'
@@ -30,9 +35,6 @@ import type { TripDetail, TripExpense } from '../../page'
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
 type EditTab = 'info' | 'expense' | number
-
-const EXPENSE_CATEGORIES = ['식비', '카페', '숙박', '교통', '입장료', '쇼핑', '기타'] as const
-type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 
 export default function ScheduleEditClient({
   trip,
@@ -42,6 +44,8 @@ export default function ScheduleEditClient({
   expenses: TripExpense[]
 }) {
   const locale = useLocale()
+  const t = useTranslations('trips')
+  const tc = useTranslations('common')
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
@@ -146,19 +150,20 @@ export default function ScheduleEditClient({
       setUploading(false)
       return
     }
-    const url = await uploadCoverImage(file, user.id)
+    const { url, error } = await uploadCoverImage(file, user.id)
     if (url) setCoverUrl(url)
+    else setSaveError(error ?? t('coverUploadFailed'))
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   async function handleSaveInfo() {
     if (!title.trim()) {
-      setSaveError('여행 이름을 입력해주세요')
+      setSaveError(t('nameRequired'))
       return
     }
     if (startDate && endDate && dayjs(endDate).isBefore(dayjs(startDate))) {
-      setSaveError('종료일이 시작일보다 빠를 수 없어요')
+      setSaveError(t('endBeforeStart'))
       return
     }
     if (startDate && endDate) {
@@ -191,8 +196,10 @@ export default function ScheduleEditClient({
       setSaveError(result.error)
       return
     }
+    // back()으로 돌아가면 상세 페이지가 라우터 캐시에서 그대로 나와 방금 바꾼
+    // 커버·제목이 반영되지 않는다. 목적지로 직접 이동한 뒤 그 페이지를 새로 받는다.
+    router.replace(`/${locale}/trips/${trip.id}`)
     router.refresh()
-    router.back()
   }
 
   function handleRemove(itemId: string) {
@@ -342,14 +349,14 @@ export default function ScheduleEditClient({
             />
           </svg>
         </button>
-        <span className="text-ink text-[17px] font-semibold">일정 편집</span>
+        <span className="text-ink text-[17px] font-semibold">{t('editTitle')}</span>
         {activeTab === 'info' ? (
           <Button onClick={handleSaveInfo} disabled={saving} size="sm">
-            {saving ? '저장 중' : '저장'}
+            {saving ? t('saving') : tc('save')}
           </Button>
         ) : (
           <Button onClick={() => router.back()} size="sm">
-            완료
+            {t('done')}
           </Button>
         )}
       </div>
@@ -363,7 +370,7 @@ export default function ScheduleEditClient({
             activeTab === 'info' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
           }`}
         >
-          정보
+          {t('info')}
         </button>
 
         {/* 비용 탭 */}
@@ -373,7 +380,7 @@ export default function ScheduleEditClient({
             activeTab === 'expense' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
           }`}
         >
-          💰 비용
+          {t('costTab')}
           {totalExpenses > 0 && (
             <span
               className={`text-[10px] font-semibold ${activeTab === 'expense' ? 'text-primary' : 'text-ink3'}`}
@@ -402,7 +409,7 @@ export default function ScheduleEditClient({
         ))}
         {expectedDays.length === 0 && (
           <span className="text-ink3 flex items-center px-2 py-3 text-[12px]">
-            날짜 설정 후 일정 편집 가능
+            {t('needDateToEdit')}
           </span>
         )}
       </div>
@@ -425,10 +432,10 @@ export default function ScheduleEditClient({
                   <div className="h-full w-full" style={{ background: coverUrl }} />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={coverUrl} alt="커버" className="h-full w-full object-cover" />
+                  <img src={coverUrl} alt={t('cover')} className="h-full w-full object-cover" />
                 )}
               </div>
-              <p className="text-ink2 mb-2 text-[12px] font-semibold">커버</p>
+              <p className="text-ink2 mb-2 text-[12px] font-semibold">{t('cover')}</p>
               <div className="grid grid-cols-5 gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -476,28 +483,32 @@ export default function ScheduleEditClient({
             {/* 여행 이름 */}
             <div>
               <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
-                여행 이름 <span className="text-red-500">*</span>
+                {t('tripName')} <span className="text-red-500">*</span>
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="여행 이름을 입력하세요"
+                placeholder={t('namePlaceholder')}
                 className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
               />
             </div>
 
             {/* 목적지 */}
             <div>
-              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">목적지</label>
+              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
+                {t('destination')}
+              </label>
               <DestinationInput value={destination} onChange={setDestination} />
             </div>
 
             {/* 날짜 */}
             <div>
-              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">여행 기간</label>
+              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
+                {t('period')}
+              </label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <p className="text-ink3 mb-1 text-[11px]">시작일</p>
+                  <p className="text-ink3 mb-1 text-[11px]">{t('startDate')}</p>
                   <input
                     type="date"
                     value={startDate}
@@ -510,7 +521,7 @@ export default function ScheduleEditClient({
                 </div>
                 <div className="text-ink3 flex items-end pb-[13px]">—</div>
                 <div className="flex-1">
-                  <p className="text-ink3 mb-1 text-[11px]">종료일</p>
+                  <p className="text-ink3 mb-1 text-[11px]">{t('endDate')}</p>
                   <input
                     type="date"
                     value={endDate}
@@ -523,8 +534,11 @@ export default function ScheduleEditClient({
               {startDate && endDate && expectedDays.length > 0 && (
                 <p className="text-primary mt-1.5 text-[12px]">
                   {expectedDays.length === 1
-                    ? '당일치기'
-                    : `${expectedDays.length - 1}박 ${expectedDays.length}일`}
+                    ? t('dayTrip')
+                    : t('nights', {
+                        nights: expectedDays.length - 1,
+                        days: expectedDays.length,
+                      })}
                 </p>
               )}
             </div>
@@ -537,12 +551,12 @@ export default function ScheduleEditClient({
             {/* 경비 추가 */}
             <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white">
               <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-ink text-[13px] font-semibold">경비 추가</span>
+                <span className="text-ink text-[13px] font-semibold">{t('addExpense')}</span>
                 <button
                   onClick={() => setShowExpenseForm((v) => !v)}
                   className={`text-[13px] font-semibold ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
                 >
-                  {showExpenseForm ? '− 숨기기' : '+ 추가'}
+                  {showExpenseForm ? t('hide') : t('add')}
                 </button>
               </div>
 
@@ -566,7 +580,7 @@ export default function ScheduleEditClient({
                   <div className="mb-2.5 flex flex-wrap gap-1.5">
                     {EXPENSE_CATEGORIES.map((cat) => (
                       <button
-                        key={cat}
+                        key={t(expenseCategoryKey(cat) as never)}
                         onClick={() => setExpenseCategory(cat)}
                         className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${expenseCategory === cat ? 'bg-primary text-white' : 'border-border text-ink2 border bg-white'}`}
                       >
@@ -581,11 +595,11 @@ export default function ScheduleEditClient({
                       inputMode="numeric"
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
-                      placeholder="금액"
+                      placeholder={t('amount')}
                       autoFocus
                       className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
                     />
-                    <span className="text-ink3 flex-shrink-0 text-[13px]">원</span>
+                    <span className="text-ink3 flex-shrink-0 text-[13px]">{t('currencyUnit')}</span>
                   </div>
                   {/* 메모 */}
                   <div className="border-border mb-3 flex items-center rounded-xl border bg-white px-3 py-2">
@@ -593,7 +607,7 @@ export default function ScheduleEditClient({
                       type="text"
                       value={expenseNote}
                       onChange={(e) => setExpenseNote(e.target.value)}
-                      placeholder="메모 (선택)"
+                      placeholder={t('memoOptional')}
                       className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
                     />
                   </div>
@@ -602,7 +616,7 @@ export default function ScheduleEditClient({
                     disabled={addingExpense || !expenseAmount}
                     className="bg-primary w-full rounded-xl py-2.5 text-[14px] font-semibold text-white disabled:opacity-50"
                   >
-                    경비 추가
+                    {t('addExpense')}
                   </button>
                 </div>
               )}
@@ -610,9 +624,7 @@ export default function ScheduleEditClient({
 
             {/* 날짜별 경비 목록 */}
             {expectedDays.length === 0 ? (
-              <p className="text-ink3 py-8 text-center text-[13px]">
-                날짜를 설정하면 경비를 기록할 수 있어요
-              </p>
+              <p className="text-ink3 py-8 text-center text-[13px]">{t('needDateForExpense')}</p>
             ) : (
               expectedDays.map((day) => {
                 const db = dayMap.get(day.dayDate)
@@ -632,7 +644,7 @@ export default function ScheduleEditClient({
                       </div>
                       {dayTotal > 0 && (
                         <span className="text-primary ml-auto text-[13px] font-bold">
-                          {dayTotal.toLocaleString()}원
+                          {t('amountWithUnit', { amount: dayTotal.toLocaleString() })}
                         </span>
                       )}
                     </div>
@@ -646,7 +658,7 @@ export default function ScheduleEditClient({
                               className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-border border-t' : ''} ${isPending ? 'opacity-60' : ''}`}
                             >
                               <span className="text-ink2 text-[12px] font-semibold">
-                                {expense.category}
+                                {t(expenseCategoryKey(expense.category) as never)}
                               </span>
                               {expense.note && (
                                 <span className="text-ink3 min-w-0 flex-1 truncate text-[11px]">
@@ -654,7 +666,7 @@ export default function ScheduleEditClient({
                                 </span>
                               )}
                               <span className="text-ink ml-auto flex-shrink-0 text-[13px] font-bold">
-                                {expense.amount.toLocaleString()}원
+                                {t('amountWithUnit', { amount: expense.amount.toLocaleString() })}
                               </span>
                               {!isPending && (
                                 <button
@@ -677,7 +689,7 @@ export default function ScheduleEditClient({
                       </div>
                     ) : (
                       <div className="border-border border-t px-4 py-3">
-                        <p className="text-ink3 text-[12px]">등록된 경비 없음</p>
+                        <p className="text-ink3 text-[12px]">{t('noExpense')}</p>
                       </div>
                     )}
                   </div>
@@ -696,21 +708,21 @@ export default function ScheduleEditClient({
                 <span className="text-ink text-[18px] font-bold">
                   {visibleItems.filter((i) => i.item_type !== 'memo').length}
                 </span>
-                <span className="text-ink3 text-[10px]">장소</span>
+                <span className="text-ink3 text-[10px]">{t('place')}</span>
               </div>
               {visibleItems.some((i) => i.item_type === 'memo') && (
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-[18px] font-bold text-amber-500">
                     {visibleItems.filter((i) => i.item_type === 'memo').length}
                   </span>
-                  <span className="text-ink3 text-[10px]">메모</span>
+                  <span className="text-ink3 text-[10px]">{t('memo')}</span>
                 </div>
               )}
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-ink text-[18px] font-bold">
                   {dayjs(selectedDay.dayDate).format('M/D')}
                 </span>
-                <span className="text-ink3 text-[10px]">날짜</span>
+                <span className="text-ink3 text-[10px]">{t('tabDate')}</span>
               </div>
               {selectedDayDB &&
                 (expensesByDay.get(selectedDayDB.id) ?? []).reduce((s, e) => s + e.amount, 0) >
@@ -720,9 +732,9 @@ export default function ScheduleEditClient({
                       {(expensesByDay.get(selectedDayDB.id) ?? [])
                         .reduce((s, e) => s + e.amount, 0)
                         .toLocaleString()}
-                      원
+                      {t('currencyUnit')}
                     </span>
-                    <span className="text-ink3 text-[10px]">경비</span>
+                    <span className="text-ink3 text-[10px]">{t('tabExpense')}</span>
                   </div>
                 )}
             </div>
@@ -746,15 +758,17 @@ export default function ScheduleEditClient({
       {confirmDialog && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5">
-            <p className="text-ink mb-1 text-[16px] font-bold">장소가 삭제돼요</p>
-            <p className="text-ink2 mb-3 text-[13px]">
-              변경된 날짜 범위 밖의 날에 등록된 장소가 있어요.
-            </p>
+            <p className="text-ink mb-1 text-[16px] font-bold">{t('placesWillBeDeleted')}</p>
+            <p className="text-ink2 mb-3 text-[13px]">{t('outOfRangeDesc')}</p>
             <div className="bg-bg2 mb-4 flex flex-col gap-1 rounded-xl px-4 py-3">
               {confirmDialog.affectedDays.map((d) => (
                 <div key={d.dayDate} className="flex items-center justify-between text-[13px]">
-                  <span className="text-ink2">{dayjs(d.dayDate).format('M월 D일 (ddd)')}</span>
-                  <span className="font-semibold text-red-500">장소 {d.itemCount}개 삭제</span>
+                  <span className="text-ink2">
+                    {dayjs(d.dayDate).locale(locale).format(t('dateFormat'))}
+                  </span>
+                  <span className="font-semibold text-red-500">
+                    {t('placesDeletedCount', { count: d.itemCount })}
+                  </span>
                 </div>
               ))}
             </div>
@@ -763,14 +777,14 @@ export default function ScheduleEditClient({
                 onClick={() => setConfirmDialog(null)}
                 className="border-border text-ink2 flex-1 rounded-xl border py-3 text-[14px] font-medium"
               >
-                취소
+                {tc('cancel')}
               </button>
               <button
                 onClick={() => doSave(true)}
                 disabled={saving}
                 className="flex-1 rounded-xl bg-red-500 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
               >
-                {saving ? '저장 중...' : '삭제 후 저장'}
+                {saving ? t('savingDots') : t('deleteAndSave')}
               </button>
             </div>
           </div>
@@ -790,13 +804,13 @@ export default function ScheduleEditClient({
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            장소 추가
+            {t('addPlace')}
           </Link>
           <button
             onClick={handleAddMemo}
             className="border-border text-ink2 flex items-center justify-center gap-1.5 rounded-xl border px-4 py-3 text-[14px] font-medium"
           >
-            📝 메모
+            {t('memoTab')}
           </button>
         </div>
       )}
@@ -952,6 +966,8 @@ function TimelineItemRow({
   onDragHandleTouchStart?: (e: React.TouchEvent) => void
   onTap: () => void
 }) {
+  const t = useTranslations('trips')
+  const tc = useTranslations('common')
   const timeRef = useRef<HTMLInputElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -1043,9 +1059,9 @@ function TimelineItemRow({
             onClick={() => onRemove(item.id)}
             className="absolute top-0 right-0 flex h-full items-center justify-center rounded-r-xl bg-red-500 text-[12px] font-semibold text-white active:bg-red-600"
             style={{ width: SWIPE_DELETE_WIDTH }}
-            aria-label="삭제"
+            aria-label={tc('delete')}
           >
-            삭제
+            {tc('delete')}
           </button>
 
           {isMemo ? (
@@ -1076,7 +1092,7 @@ function TimelineItemRow({
                 <path d="M8.5 2.5l3 3" stroke="#F59E0B" strokeWidth="1.3" />
               </svg>
               <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-amber-900">
-                {item.memo || <span className="text-amber-400 italic">탭해서 메모 입력</span>}
+                {item.memo || <span className="text-amber-400 italic">{t('memoTapToEdit')}</span>}
               </p>
             </div>
           ) : (
@@ -1099,7 +1115,7 @@ function TimelineItemRow({
               />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 bg-white px-3 py-2.5">
                 <p className="text-ink text-[13px] leading-snug font-semibold break-keep">
-                  {item.places?.name ?? '알 수 없는 장소'}
+                  {item.places?.name ?? t('unknownPlace')}
                 </p>
                 {item.places?.address && (
                   <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
@@ -1121,7 +1137,7 @@ function TimelineItemRow({
         <button
           className="flex flex-shrink-0 touch-none items-center self-stretch px-1 pb-2 select-none"
           onTouchStart={onDragHandleTouchStart}
-          aria-label="순서 변경"
+          aria-label={t('reorder')}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <rect x="2" y="4" width="10" height="1.5" rx="0.75" fill="var(--color-ink3)" />
