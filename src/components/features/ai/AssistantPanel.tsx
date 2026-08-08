@@ -384,6 +384,19 @@ export default function AssistantPanel() {
             </div>
 
             <div className="flex items-center">
+              {voiceSupported && (
+                <button
+                  onClick={enterVoiceMode}
+                  className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
+                  aria-label={t('voiceChat')}
+                >
+                  <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
+                    <rect x="9.5" y="3" width="7" height="12" rx="3.5" stroke="var(--color-ink2)" strokeWidth="1.7" />
+                    <path d="M6 12a7 7 0 0 0 14 0M13 19v3.5" stroke="var(--color-ink2)" strokeWidth="1.7" strokeLinecap="round" />
+                  </svg>
+                </button>
+              )}
+
               <button
                 onClick={openHistory}
                 className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
