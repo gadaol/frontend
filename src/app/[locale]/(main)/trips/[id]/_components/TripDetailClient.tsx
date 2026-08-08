@@ -815,7 +815,7 @@ function DraggableItemList({
   onReorder: (dayId: string, orderedIds: string[]) => void
   onItemTap: (item: ItineraryItemDB) => void
 }) {
-  const itemsKey = items.map((i) => i.id + i.order_index).join(',')
+  const itemsKey = items.map((i) => i.id + i.order_index + (i.memo ?? '')).join(',')
   const visibleItems = useMemo(
     () =>
       items.filter((i) => !removedItemIds.has(i.id)).sort((a, b) => a.order_index - b.order_index),
@@ -1099,6 +1099,9 @@ function ItineraryItemRow({
               </p>
               {item.places?.address && (
                 <p className="text-ink3 truncate text-[11px]">{item.places.address}</p>
+              )}
+              {item.memo && (
+                <p className="text-ink2 truncate text-[11px] italic">&ldquo;{item.memo}&rdquo;</p>
               )}
               <p className="mt-0.5 text-[11px] font-semibold" style={{ color: category.hex }}>
                 {category.hashLabel}

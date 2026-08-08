@@ -114,7 +114,7 @@ export default function ItemDetailSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-[60] bg-black/40"
         onClick={() => {
           handleMemoBlur()
           onClose()
@@ -124,7 +124,7 @@ export default function ItemDetailSheet({
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-white"
+        className="fixed inset-x-0 bottom-0 z-[70] max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-white"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
       >
         {/* Handle */}
