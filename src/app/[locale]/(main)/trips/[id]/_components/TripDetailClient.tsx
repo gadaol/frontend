@@ -68,6 +68,7 @@ export default function TripDetailClient({
   }
   const [activeSheetItem, setActiveSheetItem] = useState<ItineraryItemDB | null>(null)
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
+  const [memoOverrides, setMemoOverrides] = useState<Map<string, string>>(new Map())
 
   function handleInvite() {
     router.push(`/${locale}/trips/${trip.id}/invite`)
@@ -92,6 +93,21 @@ export default function TripDetailClient({
     () => new Map(trip.itinerary_days.map((d) => [d.day_date, d])),
     [trip.itinerary_days],
   )
+
+  const effectiveDayMap = useMemo(() => {
+    if (memoOverrides.size === 0) return dayMap
+    return new Map(
+      Array.from(dayMap.entries()).map(([key, day]) => [
+        key,
+        {
+          ...day,
+          itinerary_items: day.itinerary_items.map((item) =>
+            memoOverrides.has(item.id) ? { ...item, memo: memoOverrides.get(item.id)! } : item,
+          ),
+        },
+      ]),
+    )
+  }, [dayMap, memoOverrides])
 
   const expensesByDay = useMemo(() => {
     const map = new Map<string, TripExpense[]>()
@@ -145,6 +161,7 @@ export default function TripDetailClient({
   }
 
   function handleMemoSave(itemId: string, memo: string) {
+    setMemoOverrides((prev) => new Map(prev).set(itemId, memo))
     startTransition(async () => {
       await updateItineraryItemMemo(itemId, memo)
       router.refresh()
@@ -367,7 +384,7 @@ export default function TripDetailClient({
           {activeTab === '일정' && (
             <ItineraryTab
               expectedDays={expectedDays}
-              dayMap={dayMap}
+              dayMap={effectiveDayMap}
               removedItemIds={removedItemIds}
               onRemove={handleRemoveItem}
               onTimeChange={handleTimeChange}

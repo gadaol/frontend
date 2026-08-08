@@ -45,6 +45,7 @@ export default function ScheduleEditClient({
   const [activeTab, setActiveTab] = useState<EditTab>('info')
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
   const [activeSheetItem, setActiveSheetItem] = useState<ItemDB | null>(null)
+  const [memoOverrides, setMemoOverrides] = useState<Map<string, string>>(new Map())
 
   // 기본 정보 상태
   const [title, setTitle] = useState(trip.title)
@@ -119,7 +120,8 @@ export default function ScheduleEditClient({
     return selectedDayDB.itinerary_items
       .filter((i) => !removedItemIds.has(i.id))
       .sort((a, b) => a.order_index - b.order_index)
-  }, [selectedDayDB, removedItemIds])
+      .map((i) => (memoOverrides.has(i.id) ? { ...i, memo: memoOverrides.get(i.id)! } : i))
+  }, [selectedDayDB, removedItemIds, memoOverrides])
 
   // activeSheetItem이 속한 day_id 찾기
   const activeItemDayId = useMemo(() => {
@@ -222,6 +224,7 @@ export default function ScheduleEditClient({
 
   // ItemDetailSheet 핸들러
   async function handleMemoSave(itemId: string, memo: string) {
+    setMemoOverrides((prev) => new Map(prev).set(itemId, memo))
     await updateItineraryItemMemo(itemId, memo)
     router.refresh()
   }
