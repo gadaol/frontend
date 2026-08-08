@@ -3,8 +3,8 @@
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { createTripReturnId, addItineraryItem, addMemoItem } from '@/app/actions/trip'
-import { getOrCreatePlace } from '@/app/actions/backlog'
+import { applyGeneratedItinerary } from '@/app/actions/trip'
+import PageLoading from '@/components/ui/PageLoading'
 import type { GeneratedItinerary } from '@/app/api/ai/itinerary/route'
 
 const STYLES = ['relaxed', 'active', 'food', 'culture', 'nature', 'photo']
@@ -62,7 +62,6 @@ export default function AIItinerarySheet({
   const [itinerary, setItinerary] = useState<GeneratedItinerary | null>(null)
   const [parseError, setParseError] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [saveStep, setSaveStep] = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
   const canGenerate = !!destination && !!startDate && !!endDate && !streaming
@@ -138,65 +137,53 @@ export default function AIItinerarySheet({
     setSaving(true)
 
     try {
-      let targetTripId = existingTripId
-
-      if (!targetTripId) {
-        setSaveStep(t('ai.creatingTrip'))
-        const fd = new FormData()
-        fd.set('title', title || itinerary.title)
-        fd.set('destination', destination)
-        fd.set('start_date', startDate)
-        fd.set('end_date', endDate)
-        fd.set('cover_url', coverUrl)
-        const { id, error } = await createTripReturnId(fd)
-        if (error || !id) throw new Error(error)
-        targetTripId = id
-      }
-
       // 모델이 day_number를 잘못 붙여도 날짜 기준으로 우리가 아는 일차를 쓴다
       const dayNumberByDate = new Map(targetDays.map((d) => [d.dayDate, d.dayNumber]))
-      for (const day of itinerary.days) {
+      const days = itinerary.days
         // 대상 날짜를 지정했으면 그 날만 저장한다 (모델이 다른 날을 끼워도 방어)
-        if (dayNumberByDate.size > 0 && !dayNumberByDate.has(day.day_date)) continue
-        const dayNumber = dayNumberByDate.get(day.day_date) ?? day.day_number
-        setSaveStep(t('ai.savingDay', { n: day.day_number }))
-        for (const item of day.items) {
-          try {
-            const searchRes = await fetch(
-              `/api/places/search?q=${encodeURIComponent(item.google_search_query)}`,
-            )
-            const searchData = await searchRes.json()
-            const found = searchData.places?.[0]
+        .filter((day) => dayNumberByDate.size === 0 || dayNumberByDate.has(day.day_date))
+        .map((day) => ({
+          dayNumber: dayNumberByDate.get(day.day_date) ?? day.day_number,
+          dayDate: day.day_date,
+          items: day.items.map((item) => ({
+            placeName: item.place_name,
+            category: item.category,
+            visitTime: item.visit_time,
+            memo: item.memo,
+            googleSearchQuery: item.google_search_query,
+          })),
+        }))
 
-            if (found) {
-              const placeId = await getOrCreatePlace({
-                googlePlaceId: found.id,
-                name: found.displayName.text,
-                address: found.formattedAddress,
-                categoryName: item.category,
-                lat: found.location?.latitude ?? null,
-                lng: found.location?.longitude ?? null,
-              })
-              if (placeId) {
-                await addItineraryItem(targetTripId, day.day_date, dayNumber, placeId)
-              }
-            } else {
-              const memo = [item.place_name, item.visit_time && `(${item.visit_time})`, item.memo]
-                .filter(Boolean)
-                .join(' ')
-              await addMemoItem(targetTripId, day.day_date, dayNumber, memo)
-            }
-          } catch {
-            // 개별 실패는 무시하고 계속
-          }
-        }
-      }
+      // 검색·장소 upsert·일정 등록을 서버에서 한 번에 처리한다.
+      // 전에는 항목마다 검색 1번 + 서버 액션 2번을 순서대로 돌려서
+      // 20~30개짜리 일정이면 왕복이 100번을 넘었다.
+      const { tripId, error } = await applyGeneratedItinerary(
+        existingTripId
+          ? { tripId: existingTripId, days }
+          : {
+              newTrip: {
+                title: title || itinerary.title,
+                destination: destination || null,
+                startDate: startDate || null,
+                endDate: endDate || null,
+                startTime: startTime || null,
+                endTime: endTime || null,
+                coverUrl: coverUrl || null,
+              },
+              days,
+            },
+      )
+      if (error || !tripId) throw new Error(error)
 
-      router.replace(`/${locale}/trips/${targetTripId}`)
+      // 기존 여행에 채워 넣은 경우 목적지 URL이 지금 URL과 같아서
+      // replace가 이 컴포넌트를 언마운트시키지 않는다. 그러면 saving이
+      // true로 남아 로딩 오버레이가 안 사라지고, 새로고침해야만 결과가
+      // 보이는 문제가 생긴다. 시트를 직접 닫아 목록 화면을 드러낸다.
+      router.replace(`/${locale}/trips/${tripId}`)
       router.refresh()
+      onClose()
     } catch {
       setSaving(false)
-      setSaveStep('')
     }
   }
 
@@ -208,6 +195,10 @@ export default function AIItinerarySheet({
 
   return (
     <>
+      {/* 등록 중엔 앱 전체에서 쓰는 제출 오버레이를 그대로 쓴다
+          (로그인/회원가입과 같은 패턴) */}
+      <PageLoading visible={saving} />
+
       <div
         className="fixed inset-0 z-[80] bg-black/40"
         onClick={() => {
@@ -361,14 +352,6 @@ export default function AIItinerarySheet({
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* 저장 진행 */}
-          {saving && (
-            <div className="flex flex-col items-center gap-3 py-12">
-              <div className="border-primary h-8 w-8 animate-spin rounded-full border-3 border-t-transparent" />
-              <p className="text-ink text-[14px] font-medium">{saveStep}</p>
             </div>
           )}
         </div>

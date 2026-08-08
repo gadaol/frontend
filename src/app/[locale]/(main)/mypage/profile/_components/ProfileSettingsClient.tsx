@@ -190,7 +190,7 @@ export default function ProfileSettingsClient({
                 setNameValue(e.target.value)
                 setNameError('')
               }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+              onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSaveName()}
               className="text-ink w-full bg-transparent text-[15px] outline-none"
               placeholder={t('namePlaceholder')}
               maxLength={20}

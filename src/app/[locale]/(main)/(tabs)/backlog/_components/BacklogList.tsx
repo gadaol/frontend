@@ -523,7 +523,9 @@ export default function BacklogList({
               type="text"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && !e.nativeEvent.isComposing && handleCreateCollection()
+              }
               placeholder={t('collectionNamePlaceholder')}
               className="border-border bg-bg2 focus:border-primary mb-4 w-full rounded-xl border px-4 py-3 text-[15px] outline-none"
             />
@@ -559,7 +561,7 @@ export default function BacklogList({
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+              onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleRename()}
               className="border-border bg-bg2 focus:border-primary mb-4 w-full rounded-xl border px-4 py-3 text-[15px] outline-none"
             />
             <div className="flex flex-col gap-2.5">

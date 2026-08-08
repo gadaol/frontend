@@ -38,6 +38,9 @@ export default function AssistantPanel() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  // nativeEvent.isComposing만으로는 Safari에서 IME 조합 종료 타이밍이
+  // 어긋나는 경우가 있어 compositionstart/end로도 직접 추적해 이중으로 막는다.
+  const isComposingRef = useRef(false)
   const prevCharacterRef = useRef<CharacterId>(character)
   /** 지금 편집 중인 대화의 id — 저장할 때 같은 항목을 갱신하기 위해 유지한다 */
   const conversationIdRef = useRef<string>(crypto.randomUUID())
@@ -277,7 +280,11 @@ export default function AssistantPanel() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // 한글 IME 조합 중에 Enter로 전송하면 마지막 글자가 아직 값에
+    // 반영되기 전이라, 전송 후 도착하는 조합 완료 이벤트가 그 글자를
+    // 입력창에 다시 채워 넣는다("전송했는데 글자가 남는" 증상). isComposing
+    // 동안은 Enter를 전송으로 취급하지 않는다.
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !isComposingRef.current) {
       e.preventDefault()
       handleSend()
     }
@@ -560,6 +567,12 @@ export default function AssistantPanel() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onCompositionStart={() => {
+                  isComposingRef.current = true
+                }}
+                onCompositionEnd={() => {
+                  isComposingRef.current = false
+                }}
                 placeholder={t('inputPlaceholder')}
                 rows={1}
                 className="bg-bg2 text-ink placeholder:text-ink3 flex-1 resize-none rounded-[20px] px-4 py-2.5 text-[15px] outline-none"

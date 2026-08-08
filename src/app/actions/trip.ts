@@ -4,51 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-
-/** 여행 생성 후 redirect 없이 ID 반환 — AI 일정 저장 플로우에서 사용 */
-export async function createTripReturnId(
-  formData: FormData,
-): Promise<{ id?: string; error?: string }> {
-  const supabase = await createClient()
-  const locale = await getLocale()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect(`/${locale}`)
-
-  const title = (formData.get('title') as string).trim()
-  const startDate = (formData.get('start_date') as string) || null
-  const endDate = (formData.get('end_date') as string) || null
-  const destination = (formData.get('destination') as string)?.trim() || null
-  const coverUrl = (formData.get('cover_url') as string) || null
-  const startTime = (formData.get('start_time') as string) || null
-  const endTime = (formData.get('end_time') as string) || null
-
-  if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
-
-  const { data: trip, error } = await supabase
-    .from('trips')
-    .insert({
-      title,
-      destination,
-      cover_url: coverUrl,
-      start_date: startDate,
-      end_date: endDate,
-      start_time: startTime,
-      end_time: endTime,
-      owner_id: user.id,
-    })
-    .select('id')
-    .single()
-
-  if (error || !trip)
-    return { error: error?.message ?? (await getTranslations('trips'))('createFailed') }
-
-  await supabase.from('trip_members').insert({ trip_id: trip.id, user_id: user.id, role: 'owner' })
-
-  return { id: trip.id }
-}
+import { searchPlacesText } from '@/lib/googlePlaces'
 
 export async function createTrip(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -102,6 +58,218 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   }
 
   redirect(`/${locale}/trips/${trip.id}`)
+}
+
+export interface GeneratedItineraryItemInput {
+  placeName: string
+  category: string
+  visitTime: string
+  memo: string
+  googleSearchQuery: string
+}
+
+export interface GeneratedItineraryDayInput {
+  dayNumber: number
+  dayDate: string
+  items: GeneratedItineraryItemInput[]
+}
+
+export interface ApplyItineraryInput {
+  /** 이미 있는 여행에 채워 넣을 때. 없으면 newTrip으로 새 여행을 만든다 */
+  tripId?: string
+  newTrip?: {
+    title: string
+    destination: string | null
+    startDate: string | null
+    endDate: string | null
+    startTime: string | null
+    endTime: string | null
+    coverUrl: string | null
+  }
+  days: GeneratedItineraryDayInput[]
+}
+
+/**
+ * AI가 짠 일정을 통째로 저장한다.
+ *
+ * 예전에는 항목마다 (장소 검색 → 장소 생성/조회 → 일정에 추가)를 순서대로
+ * fetch/서버 액션으로 돌려서, 4일치 20~30개 항목이면 왕복이 100번을 넘었다.
+ * 여기서는 검색은 한 번에 병렬로 보내고, DB 쓰기는 날짜·장소·일정 항목 단위로
+ * 묶어서 각각 한 번의 select/insert로 끝낸다.
+ */
+export async function applyGeneratedItinerary(
+  input: ApplyItineraryInput,
+): Promise<{ tripId?: string; error?: string }> {
+  const supabase = await createClient()
+  const t = await getTranslations('trips')
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  /* ── 1. 여행 준비 ─────────────────────────────────────────── */
+  let tripId = input.tripId
+
+  if (tripId) {
+    const { data: member } = await supabase
+      .from('trip_members')
+      .select('id')
+      .eq('trip_id', tripId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!member) return { error: 'forbidden' }
+  } else if (input.newTrip) {
+    const { data: trip, error } = await supabase
+      .from('trips')
+      .insert({
+        title: input.newTrip.title,
+        destination: input.newTrip.destination,
+        cover_url: input.newTrip.coverUrl,
+        start_date: input.newTrip.startDate,
+        end_date: input.newTrip.endDate,
+        start_time: input.newTrip.startTime,
+        end_time: input.newTrip.endTime,
+        owner_id: user.id,
+      })
+      .select('id')
+      .single()
+    if (error || !trip) return { error: error?.message ?? t('createFailed') }
+
+    await supabase
+      .from('trip_members')
+      .insert({ trip_id: trip.id, user_id: user.id, role: 'owner' })
+    tripId = trip.id
+  } else {
+    return { error: 'missing_trip' }
+  }
+
+  const days = input.days.filter((d) => d.items.length > 0)
+  if (days.length === 0) return { tripId }
+
+  /* ── 2. 장소 검색 — 고유 검색어만, 전부 병렬로 ──────────────── */
+  const uniqueQueries = [...new Set(days.flatMap((d) => d.items.map((i) => i.googleSearchQuery)))]
+  const searchResults = await Promise.all(
+    uniqueQueries.map(async (q) => [q, await searchPlacesText(q).catch(() => null)] as const),
+  )
+  const foundByQuery = new Map(searchResults.map(([q, places]) => [q, places?.[0] ?? null]))
+
+  /* ── 3. 장소 upsert — 있는 것 한 번에 조회, 없는 것 한 번에 삽입 ─ */
+  const foundPlaces = [...foundByQuery.values()].filter((p) => p !== null)
+  const uniqueGoogleIds = [...new Set(foundPlaces.map((p) => p!.id))]
+
+  const placeIdByGoogleId = new Map<string, string>()
+
+  if (uniqueGoogleIds.length > 0) {
+    const { data: existingPlaces } = await supabase
+      .from('places')
+      .select('id, google_place_id')
+      .in('google_place_id', uniqueGoogleIds)
+
+    for (const p of existingPlaces ?? []) {
+      if (p.google_place_id) placeIdByGoogleId.set(p.google_place_id, p.id)
+    }
+
+    const missingGoogleIds = uniqueGoogleIds.filter((id) => !placeIdByGoogleId.has(id))
+
+    if (missingGoogleIds.length > 0) {
+      // 카테고리명 → id. AI가 준 category가 place_categories.name과 정확히
+      // 일치하지 않을 수 있어(자유 텍스트) 매칭 안 되면 그냥 null로 둔다.
+      const { data: categories } = await supabase.from('place_categories').select('id, name')
+      const categoryIdByName = new Map((categories ?? []).map((c) => [c.name, c.id]))
+
+      const toInsert = missingGoogleIds.map((googleId) => {
+        const place = foundPlaces.find((p) => p!.id === googleId)!
+        const item = days
+          .flatMap((d) => d.items)
+          .find((i) => foundByQuery.get(i.googleSearchQuery)?.id === googleId)
+        return {
+          google_place_id: place.id,
+          name: place.displayName.text,
+          address: place.formattedAddress ?? null,
+          category_id: item ? (categoryIdByName.get(item.category) ?? null) : null,
+          lat: place.location?.latitude ?? null,
+          lng: place.location?.longitude ?? null,
+        }
+      })
+
+      const { data: inserted } = await supabase
+        .from('places')
+        .insert(toInsert)
+        .select('id, google_place_id')
+
+      for (const p of inserted ?? []) {
+        if (p.google_place_id) placeIdByGoogleId.set(p.google_place_id, p.id)
+      }
+    }
+  }
+
+  /* ── 4. itinerary_days upsert — 대상 날짜 한 번에 조회, 없는 것 한 번에 삽입 ─ */
+  const targetDates = days.map((d) => d.dayDate)
+  const { data: existingDays } = await supabase
+    .from('itinerary_days')
+    .select('id, day_date')
+    .eq('trip_id', tripId)
+    .in('day_date', targetDates)
+
+  const dayIdByDate = new Map((existingDays ?? []).map((d) => [d.day_date, d.id]))
+  const missingDays = days.filter((d) => !dayIdByDate.has(d.dayDate))
+
+  if (missingDays.length > 0) {
+    const { data: insertedDays } = await supabase
+      .from('itinerary_days')
+      .insert(
+        missingDays.map((d) => ({
+          trip_id: tripId,
+          day_date: d.dayDate,
+          day_number: d.dayNumber,
+        })),
+      )
+      .select('id, day_date')
+
+    for (const d of insertedDays ?? []) {
+      dayIdByDate.set(d.day_date, d.id)
+    }
+  }
+
+  /* ── 5. itinerary_items 일괄 삽입 ────────────────────────────── */
+  // 대상 날은 새로 만든 날이거나 비어 있는 날(호출부가 보장)이라
+  // order_index는 0부터 시작해도 안전하다.
+  const itemRows = days.flatMap((day) => {
+    const dayId = dayIdByDate.get(day.dayDate)
+    if (!dayId) return []
+    return day.items.map((item, i) => {
+      const found = foundByQuery.get(item.googleSearchQuery)
+      const placeId = found ? (placeIdByGoogleId.get(found.id) ?? null) : null
+      return placeId
+        ? {
+            day_id: dayId,
+            place_id: placeId,
+            order_index: i,
+            visit_time: item.visitTime || null,
+            memo: item.memo || null,
+          }
+        : {
+            day_id: dayId,
+            place_id: null,
+            item_type: 'memo',
+            order_index: i,
+            visit_time: item.visitTime || null,
+            memo: [item.placeName, item.visitTime && `(${item.visitTime})`, item.memo]
+              .filter(Boolean)
+              .join(' '),
+          }
+    })
+  })
+
+  if (itemRows.length > 0) {
+    const { error } = await supabase.from('itinerary_items').insert(itemRows)
+    if (error) return { tripId, error: error.message }
+  }
+
+  const locale = await getLocale()
+  revalidatePath(`/${locale}/trips/${tripId}`)
+  return { tripId }
 }
 
 export async function ensureItineraryDay(

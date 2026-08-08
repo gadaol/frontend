@@ -118,8 +118,6 @@
     "regenerate": "다시 생성",
     "apply": "이 일정으로 여행 만들기",
     "applyExisting": "이 일정으로 채우기",
-    "creatingTrip": "여행 만드는 중...",
-    "savingDay": "{n}일차 일정 저장 중...",
     "style": {
       "relaxed": "여유롭게",
       "active": "알차게",
@@ -127,7 +125,8 @@
       "culture": "문화·역사",
       "nature": "자연·힐링",
       "photo": "사진 스팟"
-    }
+    },
+    "savingAll": "일정 저장하는 중..."
   },
   "memoTitle": "메모",
   "memoPlaceholderPlace": "이 장소에 대한 메모를 남겨보세요",

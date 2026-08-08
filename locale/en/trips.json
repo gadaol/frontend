@@ -118,8 +118,6 @@
     "regenerate": "Try again",
     "apply": "Create trip with this",
     "applyExisting": "Fill in with this",
-    "creatingTrip": "Creating your trip...",
-    "savingDay": "Saving day {n}...",
     "style": {
       "relaxed": "Relaxed",
       "active": "Packed",
@@ -127,7 +125,8 @@
       "culture": "Culture & history",
       "nature": "Nature & calm",
       "photo": "Photo spots"
-    }
+    },
+    "savingAll": "Saving your itinerary..."
   },
   "memoTitle": "Note",
   "memoPlaceholderPlace": "Jot down anything about this place",
