@@ -13,11 +13,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/cerebras": "^3.0.25",
     "@hookform/resolvers": "^5.2.2",
     "@react-google-maps/api": "^2.20.8",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@tosspayments/payment-widget-sdk": "^0.12.2",
+    "ai": "^7.0.56",
     "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
