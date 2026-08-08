@@ -969,6 +969,8 @@ export default function ScheduleEditClient({
           onMemoSave={handleMemoSave}
           onAddExpense={handleAddExpenseFromSheet}
           onRemoveExpense={handleRemoveExpenseFromSheet}
+          canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
+          onExpenseUpgrade={() => setExpenseUpgrade(true)}
         />
       )}
     </div>

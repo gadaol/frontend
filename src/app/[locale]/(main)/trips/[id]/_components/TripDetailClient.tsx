@@ -494,6 +494,8 @@ export default function TripDetailClient({
           onMemoSave={handleMemoSave}
           onAddExpense={handleAddExpense}
           onRemoveExpense={handleRemoveExpense}
+          canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
+          onExpenseUpgrade={() => setExpenseUpgrade(true)}
         />
       )}
 

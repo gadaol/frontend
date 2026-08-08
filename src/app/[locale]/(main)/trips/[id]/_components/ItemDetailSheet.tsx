@@ -34,6 +34,8 @@ interface Props {
   onMemoSave: (itemId: string, memo: string) => void
   onAddExpense: (amount: number, category: string, note: string) => Promise<string | null>
   onRemoveExpense: (expenseId: string) => void
+  canAddExpense?: boolean
+  onExpenseUpgrade?: () => void
 }
 
 export default function ItemDetailSheet({
@@ -43,6 +45,8 @@ export default function ItemDetailSheet({
   onMemoSave,
   onAddExpense,
   onRemoveExpense,
+  canAddExpense = true,
+  onExpenseUpgrade,
 }: Props) {
   const t = useTranslations('trips')
   const tp = useTranslations('places')
@@ -234,7 +238,10 @@ export default function ItemDetailSheet({
               )}
             </div>
             <button
-              onClick={() => setShowExpenseForm((v) => !v)}
+              onClick={() => {
+                if (!canAddExpense) { onExpenseUpgrade?.(); return }
+                setShowExpenseForm((v) => !v)
+              }}
               className={`text-[13px] font-semibold transition-colors ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
             >
               {showExpenseForm ? t('hide') : t('add')}
@@ -309,10 +316,11 @@ export default function ItemDetailSheet({
               {/* 금액 입력 */}
               <div className="border-border mb-2 flex items-center gap-1 rounded-xl border bg-white px-3 py-2">
                 <input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   value={expenseAmount}
-                  onChange={(e) => setExpenseAmount(e.target.value)}
+                  onChange={(e) => setExpenseAmount(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder={t('amount')}
                   className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
                   autoFocus
