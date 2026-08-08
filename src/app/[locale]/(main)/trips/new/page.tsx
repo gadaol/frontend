@@ -8,6 +8,7 @@ import { MapPinIcon } from '@/components/icons'
 import { uploadCoverImage, isGradient } from '@/utils/uploadCover'
 import { createClient } from '@/lib/supabase/client'
 import { COVER_PRESETS } from '@/utils/coverPresets'
+import AIItinerarySheet from './_components/AIItinerarySheet'
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-border bg-bg2 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink3 outline-none focus:border-primary focus:bg-white transition-colors'
@@ -17,8 +18,11 @@ export default function NewTripPage() {
   const [selectedCover, setSelectedCover] = useState(COVER_PRESETS[0])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [destination, setDestination] = useState('')
+  const [title, setTitle] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [showAISheet, setShowAISheet] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -129,6 +133,8 @@ export default function NewTripPage() {
             maxLength={60}
             placeholder="예: 제주도 힐링 여행"
             className={INPUT_CLASS}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
@@ -143,6 +149,8 @@ export default function NewTripPage() {
               maxLength={60}
               placeholder="예: 제주도, 도쿄, 파리"
               className={`${INPUT_CLASS} pl-10`}
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
             />
           </div>
         </div>
@@ -174,8 +182,37 @@ export default function NewTripPage() {
           <p className="text-ink3 mt-1.5 text-[12px]">날짜는 나중에 설정할 수 있어요</p>
         </div>
 
+        {/* AI 일정 자동 생성 버튼 */}
+        {destination && startDate && endDate && (
+          <button
+            type="button"
+            onClick={() => setShowAISheet(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3.5 text-left transition-colors active:bg-primary/10"
+          >
+            <span className="text-[22px]">✨</span>
+            <div>
+              <p className="text-[14px] font-bold text-primary">AI 일정 자동 생성</p>
+              <p className="text-[12px] text-ink3">AI가 {destination} 여행 일정을 자동으로 짜드려요</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="ml-auto text-primary/50">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+
         {errorMsg && <p className="text-center text-[13px] text-red-500">{errorMsg}</p>}
       </form>
+
+      {showAISheet && (
+        <AIItinerarySheet
+          title={title}
+          destination={destination}
+          startDate={startDate}
+          endDate={endDate}
+          coverUrl={selectedCover}
+          onClose={() => setShowAISheet(false)}
+        />
+      )}
 
       {/* 하단 고정 버튼 */}
       <div className="border-border fixed right-0 bottom-0 left-0 border-t bg-white px-4 pt-3 pb-8">

@@ -85,8 +85,10 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
     await adminSupabase.from('subscriptions').upsert({
       user_id: user.id,
       plan,
+      period: validPeriod,
       status: 'active',
       expires_at: expiresAt.toISOString(),
+      canceled_at: null,
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : '결제 처리 중 오류가 발생했어요'

@@ -13,17 +13,45 @@ export default async function SubscriptionPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${locale}`)
 
-  const { data: subscriptionRow } = await supabase
-    .from('subscriptions')
-    .select('plan, status')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'trial'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const [{ data: subscriptionRow }, { data: billingKey }, { data: payments }] = await Promise.all([
+    supabase
+      .from('subscriptions')
+      .select('id, plan, status, period, expires_at, canceled_at')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trial', 'canceled'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('billing_keys')
+      .select('card_company, card_number')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('payments')
+      .select('id, plan, period, amount, status, approved_at')
+      .eq('user_id', user.id)
+      .order('approved_at', { ascending: false })
+      .limit(10),
+  ])
 
   const plan = (subscriptionRow?.plan as Plan | undefined) ?? 'free'
   const isTrial = subscriptionRow?.status === 'trial'
+  const isCanceled = subscriptionRow?.status === 'canceled'
 
-  return <SubscriptionClient plan={plan} isTrial={isTrial} />
+  return (
+    <SubscriptionClient
+      plan={plan}
+      isTrial={isTrial}
+      isCanceled={isCanceled}
+      period={(subscriptionRow?.period as 'monthly' | 'yearly' | undefined) ?? 'monthly'}
+      expiresAt={subscriptionRow?.expires_at ?? null}
+      canceledAt={subscriptionRow?.canceled_at ?? null}
+      cardCompany={billingKey?.card_company ?? null}
+      cardNumber={billingKey?.card_number ?? null}
+      payments={payments ?? []}
+    />
+  )
 }

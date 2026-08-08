@@ -1,4 +1,4 @@
-import { streamText, isStepCount, type ModelMessage } from 'ai'
+import { streamText, isStepCount, convertToModelMessages, type UIMessage } from 'ai'
 import { NextRequest } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { getCharacterPrompt, type CharacterId, type Locale } from '@/lib/ai/characters'
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const { messages, character, locale = 'ko' } = await req.json() as {
-    messages: { role: string; content: string }[]
+  const { messages: uiMessages, character, locale = 'ko' } = await req.json() as {
+    messages: UIMessage[]
     character: CharacterId
     locale?: Locale
   }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     ...makeItineraryTools(supabase, user.id),
   }
 
-  const recentMessages = messages.slice(-20) as ModelMessage[]
+  const recentMessages = await convertToModelMessages(uiMessages.slice(-20))
 
   const result = streamText({
     model: cerebras(MODELS.default),

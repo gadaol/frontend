@@ -13,6 +13,8 @@ import {
 } from '@/components/icons'
 import { isGradient } from '@/utils/uploadCover'
 import { AVATAR_COLORS } from '@/utils/avatarColors'
+import HomeAISection from '@/components/features/ai/HomeAISection'
+import HomePopularSection from '@/components/features/home/HomePopularSection'
 import type { TripWithMembers } from '@/types/trip'
 
 function greetingSubKey():
@@ -256,7 +258,6 @@ export default async function HomePage() {
                 href={item.href}
                 className="flex flex-col items-center gap-1.5"
               >
-                {/* 퀵 아이콘: 디자인 box-shadow 0 1px 4px rgba(0,0,0,.06) */}
                 <div className="border-border bg-bg flex h-13 w-13 items-center justify-center rounded-[14px] border shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
                   {item.icon}
                 </div>
@@ -265,6 +266,12 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+
+        {/* AI 취향 추천 배너 */}
+        <HomeAISection />
+
+        {/* 실시간 인기 여행지 */}
+        <HomePopularSection />
 
       </div>
     </div>

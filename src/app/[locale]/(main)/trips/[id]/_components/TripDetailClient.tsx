@@ -10,6 +10,7 @@ import BottomNav from '@/components/common/BottomNav'
 import Tabs from '@/components/ui/Tabs'
 import PlacesMapTab from './PlacesMapTab'
 import ItemDetailSheet from './ItemDetailSheet'
+import { useAssistantStore } from '@/lib/ai/store'
 import { isGradient } from '@/utils/uploadCover'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { AVATAR_COLORS } from '@/utils/avatarColors'
@@ -224,6 +225,7 @@ export default function TripDetailClient({
   const isOwner = trip.owner_id === currentUserId
 
   const isMapTab = activeTab === '장소'
+  const openAssistant = useAssistantStore((s) => s.open)
 
   return (
     <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
@@ -408,11 +410,27 @@ export default function TripDetailClient({
             />
           )}
           {activeTab === '장소' && (
-            <PlacesMapTab
-              trip={trip}
-              currentUserAvatar={currentUserAvatar}
-              currentUserName={currentUserName}
-            />
+            <div className="relative flex-1">
+              <PlacesMapTab
+                trip={trip}
+                currentUserAvatar={currentUserAvatar}
+                currentUserName={currentUserName}
+              />
+              {/* AI 추천 플로팅 버튼 */}
+              <button
+                onClick={() =>
+                  openAssistant({
+                    prompt: trip.destination
+                      ? `${trip.destination} 여행에 추가할 장소를 추천해줘`
+                      : '이 여행에 추가할 좋은 장소를 추천해줘',
+                  })
+                }
+                className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-primary/30"
+              >
+                <span>✨</span>
+                AI 추천
+              </button>
+            </div>
           )}
           {activeTab === '메이트' && (
             <MateTab

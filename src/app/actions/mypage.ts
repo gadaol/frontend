@@ -108,6 +108,35 @@ export async function updateTravelStyle({
   return { success: true }
 }
 
+export async function cancelSubscription(): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
+
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('id, status')
+    .eq('user_id', user.id)
+    .in('status', ['active', 'trial'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!sub) return { error: 'no_active_subscription' }
+
+  const { error } = await supabase
+    .from('subscriptions')
+    .update({ status: 'canceled', canceled_at: new Date().toISOString() })
+    .eq('id', sub.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/', 'layout')
+  return {}
+}
+
 export async function deleteAccount() {
   const supabase = await createClient()
   const {

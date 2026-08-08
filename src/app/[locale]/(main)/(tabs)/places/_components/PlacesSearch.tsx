@@ -5,11 +5,18 @@ import { BacklogIcon } from '@/components/icons'
 import { addToBacklog } from '@/app/actions/backlog'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
 import { getDbCategory } from '@/utils/placeCategory'
+import { useAssistantStore } from '@/lib/ai/store'
 import type { GooglePlace } from '@/types/place'
 
-export default function PlacesSearch() {
+interface Props {
+  initialAvatar?: string | null
+  initialName?: string | null
+}
+
+export default function PlacesSearch({ initialAvatar, initialName }: Props) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
+  const openAssistant = useAssistantStore((s) => s.open)
 
   async function handleSave(place: GooglePlace, e: React.MouseEvent) {
     e.stopPropagation()
@@ -34,6 +41,18 @@ export default function PlacesSearch() {
 
   return (
     <PlaceMapSearch
+      initialAvatar={initialAvatar}
+      initialName={initialName}
+      headerExtra={
+        <button
+          onClick={() => openAssistant({ prompt: '이 근처 가볼만한 장소를 추천해줘' })}
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
+          style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+        >
+          <span>✨</span>
+          <span>AI에게 물어보기</span>
+        </button>
+      }
       renderListAction={(place) => {
         const isSaved = savedIds.has(place.id)
         const isSaving = savingIds.has(place.id)

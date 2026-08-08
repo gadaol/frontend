@@ -126,12 +126,12 @@ export default function MypageClient({
       {/* 프로필 카드 */}
       <div className="border-border mx-4 mt-3.5 overflow-hidden rounded-[20px] border bg-white">
         {/* 배너 */}
-        <div className="relative h-[72px] overflow-hidden" style={{ backgroundColor: 'var(--color-primary)' }}>
-          {/* 우하단 로고 마크 */}
+        <div className="relative h-[72px]" style={{ backgroundColor: 'var(--color-primary)' }}>
+          {/* 우상단 로고 마크 */}
           <svg
             aria-hidden
             viewBox="0 0 48 48"
-            style={{ position: 'absolute', right: -12, bottom: -12, width: 90, height: 90, opacity: 0.18 }}
+            style={{ position: 'absolute', right: -12, top: -12, width: 90, height: 90, opacity: 0.18 }}
           >
             <g transform="translate(10 9)">
               <path d="M3 24L23 4L18 24L12 17Z" fill="white" />
@@ -140,7 +140,7 @@ export default function MypageClient({
           </svg>
 
           {/* 아바타 — 배너 아래로 오버랩 */}
-          <div className="absolute -bottom-7 left-5">
+          <div className="absolute -bottom-7 left-5 z-10">
             <div className="h-14 w-14 overflow-hidden rounded-full border-[3px] border-white">
               {currentAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -203,20 +203,20 @@ export default function MypageClient({
         <button
           onClick={() => router.push(`/${locale}/mypage/subscription`)}
           className="mx-4 mt-3 flex w-[calc(100%-32px)] items-center gap-3.5 overflow-hidden rounded-2xl p-4"
-          style={{ backgroundColor: 'var(--color-primary)', position: 'relative' }}
+          style={{ background: 'linear-gradient(135deg, #1b6ff0 0%, #7c3aed 100%)', position: 'relative' }}
         >
-          {/* 우하단 로고 마크 */}
+          {/* 우상단 로고 마크 */}
           <svg
             aria-hidden
             viewBox="0 0 48 48"
-            style={{ position: 'absolute', right: -8, bottom: -10, width: 72, height: 72, opacity: 0.18 }}
+            style={{ position: 'absolute', right: -8, top: -10, width: 72, height: 72, opacity: 0.18 }}
           >
             <g transform="translate(10 9)">
               <path d="M3 24L23 4L18 24L12 17Z" fill="white" />
               <path d="M17 25L20 30" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
             </g>
           </svg>
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 relative z-10">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path d="M11 2l2 6h6l-5 4 2 6-5-3.5L6 18l2-6-5-4h6z" fill="var(--color-kakao)" />
             </svg>

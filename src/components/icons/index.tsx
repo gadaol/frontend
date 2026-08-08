@@ -47,24 +47,18 @@ export function PlacesIcon({ size = 24, className }: IconProps) {
 
 export function BacklogIcon({ size = 24, className, filled }: IconProps & { filled?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
-      <rect
-        x="2"
-        y="7"
-        width="18"
-        height="12"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill={filled ? 'var(--color-primary-light)' : 'none'}
-      />
-      <path
-        d="M7 7V5a2 2 0 0 1 4 0v2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="11" cy="13" r="2" stroke="currentColor" strokeWidth="1.5" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
     </svg>
   )
 }

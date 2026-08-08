@@ -5,6 +5,39 @@ import { revalidatePath } from 'next/cache'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
+/** 여행 생성 후 redirect 없이 ID 반환 — AI 일정 저장 플로우에서 사용 */
+export async function createTripReturnId(
+  formData: FormData,
+): Promise<{ id?: string; error?: string }> {
+  const supabase = await createClient()
+  const locale = await getLocale()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect(`/${locale}`)
+
+  const title = (formData.get('title') as string).trim()
+  const startDate = (formData.get('start_date') as string) || null
+  const endDate = (formData.get('end_date') as string) || null
+  const destination = (formData.get('destination') as string)?.trim() || null
+  const coverUrl = (formData.get('cover_url') as string) || null
+
+  if (!title) return { error: '여행 제목을 입력해주세요' }
+
+  const { data: trip, error } = await supabase
+    .from('trips')
+    .insert({ title, destination, cover_url: coverUrl, start_date: startDate, end_date: endDate, owner_id: user.id })
+    .select('id')
+    .single()
+
+  if (error || !trip) return { error: error?.message ?? '여행 생성에 실패했어요' }
+
+  await supabase.from('trip_members').insert({ trip_id: trip.id, user_id: user.id, role: 'owner' })
+
+  return { id: trip.id }
+}
+
 export async function createTrip(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient()
   const locale = await getLocale()

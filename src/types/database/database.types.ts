@@ -562,25 +562,31 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          canceled_at: string | null
           created_at: string | null
           expires_at: string | null
           id: string
+          period: string
           plan: string
           status: string
           user_id: string
         }
         Insert: {
+          canceled_at?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          period?: string
           plan?: string
           status?: string
           user_id: string
         }
         Update: {
+          canceled_at?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          period?: string
           plan?: string
           status?: string
           user_id?: string

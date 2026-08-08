@@ -16,13 +16,6 @@ const CATEGORY_CHIPS = (
   ['식당', '카페', '관광지', '숙소', '쇼핑', '자연', '액티비티', '기타'] as const
 ).map(getCategoryStyle)
 
-// ─── 추천 장소 목 데이터 (TODO: API 연동) ─────────────────────────────────────
-type RecommendationItem = { id: string; name: string; address: string; categoryName: string }
-const MOCK_RECOMMENDATIONS: RecommendationItem[] = [
-  { id: 'r1', name: '추천 장소 이름', address: '서울시 강남구 어딘가', categoryName: '식당' },
-  { id: 'r2', name: '추천 카페 이름', address: '서울시 마포구 어딘가', categoryName: '카페' },
-  { id: 'r3', name: '추천 관광지 이름', address: '서울시 종로구 어딘가', categoryName: '관광지' },
-]
 
 const MAP_DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 }
 const MAP_OPTIONS: google.maps.MapOptions = {
@@ -45,6 +38,14 @@ interface Props {
   bottomOffset?: number
   /** 여행 목적지 — 지도 초기 중심 설정에 사용 */
   destination?: string | null
+  /** 서버에서 미리 받아온 아바타 URL — 첫 렌더부터 바로 표시 */
+  initialAvatar?: string | null
+  /** 서버에서 미리 받아온 이름 */
+  initialName?: string | null
+  /** 검색바 아래 추가 UI (AI 검색 버튼 등) */
+  headerExtra?: React.ReactNode
+  /** 여행 컨텍스트 — 있으면 AI 추천이 해당 여행 목적지 기반으로 동작 */
+  tripId?: string
 }
 
 export default function PlaceMapSearch({
@@ -52,6 +53,10 @@ export default function PlaceMapSearch({
   renderInfoCta,
   bottomOffset = 0,
   destination,
+  initialAvatar = null,
+  initialName = null,
+  headerExtra,
+  tripId,
 }: Props) {
   const t = useTranslations('places')
   const locale = useLocale()
@@ -66,10 +71,59 @@ export default function PlaceMapSearch({
   const [showRecommendations, setShowRecommendations] = useState(true)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locating, setLocating] = useState(false)
-  const [userAvatar, setUserAvatar] = useState<string | null>(null)
-  const [userName, setUserName] = useState<string | null>(null)
+  const [userAvatar, setUserAvatar] = useState<string | null>(initialAvatar)
+  const [userName, setUserName] = useState<string | null>(initialName)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
+
+  // AI 추천 스트리밍
+  const [aiText, setAiText] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiDone, setAiDone] = useState(false)
+  const aiAbortRef = useRef<AbortController | null>(null)
+
+  const fetchAIRecommend = useCallback(async () => {
+    if (aiLoading) return
+    setAiText('')
+    setAiDone(false)
+    setAiLoading(true)
+    aiAbortRef.current?.abort()
+    aiAbortRef.current = new AbortController()
+    try {
+      const res = await fetch('/api/ai/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale,
+          ...(tripId && { tripId }),
+          ...(destination && { destination }),
+        }),
+        signal: aiAbortRef.current.signal,
+      })
+      if (!res.ok || !res.body) throw new Error('failed')
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done: streamDone, value } = await reader.read()
+        if (streamDone) break
+        setAiText((prev) => prev + decoder.decode(value, { stream: true }))
+      }
+      setAiDone(true)
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError')
+        setAiText(locale === 'ko' ? '추천을 불러오지 못했어요.' : 'Failed to load recommendations.')
+    } finally {
+      setAiLoading(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale])
+
+  useEffect(() => {
+    fetchAIRecommend()
+    return () => { aiAbortRef.current?.abort() }
+  // only on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
@@ -331,6 +385,7 @@ export default function PlaceMapSearch({
             <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
           )}
         </div>
+        {headerExtra && <div className="mt-2.5 flex items-center gap-2">{headerExtra}</div>}
         {/* 내 위치 버튼 — 검색바 우측 아래 고정 */}
         <button
           onClick={handleMyLocation}
@@ -362,7 +417,7 @@ export default function PlaceMapSearch({
               onClick={() => setShowRecommendations((v) => !v)}
               className="border-border flex w-full items-center justify-between border-b px-5 py-3"
             >
-              <span className="text-ink text-[14px] font-semibold">추천 장소</span>
+              <span className="text-ink text-[14px] font-semibold">AI 추천 장소</span>
               <svg
                 width="18"
                 height="18"
@@ -413,39 +468,38 @@ export default function PlaceMapSearch({
                 <div className="pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-white to-transparent" />
               </div>
 
-              {/* 추천 장소 목록 (TODO: API 연동) */}
+              {/* AI 취향 추천 스트리밍 */}
               <div
-                className="overflow-y-auto"
+                className="overflow-y-auto px-4 pt-3"
                 style={{ maxHeight: 224, paddingBottom: bottomOffset > 0 ? bottomOffset + 8 : 16 }}
               >
-                {MOCK_RECOMMENDATIONS.map((item) => {
-                  const cat = getCategoryStyle(item.categoryName)
-                  const CatIcon = cat.icon
-                  return (
-                    <div key={item.id} className="active:bg-bg2 flex items-center px-4 py-2.5">
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div
-                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}
-                        >
-                          <CatIcon size={18} className={cat.color} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-ink truncate text-[14px] font-semibold">{item.name}</p>
-                          <p className="text-ink3 truncate text-[11px]">{item.address}</p>
-                          <p
-                            className="mt-0.5 text-[11px] font-semibold"
-                            style={{ color: cat.hex }}
-                          >
-                            {cat.hashLabel}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center">
-                        <ChevronRightIcon size={18} className="text-[#C4C8CF]" />
-                      </div>
-                    </div>
-                  )
-                })}
+                {aiLoading && !aiText && (
+                  <div className="flex items-center gap-2 py-1 text-[13px] text-ink3">
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    {locale === 'ko' ? 'AI가 취향에 맞는 장소를 찾고 있어요...' : 'Finding places for you...'}
+                  </div>
+                )}
+                {aiText && (
+                  <p className="whitespace-pre-wrap text-[13px] leading-[1.75] text-ink">
+                    {aiText}
+                    {aiLoading && (
+                      <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-ink3 align-text-bottom" />
+                    )}
+                  </p>
+                )}
+                {aiDone && (
+                  <button
+                    onClick={() => { setAiText(''); setAiDone(false); fetchAIRecommend() }}
+                    className="mt-2 text-[12px] font-medium text-primary"
+                  >
+                    {locale === 'ko' ? '다시 추천 받기 →' : 'Refresh →'}
+                  </button>
+                )}
+                {!aiText && !aiLoading && !aiDone && (
+                  <button onClick={fetchAIRecommend} className="py-1 text-[13px] font-medium text-primary">
+                    {locale === 'ko' ? 'AI 추천 받기 →' : 'Get AI recommendations →'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
