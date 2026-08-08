@@ -11,9 +11,9 @@ import type { GooglePlace } from '@/types/place'
 export type { GooglePlace }
 
 // ─── 카테고리 칩 (8개 DB 카테고리) ──────────────────────────────────────────
-const CATEGORY_CHIPS = (['식당', '카페', '관광지', '숙소', '쇼핑', '자연', '액티비티', '기타'] as const).map(
-  getCategoryStyle
-)
+const CATEGORY_CHIPS = (
+  ['식당', '카페', '관광지', '숙소', '쇼핑', '자연', '액티비티', '기타'] as const
+).map(getCategoryStyle)
 
 // ─── 추천 장소 목 데이터 (TODO: API 연동) ─────────────────────────────────────
 type RecommendationItem = { id: string; name: string; address: string; categoryName: string }
@@ -28,6 +28,7 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
   zoomControl: false,
   clickableIcons: false,
+  gestureHandling: 'greedy',
   styles: [
     { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
     { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
@@ -41,12 +42,15 @@ interface Props {
   renderInfoCta?: (place: GooglePlace) => React.ReactNode
   /** 하단 고정 바 높이(px) — 리스트 시트가 가려지지 않도록 여백 추가 */
   bottomOffset?: number
+  /** 여행 목적지 — 지도 초기 중심 설정에 사용 */
+  destination?: string | null
 }
 
 export default function PlaceMapSearch({
   renderListAction,
   renderInfoCta,
   bottomOffset = 0,
+  destination,
 }: Props) {
   const t = useTranslations('places')
   const locale = useLocale()
@@ -71,6 +75,19 @@ export default function PlaceMapSearch({
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map
   }, [])
+
+  useEffect(() => {
+    if (!isLoaded || !destination) return
+    const geocoder = new google.maps.Geocoder()
+    geocoder.geocode({ address: destination }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
+        const loc = results[0].geometry.location
+        const center = { lat: loc.lat(), lng: loc.lng() }
+        setMapCenter(center)
+        mapRef.current?.panTo(center)
+      }
+    })
+  }, [isLoaded, destination])
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -215,7 +232,15 @@ export default function PlaceMapSearch({
                   >
                     {selectedPlace.displayName.text}
                   </p>
-                  <p style={{ fontSize: 12, color: getCategoryInfo(selectedPlace.types).hex, fontWeight: 600, margin: '3px 0 0', lineHeight: 1.4 }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: getCategoryInfo(selectedPlace.types).hex,
+                      fontWeight: 600,
+                      margin: '3px 0 0',
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {getCategoryInfo(selectedPlace.types).hashLabel}
                   </p>
                   {selectedPlace.rating && (
@@ -302,7 +327,6 @@ export default function PlaceMapSearch({
       {!hasSearched && query.length < 2 && (
         <div className="relative z-10 mt-auto min-h-0">
           <div className="rounded-t-3xl bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
-
             {/* 헤더 (항상 노출 — 토글) */}
             <button
               onClick={() => setShowRecommendations((v) => !v)}
@@ -310,10 +334,19 @@ export default function PlaceMapSearch({
             >
               <span className="text-ink text-[14px] font-semibold">추천 장소</span>
               <svg
-                width="18" height="18" viewBox="0 0 18 18" fill="none"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
                 className={`transition-transform duration-300 ${showRecommendations ? 'rotate-180' : ''}`}
               >
-                <path d="M4.5 11L9 6.5l4.5 4.5" stroke="var(--color-ink3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M4.5 11L9 6.5l4.5 4.5"
+                  stroke="var(--color-ink3)"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
 
@@ -323,7 +356,7 @@ export default function PlaceMapSearch({
               style={{ maxHeight: showRecommendations ? 600 : 0 }}
             >
               {/* 카테고리 칩 */}
-              <div className="relative border-border border-b">
+              <div className="border-border relative border-b">
                 <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                   <div className="flex gap-2 px-4 py-3 pr-10">
                     {CATEGORY_CHIPS.map((cat) => {
@@ -333,7 +366,11 @@ export default function PlaceMapSearch({
                           key={cat.label}
                           onClick={() => setQuery(cat.label)}
                           className="flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold active:opacity-70"
-                          style={{ borderColor: cat.hex + '50', color: cat.hex, backgroundColor: cat.hex + '14' }}
+                          style={{
+                            borderColor: cat.hex + '50',
+                            color: cat.hex,
+                            backgroundColor: cat.hex + '14',
+                          }}
                         >
                           <CatIcon size={13} className="flex-shrink-0" />
                           {cat.label}
@@ -357,13 +394,18 @@ export default function PlaceMapSearch({
                   return (
                     <div key={item.id} className="active:bg-bg2 flex items-center px-4 py-2.5">
                       <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}>
+                        <div
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${cat.bg}`}
+                        >
                           <CatIcon size={18} className={cat.color} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-ink truncate text-[14px] font-semibold">{item.name}</p>
                           <p className="text-ink3 truncate text-[11px]">{item.address}</p>
-                          <p className="mt-0.5 text-[11px] font-semibold" style={{ color: cat.hex }}>
+                          <p
+                            className="mt-0.5 text-[11px] font-semibold"
+                            style={{ color: cat.hex }}
+                          >
                             {cat.hashLabel}
                           </p>
                         </div>
@@ -376,7 +418,6 @@ export default function PlaceMapSearch({
                 })}
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -453,7 +494,10 @@ export default function PlaceMapSearch({
                           <p className="text-ink3 mt-0.5 truncate text-[11px]">
                             {place.formattedAddress}
                           </p>
-                          <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: category.hex }}>
+                          <p
+                            className="mt-0.5 truncate text-[11px] font-semibold"
+                            style={{ color: category.hex }}
+                          >
                             {category.hashLabel}
                           </p>
                         </div>

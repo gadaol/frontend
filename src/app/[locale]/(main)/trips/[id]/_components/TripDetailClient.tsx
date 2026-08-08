@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useTransition, useRef, useEffect, useLayoutEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import dayjs from '@/lib/dayjs'
 import { MapPinIcon, PlusIcon } from '@/components/icons'
@@ -49,9 +49,19 @@ export default function TripDetailClient({
 }: Props) {
   const locale = useLocale()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [removedItemIds, setRemovedItemIds] = useState<Set<string>>(new Set())
-  const [activeTab, setActiveTab] = useState<Tab>('일정')
+  const TAB_VALUES: Tab[] = ['일정', '비용', '장소', '메이트']
+  const initialTab = (TAB_VALUES.find((t) => t === searchParams.get('tab')) ?? '일정') as Tab
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  function handleTabChange(tab: Tab) {
+    setActiveTab(tab)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
   const [activeSheetItem, setActiveSheetItem] = useState<ItineraryItemDB | null>(null)
   const [localExpenses, setLocalExpenses] = useState<TripExpense[]>(initialExpenses)
 
@@ -191,11 +201,13 @@ export default function TripDetailClient({
 
   const isOwner = trip.owner_id === currentUserId
 
+  const isMapTab = activeTab === '장소'
+
   return (
-    <div className="bg-bg2 flex min-h-full flex-col">
+    <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
       {/* 커버 */}
       <div
-        className="relative h-[220px] flex-shrink-0"
+        className={`relative h-[220px] flex-shrink-0 ${isMapTab ? 'hidden' : ''}`}
         style={
           trip.cover_url && !isGradient(trip.cover_url)
             ? {
@@ -237,9 +249,9 @@ export default function TripDetailClient({
       </div>
 
       {/* 바디 카드 */}
-      <div className="relative z-10 -mt-3 flex flex-1 flex-col rounded-t-3xl bg-white">
+      <div className={`relative z-10 flex flex-1 flex-col bg-white ${isMapTab ? 'overflow-hidden' : '-mt-3 rounded-t-3xl'}`}>
         {/* 멤버 row */}
-        <div className="flex items-center gap-2.5 px-4 pt-4 pb-0">
+        <div className={`flex items-center gap-2.5 px-4 pt-4 pb-0 ${isMapTab ? 'hidden' : ''}`}>
           <div className="flex">
             {trip.trip_members.slice(0, 5).map((m, i) => {
               const profile = profileMap.get(m.user_id)
@@ -288,7 +300,7 @@ export default function TripDetailClient({
         </div>
 
         {/* Quick action 2버튼 */}
-        <div className="border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4">
+        <div className={`border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4 ${isMapTab ? 'hidden' : ''}`}>
           <Link
             href={`/${locale}/trips/${trip.id}/edit`}
             className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
@@ -341,12 +353,12 @@ export default function TripDetailClient({
             { key: '메이트' as Tab, label: '메이트' },
           ]}
           value={activeTab}
-          onChange={setActiveTab}
+          onChange={handleTabChange}
           className="px-4"
         />
 
         {/* 탭 컨텐츠 */}
-        <div className="flex-1 pb-6">
+        <div className={isMapTab ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'flex-1 pb-20'}>
           {activeTab === '일정' && (
             <ItineraryTab
               expectedDays={expectedDays}
@@ -373,7 +385,13 @@ export default function TripDetailClient({
               locale={locale}
             />
           )}
-          {activeTab === '장소' && <PlacesMapTab trip={trip} />}
+          {activeTab === '장소' && (
+            <PlacesMapTab
+              trip={trip}
+              currentUserAvatar={profileMap.get(currentUserId)?.avatar_url ?? null}
+              currentUserName={profileMap.get(currentUserId)?.name ?? null}
+            />
+          )}
           {activeTab === '메이트' && (
             <MateTab
               members={trip.trip_members}

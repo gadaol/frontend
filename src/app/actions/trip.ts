@@ -477,3 +477,13 @@ export async function kickMember(
   revalidatePath('/', 'layout')
   return {}
 }
+
+export async function getTripDestination(tripId: string): Promise<string | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('trips')
+    .select('destination')
+    .eq('id', tripId)
+    .maybeSingle()
+  return data?.destination ?? null
+}

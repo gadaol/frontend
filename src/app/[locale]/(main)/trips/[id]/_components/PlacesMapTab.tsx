@@ -1,15 +1,20 @@
 'use client'
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api'
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline, OverlayView } from '@react-google-maps/api'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import { getDayColor } from '@/utils/dayColors'
 import type { TripDetail } from '../page'
+
+const MAP_H = 224
+const BOTTOM_NAV_H = 56
+const PANEL_HEADER_H = 56
 
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
   zoomControl: false,
   clickableIcons: true,
+  gestureHandling: 'greedy',
   styles: [
     { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'simplified' }] },
     { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
@@ -31,46 +36,30 @@ type PlacePin = {
 
 interface Props {
   trip: TripDetail
+  currentUserAvatar: string | null
+  currentUserName: string | null
 }
 
-export default function PlacesMapTab({ trip }: Props) {
+export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName }: Props) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
   })
 
   const mapRef = useRef<google.maps.Map | null>(null)
+  const polylineRefs = useRef<Map<number, google.maps.Polyline>>(new Map())
   const [selectedPin, setSelectedPin] = useState<PlacePin | null>(null)
-  const [listOpen, setListOpen] = useState(true)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locating, setLocating] = useState(false)
+  const [listOpen, setListOpen] = useState(true)
+  const [showRoute, setShowRoute] = useState(false)
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
-  function handleMyLocation() {
-    if (!navigator.geolocation) return
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-        setMyLocation(loc)
-        mapRef.current?.panTo(loc)
-        mapRef.current?.setZoom(15)
-        setLocating(false)
-      },
-      () => setLocating(false),
-      { timeout: 8000 },
-    )
-  }
-
-  // 마운트 시 현재 위치 마커 자동 표시 (권한 있으면)
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (pos) => setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { timeout: 5000 },
-    )
-  }, [])
+    polylineRefs.current.forEach((polyline, dayNum) => {
+      polyline.setVisible(showRoute && (selectedDay === null || selectedDay === dayNum))
+    })
+  }, [showRoute, selectedDay])
 
-  // 색상 반복 주기는 실제 존재하는 일수(day_number 최댓값) 기준 — itinerary_days.length는
-  // 아이템 있는 날짜만 들어있어 비어있는 날이 있으면 최댓값보다 작아져 색상이 겹칠 수 있음
   const maxDayNumber = useMemo(
     () => Math.max(1, ...trip.itinerary_days.map((d) => d.day_number)),
     [trip.itinerary_days],
@@ -131,12 +120,27 @@ export default function PlacesMapTab({ trip }: Props) {
     mapRef.current?.panTo({ lat: pin.lat, lng: pin.lng })
   }
 
-  // 일정에 장소 자체가 없는 경우에만 빈 상태 표시
+  function handleMyLocation() {
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setMyLocation(loc)
+        mapRef.current?.panTo(loc)
+        mapRef.current?.setZoom(15)
+        setLocating(false)
+      },
+      () => setLocating(false),
+      { timeout: 8000 },
+    )
+  }
+
   const hasAnyItems = trip.itinerary_days.some((d) => d.itinerary_items.length > 0)
 
   if (!isLoaded) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
         <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
@@ -144,14 +148,10 @@ export default function PlacesMapTab({ trip }: Props) {
 
   if (!hasAnyItems) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
         <div className="bg-primary-light flex h-16 w-16 items-center justify-center rounded-[20px]">
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path
-              d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z"
-              stroke="var(--color-primary)"
-              strokeWidth="2"
-            />
+            <path d="M15 3C10.5 3 6 7.05 6 12c0 6 9 15 9 15s9-9 9-15c0-4.95-4.05-9-9-9z" stroke="var(--color-primary)" strokeWidth="2" />
             <circle cx="15" cy="12" r="3" stroke="var(--color-primary)" strokeWidth="2" />
           </svg>
         </div>
@@ -164,9 +164,13 @@ export default function PlacesMapTab({ trip }: Props) {
   }
 
   return (
-    <div className="flex flex-col">
-      {/* 지도 — 고정 높이로 항상 표시 */}
-      <div className="relative h-72 w-full">
+    // relative + flex-1 min-h-0 로 부모 높이 전체 차지, 내부는 absolute로 배치
+    <div className="relative min-h-0 flex-1">
+      {/* 지도: 열릴때 224px 고정, 닫힐때 패널 헤더 위까지 채움 */}
+      <div
+        className="absolute top-0 right-0 left-0"
+        style={listOpen ? { height: MAP_H } : { bottom: BOTTOM_NAV_H + PANEL_HEADER_H }}
+      >
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
           center={center}
@@ -175,7 +179,26 @@ export default function PlacesMapTab({ trip }: Props) {
           onLoad={onLoad}
           onClick={() => setSelectedPin(null)}
         >
-          {pins.map((pin) => (
+          {dayGroups.map(([dayNum, dayPins]) =>
+            dayPins.length > 1 ? (
+              <Polyline
+                key={`route-${dayNum}`}
+                path={dayPins.map((p) => ({ lat: p.lat, lng: p.lng }))}
+                options={{
+                  strokeColor: dayPins[0].color,
+                  strokeOpacity: 0.75,
+                  strokeWeight: 2.5,
+                  visible: false,
+                }}
+                onLoad={(pl) => {
+                  polylineRefs.current.set(dayNum, pl)
+                  pl.setVisible(showRoute && (selectedDay === null || selectedDay === dayNum))
+                }}
+                onUnmount={() => polylineRefs.current.delete(dayNum)}
+              />
+            ) : null,
+          )}
+          {pins.filter((p) => selectedDay === null || p.dayNumber === selectedDay).map((pin) => (
             <Marker
               key={pin.id}
               position={{ lat: pin.lat, lng: pin.lng }}
@@ -196,19 +219,47 @@ export default function PlacesMapTab({ trip }: Props) {
               onClick={() => handlePinClick(pin)}
             />
           ))}
-          {/* 현재 위치 마커 */}
           {myLocation && (
-            <Marker
+            <OverlayView
               position={myLocation}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: '#4A90E2',
-                fillOpacity: 1,
-                strokeColor: '#fff',
-                strokeWeight: 3,
-              }}
-            />
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={{ transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
+                {currentUserAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={currentUserAvatar}
+                    alt={currentUserName ?? '나'}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      border: '3px solid white',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    border: '3px solid white',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    backgroundColor: 'var(--color-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}>
+                    {currentUserName?.[0] ?? '나'}
+                  </div>
+                )}
+              </div>
+            </OverlayView>
           )}
           {selectedPin && (
             <InfoWindow
@@ -216,25 +267,11 @@ export default function PlacesMapTab({ trip }: Props) {
               onCloseClick={() => setSelectedPin(null)}
             >
               <div style={{ maxWidth: 180, padding: '6px 4px 4px' }}>
-                <p
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: 'var(--color-ink)',
-                    marginBottom: 4,
-                  }}
-                >
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>
                   {selectedPin.name}
                 </p>
                 {selectedPin.address && (
-                  <p
-                    style={{
-                      fontSize: 11,
-                      color: 'var(--color-ink3)',
-                      marginBottom: 4,
-                      lineHeight: 1.4,
-                    }}
-                  >
+                  <p style={{ fontSize: 11, color: 'var(--color-ink3)', marginBottom: 4, lineHeight: 1.4 }}>
                     {selectedPin.address}
                   </p>
                 )}
@@ -246,7 +283,41 @@ export default function PlacesMapTab({ trip }: Props) {
           )}
         </GoogleMap>
 
-        {/* 현재 위치 버튼 */}
+        {/* Day 필터 칩 */}
+        <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
+          <button
+            onClick={() => setSelectedDay(null)}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm transition-colors ${selectedDay === null ? 'bg-ink text-white' : 'bg-white text-ink3'}`}
+          >
+            전체
+          </button>
+          {dayGroups.map(([dayNum, dayPins]) => (
+            <button
+              key={dayNum}
+              onClick={() => setSelectedDay(selectedDay === dayNum ? null : dayNum)}
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm transition-colors"
+              style={
+                selectedDay === dayNum
+                  ? { backgroundColor: dayPins[0].color, color: '#fff' }
+                  : { backgroundColor: '#fff', color: dayPins[0].color }
+              }
+            >
+              D{dayNum}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setShowRoute((v) => !v)}
+          className={`absolute right-3 bottom-16 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-colors ${showRoute ? 'bg-primary text-white' : 'bg-white text-ink3'}`}
+          title={showRoute ? '경로 숨기기' : '경로 보기'}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 14c0-2 1.5-3 3-3s3 1 4.5 1S13 11 13 9s-1.5-4-4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="3" cy="14" r="1.5" fill="currentColor" />
+            <circle cx="15" cy="5" r="1.5" fill="currentColor" />
+          </svg>
+        </button>
         <button
           onClick={handleMyLocation}
           className="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
@@ -257,75 +328,53 @@ export default function PlacesMapTab({ trip }: Props) {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <circle cx="10" cy="10" r="3.5" fill="var(--color-primary)" />
               <circle cx="10" cy="10" r="6" stroke="var(--color-primary)" strokeWidth="1.5" />
-              <path
-                d="M10 2v2M10 16v2M2 10h2M16 10h2"
-                stroke="var(--color-primary)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
+              <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           )}
         </button>
       </div>
 
-      {/* 장소 목록 패널 */}
-      <div className="bg-white">
-        {/* 토글 핸들 */}
+      {/* 패널: 열릴때 지도 아래~하단네비 위, 닫힐때 하단네비 바로 위에 헤더만 */}
+      <div
+        className="absolute right-0 left-0 flex flex-col rounded-t-2xl bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.1)]"
+        style={
+          listOpen
+            ? { top: MAP_H, bottom: BOTTOM_NAV_H }
+            : { bottom: BOTTOM_NAV_H }
+        }
+      >
+        {/* 바 핸들 토글 */}
         <button
           onClick={() => setListOpen((v) => !v)}
-          className="border-border flex w-full items-center justify-between border-b px-4 py-3"
+          className="flex w-full flex-col items-center gap-2 pt-3 pb-1"
         >
-          <div className="flex items-center gap-2">
-            <span className="text-ink text-[14px] font-semibold">장소 목록</span>
-            <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
-              {pins.length}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Day 색상 범례 */}
+          <div className="h-[5px] w-10 rounded-full bg-gray-300" />
+          <div className="flex w-full items-center justify-between px-4 pb-1">
+            <div className="flex items-center gap-2">
+              <span className="text-ink text-[14px] font-semibold">장소 목록</span>
+              <span className="bg-primary-light text-primary rounded-full px-2 py-0.5 text-[11px] font-bold">
+                {pins.length}
+              </span>
+            </div>
             <div className="flex items-center gap-1.5">
               {dayGroups.map(([dayNum, dayPins]) => (
                 <div key={dayNum} className="flex items-center gap-0.5">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: dayPins[0].color }}
-                  />
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: dayPins[0].color }} />
                   <span className="text-ink3 text-[10px]">D{dayNum}</span>
                 </div>
               ))}
             </div>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              className={`transition-transform duration-300 ${listOpen ? 'rotate-180' : ''}`}
-            >
-              <path
-                d="M4.5 11L9 6.5l4.5 4.5"
-                stroke="var(--color-ink3)"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
           </div>
         </button>
 
-        {/* 리스트 (max-height 토글) */}
-        <div
-          className="overflow-hidden transition-all duration-300 ease-in-out"
-          style={{ maxHeight: listOpen ? 2000 : 0 }}
-        >
-          <div className="px-4 pt-3 pb-6">
-            {pins.length === 0 && (
-              <p className="text-ink3 py-4 text-center text-[13px]">
-                장소 좌표가 없어 지도에 표시할 수 없어요
-              </p>
-            )}
-            {dayGroups.map(([dayNum, dayPins]) => (
+        {/* 목록: 패널 높이에서 헤더 제외한 나머지를 스크롤 영역으로 */}
+        {listOpen && (
+          <div
+            className="overflow-y-auto px-4 pt-2 pb-4"
+            style={{ height: `calc(100% - ${PANEL_HEADER_H}px)` }}
+          >
+            {dayGroups.filter(([dayNum]) => selectedDay === null || dayNum === selectedDay).map(([dayNum, dayPins]) => (
               <div key={dayNum} className="mb-4">
-                {/* Day 헤더 */}
                 <div className="mb-2 flex items-center gap-2">
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white"
@@ -335,14 +384,11 @@ export default function PlacesMapTab({ trip }: Props) {
                   </span>
                   <span className="text-ink3 text-[11px]">{dayPins[0].dayDate}</span>
                 </div>
-
-                {/* 장소 카드 */}
                 <div className="flex flex-col gap-2">
                   {dayPins.map((pin) => {
                     const catInfo = getCategoryInfoByLabel(pin.categoryName ?? '')
                     const Icon = catInfo.icon
                     const isSelected = selectedPin?.id === pin.id
-
                     return (
                       <button
                         key={pin.id}
@@ -357,15 +403,11 @@ export default function PlacesMapTab({ trip }: Props) {
                         >
                           {pin.orderIndex + 1}
                         </div>
-                        <div
-                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}
-                        >
+                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${catInfo.bg}`}>
                           <Icon size={18} className={catInfo.color} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p
-                            className={`truncate text-[13px] font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}
-                          >
+                          <p className={`truncate text-[13px] font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}>
                             {pin.name}
                           </p>
                           {pin.address && (
@@ -375,18 +417,8 @@ export default function PlacesMapTab({ trip }: Props) {
                             {catInfo.hashLabel}
                           </p>
                         </div>
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          className="text-ink3 flex-shrink-0"
-                        >
-                          <path
-                            d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z"
-                            stroke="currentColor"
-                            strokeWidth="1.3"
-                          />
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-ink3 flex-shrink-0">
+                          <path d="M7 1.5C4.8 1.5 3 3.3 3 5.5c0 2.8 4 7 4 7s4-4.2 4-7c0-2.2-1.8-4-4-4z" stroke="currentColor" strokeWidth="1.3" />
                           <circle cx="7" cy="5.5" r="1.3" stroke="currentColor" strokeWidth="1.3" />
                         </svg>
                       </button>
@@ -396,7 +428,7 @@ export default function PlacesMapTab({ trip }: Props) {
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

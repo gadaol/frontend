@@ -54,7 +54,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="border-border bg-bg flex-shrink-0 border-t">
+    <nav className="border-border bg-bg fixed right-0 bottom-0 left-0 z-50 border-t">
       <div className="flex items-center" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {tabs.map((tab) => {
           const active = isActive(tab.href)

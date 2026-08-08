@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/common/AppHeader'
 import Button from '@/components/ui/Button'
 import PlaceMapSearch from '@/components/features/places/PlaceMapSearch'
-import { addItineraryItem } from '@/app/actions/trip'
+import { addItineraryItem, getTripDestination } from '@/app/actions/trip'
 import { getOrCreatePlace } from '@/app/actions/backlog'
 import { addCandidatePlace } from '@/app/actions/candidate'
 import { getDbCategory } from '@/utils/placeCategory'
@@ -30,6 +30,11 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
   // 선택된 장소 Map<googlePlaceId, GooglePlace>
   const [selected, setSelected] = useState<Map<string, GooglePlace>>(new Map())
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [destination, setDestination] = useState<string | null>(null)
+
+  useEffect(() => {
+    getTripDestination(tripId).then(setDestination)
+  }, [tripId])
 
   function toggleSelect(place: GooglePlace) {
     setSelected((prev) => {
@@ -85,6 +90,7 @@ export default function TripPlacesPage({ params, searchParams }: Props) {
       <AppHeader title={headerTitle} onBack="router" />
       <div className="relative flex-1 overflow-hidden">
         <PlaceMapSearch
+          destination={destination}
           bottomOffset={selectedCount > 0 ? BOTTOM_BAR_HEIGHT : 0}
           renderListAction={(place) => {
             const isSelected = selected.has(place.id)
