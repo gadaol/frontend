@@ -499,7 +499,10 @@ export default function PlaceMapSearch({
                   </div>
 
                   {/* AI 맞춤 추천 버튼 */}
-                  <div className="px-4 py-3">
+                  <div
+                    className="px-4 pt-3"
+                    style={{ paddingBottom: bottomOffset > 0 ? bottomOffset + 16 : 16 }}
+                  >
                     <button
                       onClick={fetchAIRecommend}
                       className="flex w-full items-center gap-3 rounded-2xl p-3.5 text-left transition-opacity active:opacity-90"
