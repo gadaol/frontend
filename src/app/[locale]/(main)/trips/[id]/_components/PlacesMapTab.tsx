@@ -60,6 +60,14 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
     })
   }, [showRoute, selectedDay])
 
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => setMyLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { timeout: 8000, enableHighAccuracy: false },
+    )
+  }, [])
+
   const maxDayNumber = useMemo(
     () => Math.max(1, ...trip.itinerary_days.map((d) => d.day_number)),
     [trip.itinerary_days],
@@ -121,6 +129,11 @@ export default function PlacesMapTab({ trip, currentUserAvatar, currentUserName 
   }
 
   function handleMyLocation() {
+    if (myLocation) {
+      mapRef.current?.panTo(myLocation)
+      mapRef.current?.setZoom(15)
+      return
+    }
     if (!navigator.geolocation) return
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
