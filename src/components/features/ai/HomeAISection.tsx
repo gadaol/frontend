@@ -293,18 +293,16 @@ export default function HomeAISection() {
                 )}
               </div>
 
-              {/* 하단 버튼 */}
-              {!loading && (result || error) && (
+              {/* 하단 버튼 — 에러 상태엔 콘텐츠 안에 이미 버튼 있음 */}
+              {!loading && result && (
                 <div className="border-border pb-safe flex-shrink-0 border-t px-4 py-3 flex gap-2">
-                  {result && (
-                    <button
-                      onClick={handleAskForTrip}
-                      className="flex-1 rounded-2xl py-3 text-[14px] font-semibold text-white"
-                      style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
-                    >
-                      {isKo ? '여행 일정 만들기 →' : 'Build itinerary →'}
-                    </button>
-                  )}
+                  <button
+                    onClick={handleAskForTrip}
+                    className="flex-1 rounded-2xl py-3 text-[14px] font-semibold text-white"
+                    style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
+                  >
+                    {isKo ? '여행 일정 만들기 →' : 'Build itinerary →'}
+                  </button>
                   <button
                     onClick={() => {
                       setResult(null)

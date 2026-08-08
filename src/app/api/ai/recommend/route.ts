@@ -42,24 +42,21 @@ function formatPlace(p: PlaceWithCategory): string | null {
 
 export const RecommendSchema = z.object({
   intro: z.string().describe('사용자에게 건네는 추천 인사말 (1~2문장, 왜 이런 곳들을 골랐는지)'),
-  places: z
-    .array(
-      z.object({
-        name: z.string().describe('장소명 (공식 명칭)'),
-        category: z
-          .string()
-          .describe('카테고리: 식당/카페/자연/관광지/쇼핑/액티비티/박물관/온천/기타 중 하나'),
-        reason: z
-          .string()
-          .describe('이 사용자에게 맞는 구체적인 이유 (1~2문장. 취향·백로그·행동 데이터와 연결)'),
-        tip: z.string().describe('방문 팁: 최적 시간대, 예약 여부, 주의사항 등 (1문장)'),
-        googleSearchQuery: z
-          .string()
-          .describe('Google Places 검색어 ("장소명 도시명" 형식, 정확한 공식 명칭 사용)'),
-      }),
-    )
-    .min(5)
-    .max(8),
+  places: z.array(
+    z.object({
+      name: z.string().describe('장소명 (공식 명칭)'),
+      category: z
+        .string()
+        .describe('카테고리: 식당/카페/자연/관광지/쇼핑/액티비티/박물관/온천/기타 중 하나'),
+      reason: z
+        .string()
+        .describe('이 사용자에게 맞는 구체적인 이유 (1~2문장. 취향·백로그·행동 데이터와 연결)'),
+      tip: z.string().describe('방문 팁: 최적 시간대, 예약 여부, 주의사항 등 (1문장)'),
+      googleSearchQuery: z
+        .string()
+        .describe('Google Places 검색어 ("장소명 도시명" 형식, 정확한 공식 명칭 사용)'),
+    }),
+  ),
 })
 
 export type RecommendResult = z.infer<typeof RecommendSchema>
@@ -214,6 +211,9 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join('\n\n')
 
+  const countInstruction =
+    locale === 'ko' ? '장소는 정확히 6개를 추천한다.' : 'Recommend exactly 6 places.'
+
   const catFilter =
     categories.length > 0
       ? locale === 'ko'
@@ -222,34 +222,18 @@ export async function POST(req: NextRequest) {
       : ''
 
   const prompt = (() => {
-    if (destination) {
-      return [
-        locale === 'ko'
-          ? `${destination} 여행에 맞는 장소를 추천해줘.`
-          : `Recommend places for a trip to ${destination}.`,
-        catFilter,
-      ]
-        .filter(Boolean)
-        .join('\n')
-    }
-    if (tripId) {
-      return [
-        locale === 'ko'
+    const base = destination
+      ? locale === 'ko'
+        ? `${destination} 여행에 맞는 장소를 추천해줘.`
+        : `Recommend places for a trip to ${destination}.`
+      : tripId
+        ? locale === 'ko'
           ? `여행 ID ${tripId}에 추가할 장소를 추천해줘.`
-          : `Recommend places to add to trip ${tripId}.`,
-        catFilter,
-      ]
-        .filter(Boolean)
-        .join('\n')
-    }
-    return [
-      locale === 'ko'
-        ? '내 취향과 지금까지 관심 보인 장소들을 바탕으로 가장 잘 맞는 장소를 추천해줘.'
-        : 'Recommend places that best match my preferences and past interests.',
-      catFilter,
-    ]
-      .filter(Boolean)
-      .join('\n')
+          : `Recommend places to add to trip ${tripId}.`
+        : locale === 'ko'
+          ? '내 취향과 지금까지 관심 보인 장소들을 바탕으로 가장 잘 맞는 장소를 추천해줘.'
+          : 'Recommend places that best match my preferences and past interests.'
+    return [base, countInstruction, catFilter].filter(Boolean).join('\n')
   })()
 
   try {
@@ -259,6 +243,7 @@ export async function POST(req: NextRequest) {
       prompt,
       schema: RecommendSchema,
       abortSignal: AbortSignal.timeout(45_000),
+      maxRetries: 0,
     })
 
     void supabase.from('recommendation_logs').insert({
