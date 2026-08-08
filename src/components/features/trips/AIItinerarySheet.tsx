@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { applyGeneratedItinerary } from '@/app/actions/trip'
 import PageLoading from '@/components/ui/PageLoading'
 import type { GeneratedItinerary } from '@/app/api/ai/itinerary/route'
+import { MapPinIcon } from '@/components/icons'
 
 const STYLES = ['relaxed', 'active', 'food', 'culture', 'nature', 'photo']
 
@@ -35,6 +36,11 @@ interface Props {
   excludePlaces?: string[]
   /** 여행 멤버 수 — 비용 산출 시 인원 선택 상한 */
   memberCount?: number
+  /**
+   * 폼에서 등록한 다중 목적지 세그먼트.
+   * 있으면 읽기 전용으로 표시하고 AI 프롬프트에 날짜별로 반영한다.
+   */
+  segments?: Array<{ destination: string; startDate: string; endDate: string }>
   onClose: () => void
 }
 
@@ -50,6 +56,7 @@ export default function AIItinerarySheet({
   targetDays = [],
   excludePlaces = [],
   memberCount = 1,
+  segments: propSegments,
   onClose,
 }: Props) {
   const locale = useLocale()
@@ -57,11 +64,35 @@ export default function AIItinerarySheet({
   const to = useTranslations('onboarding')
   const router = useRouter()
 
+  // 여행 총 일수 (날짜 기반)
+  const totalDays = Math.max(
+    1,
+    Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000) + 1,
+  )
+
+  interface DestSegment { destination: string; dayStart: number; dayEnd: number }
+
+  // propSegments(날짜 기반)를 dayStart/dayEnd(일차 기반)로 변환
+  function propSegmentsToDaySegments(): DestSegment[] {
+    if (!propSegments || propSegments.length === 0) {
+      return [{ destination, dayStart: 1, dayEnd: totalDays }]
+    }
+    const tripStart = new Date(startDate + 'T00:00:00')
+    return propSegments.map((s) => {
+      const sd = s.startDate ? new Date(s.startDate + 'T00:00:00') : tripStart
+      const ed = s.endDate ? new Date(s.endDate + 'T00:00:00') : sd
+      const dayStart = Math.max(1, Math.round((sd.getTime() - tripStart.getTime()) / 86400000) + 1)
+      const dayEnd = Math.max(dayStart, Math.round((ed.getTime() - tripStart.getTime()) / 86400000) + 1)
+      return { destination: s.destination || destination, dayStart, dayEnd }
+    })
+  }
+
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [companion, setCompanion] = useState('solo')
   const [notes, setNotes] = useState('')
   const [withCost, setWithCost] = useState(false)
   const [personCount, setPersonCount] = useState(memberCount)
+  const [destSegments] = useState<DestSegment[]>(() => propSegmentsToDaySegments())
   const [streaming, setStreaming] = useState(false)
   const [itinerary, setItinerary] = useState<GeneratedItinerary | null>(null)
   const [parseError, setParseError] = useState(false)
@@ -83,7 +114,10 @@ export default function AIItinerarySheet({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          destination,
+          destination: destSegments.length === 1
+            ? destSegments[0].destination
+            : destSegments.map((s) => `${s.destination}(${s.dayStart}~${s.dayEnd}일차)`).join(', '),
+          segments: destSegments.length > 1 ? destSegments : undefined,
           startDate,
           endDate,
           startTime,
@@ -134,6 +168,7 @@ export default function AIItinerarySheet({
     notes,
     withCost,
     locale,
+    destSegments,
   ])
 
   async function applyItinerary() {
@@ -252,6 +287,29 @@ export default function AIItinerarySheet({
           {/* 옵션 선택 — 아직 생성 안 됐을 때만 */}
           {!itinerary && !streaming && (
             <div className="space-y-4 px-5 py-4">
+              {/* 방문 도시 (읽기 전용) */}
+              <div>
+                <p className="text-ink mb-2 text-[13px] font-semibold">{t('ai.visitCitiesLabel')}</p>
+                <div className="space-y-1.5">
+                  {destSegments.map((seg, i) => (
+                    <div
+                      key={i}
+                      className="border-border flex items-center gap-2 rounded-xl border px-3 py-2.5"
+                    >
+                      <MapPinIcon size={14} className="text-primary flex-shrink-0" />
+                      <span className="text-ink min-w-0 flex-1 truncate text-[13px] font-semibold">
+                        {seg.destination}
+                      </span>
+                      {destSegments.length > 1 && (
+                        <span className="text-ink3 flex-shrink-0 text-[11px]">
+                          {t('ai.dayRangeLabel', { start: seg.dayStart, end: seg.dayEnd })}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* 여행 스타일 */}
               <div>
                 <p className="text-ink mb-2 text-[13px] font-semibold">{t('ai.styleLabel')}</p>
@@ -340,9 +398,9 @@ export default function AIItinerarySheet({
                     )}
                   </div>
                   <div>
-                    <p className="text-ink text-[13px] font-semibold">예상 비용 산출</p>
+                    <p className="text-ink text-[13px] font-semibold">{t('ai.estimateCostLabel')}</p>
                     <p className="text-ink3 text-[11px]">
-                      장소별 예상 비용을 함께 생성해 경비 탭에 자동 등록합니다
+                      {t('ai.estimateCostDesc')}
                     </p>
                   </div>
                 </button>
@@ -350,7 +408,7 @@ export default function AIItinerarySheet({
                 {/* 인원 선택 — 체크됐을 때만 */}
                 {withCost && (
                   <div className="border-primary/20 flex items-center justify-between border-t px-4 py-2.5">
-                    <span className="text-ink text-[13px] font-medium">인원</span>
+                    <span className="text-ink text-[13px] font-medium">{t('ai.personCountLabel')}</span>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setPersonCount((v) => Math.max(1, v - 1))}
@@ -484,6 +542,7 @@ export default function AIItinerarySheet({
           </div>
         )}
       </div>
+
     </>
   )
 }

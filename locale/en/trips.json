@@ -126,7 +126,12 @@
       "nature": "Nature & calm",
       "photo": "Photo spots"
     },
-    "savingAll": "Saving your itinerary..."
+    "savingAll": "Saving your itinerary...",
+    "visitCitiesLabel": "Destinations",
+    "estimateCostLabel": "Estimate costs",
+    "estimateCostDesc": "Generates per-place costs and adds them to your expense tab",
+    "personCountLabel": "People",
+    "dayRangeLabel": "Day {start}–{end}"
   },
   "memoTitle": "Note",
   "memoPlaceholderPlace": "Jot down anything about this place",

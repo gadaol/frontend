@@ -29,12 +29,39 @@ import {
   type ExpenseCategory,
 } from '@/utils/expenseCategory'
 import DestinationInput from '@/components/features/trips/DestinationInput'
+import DateRangePicker from '@/components/ui/DateRangePicker'
 import ItemDetailSheet from '../../_components/ItemDetailSheet'
 import type { TripDetail, TripExpense } from '../../page'
 
 type DayDB = TripDetail['itinerary_days'][number]
 type ItemDB = DayDB['itinerary_items'][number]
 type EditTab = 'info' | 'expense' | number
+
+interface DestSegment {
+  destination: string
+  startDate: string
+  endDate: string
+}
+
+function formatDateRangeLabel(startDate: string, endDate: string, locale: string) {
+  if (!startDate) return locale === 'ko' ? '날짜 선택' : 'Select dates'
+  const [sy, sm, sd] = startDate.split('-').map(Number)
+  const sDate = new Date(sy, sm - 1, sd)
+  const wd = locale === 'ko'
+    ? ['일', '월', '화', '수', '목', '금', '토'][sDate.getDay()]
+    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][sDate.getDay()]
+  const sLabel = locale === 'ko' ? `${sm}/${sd}(${wd})` : `${sm}/${sd}`
+  if (!endDate || startDate === endDate) return sLabel
+  const [ey, em, ed] = endDate.split('-').map(Number)
+  const eDate = new Date(ey, em - 1, ed)
+  const ewd = locale === 'ko'
+    ? ['일', '월', '화', '수', '목', '금', '토'][eDate.getDay()]
+    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][eDate.getDay()]
+  const eLabel = locale === 'ko' ? `${em}/${ed}(${ewd})` : `${em}/${ed}`
+  const nights = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000)
+  const nightsLabel = locale === 'ko' ? `${nights}박 ${nights + 1}일` : `${nights}N ${nights + 1}D`
+  return `${sLabel} → ${eLabel}  ·  ${nightsLabel}`
+}
 
 export default function ScheduleEditClient({
   trip,
@@ -56,12 +83,38 @@ export default function ScheduleEditClient({
 
   // 기본 정보 상태
   const [title, setTitle] = useState(trip.title)
-  const [destination, setDestination] = useState(trip.destination ?? '')
-  const [startDate, setStartDate] = useState(trip.start_date ?? '')
-  const [endDate, setEndDate] = useState(trip.end_date ?? '')
+  const [segments, setSegments] = useState<DestSegment[]>(() => {
+    const saved = (trip as unknown as { destinations?: DestSegment[] | null }).destinations
+    if (saved && saved.length > 0) return saved
+    return [{ destination: trip.destination ?? '', startDate: trip.start_date ?? '', endDate: trip.end_date ?? '' }]
+  })
+  const [datePickerFor, setDatePickerFor] = useState<number | null>(null)
   // time 컬럼은 'HH:MM:SS'로 오는데 input[type=time]은 'HH:MM'만 받는다
   const [startTime, setStartTime] = useState((trip.start_time ?? '').slice(0, 5))
   const [endTime, setEndTime] = useState((trip.end_time ?? '').slice(0, 5))
+
+  // 세그먼트에서 전체 여행 날짜 추론
+  const overallStart = segments.map((s) => s.startDate).filter(Boolean).sort()[0] ?? ''
+  const overallEnd = [...segments.map((s) => s.endDate).filter(Boolean)].sort().at(-1) ?? ''
+
+  function updateSegment(i: number, patch: Partial<DestSegment>) {
+    setSegments((prev) => {
+      const next = prev.map((s, j) => (j === i ? { ...s, ...patch } : s))
+      if ('endDate' in patch && patch.endDate && i < prev.length - 1) {
+        next[i + 1] = { ...next[i + 1], startDate: patch.endDate }
+      }
+      return next
+    })
+  }
+  function addSegment() {
+    setSegments((prev) => {
+      const last = prev[prev.length - 1]
+      return [...prev, { destination: '', startDate: last?.endDate ?? '', endDate: '' }]
+    })
+  }
+  function removeSegment(i: number) {
+    setSegments((prev) => prev.filter((_, j) => j !== i))
+  }
   const [coverUrl, setCoverUrl] = useState(trip.cover_url ?? COVER_PRESETS[0])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -80,16 +133,16 @@ export default function ScheduleEditClient({
   const [addingExpense, setAddingExpense] = useState(false)
 
   const expectedDays = useMemo(() => {
-    if (!startDate || !endDate) return []
-    const start = dayjs(startDate)
-    const end = dayjs(endDate)
+    if (!overallStart || !overallEnd) return []
+    const start = dayjs(overallStart)
+    const end = dayjs(overallEnd)
     const numDays = end.diff(start, 'day') + 1
     if (numDays <= 0) return []
     return Array.from({ length: numDays }, (_, i) => ({
       dayNumber: i + 1,
       dayDate: start.add(i, 'day').format('YYYY-MM-DD'),
     }))
-  }, [startDate, endDate])
+  }, [overallStart, overallEnd])
 
   const dayMap = useMemo(
     () => new Map(trip.itinerary_days.map((d) => [d.day_date, d])),
@@ -154,8 +207,21 @@ export default function ScheduleEditClient({
       return
     }
     const { url, error } = await uploadCoverImage(file, user.id)
-    if (url) setCoverUrl(url)
-    else setSaveError(error ?? t('coverUploadFailed'))
+    if (url) {
+      setCoverUrl(url)
+      await updateTrip(trip.id, {
+        title: title.trim(),
+        destination: segments[0]?.destination.trim() || null,
+        start_date: overallStart || null,
+        end_date: overallEnd || null,
+        start_time: startTime || null,
+        end_time: endTime || null,
+        cover_url: url,
+      })
+      router.refresh()
+    } else {
+      setSaveError(error ?? t('coverUploadFailed'))
+    }
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -165,13 +231,13 @@ export default function ScheduleEditClient({
       setSaveError(t('nameRequired'))
       return
     }
-    if (startDate && endDate && dayjs(endDate).isBefore(dayjs(startDate))) {
+    if (overallStart && overallEnd && dayjs(overallEnd).isBefore(dayjs(overallStart))) {
       setSaveError(t('endBeforeStart'))
       return
     }
-    if (startDate && endDate) {
+    if (overallStart && overallEnd) {
       const affected = trip.itinerary_days
-        .filter((d) => d.day_date < startDate || d.day_date > endDate)
+        .filter((d) => d.day_date < overallStart || d.day_date > overallEnd)
         .filter((d) => d.itinerary_items.length > 0)
         .map((d) => ({ dayDate: d.day_date, itemCount: d.itinerary_items.length }))
       if (affected.length > 0) {
@@ -186,15 +252,16 @@ export default function ScheduleEditClient({
     setSaving(true)
     setSaveError(null)
     setConfirmDialog(null)
-    if (deleteDays && startDate && endDate) await deleteOutOfRangeDays(trip.id, startDate, endDate)
+    if (deleteDays && overallStart && overallEnd) await deleteOutOfRangeDays(trip.id, overallStart, overallEnd)
     const result = await updateTrip(trip.id, {
       title: title.trim(),
-      destination: destination.trim() || null,
-      start_date: startDate || null,
-      end_date: endDate || null,
+      destination: segments[0]?.destination.trim() || null,
+      start_date: overallStart || null,
+      end_date: overallEnd || null,
       start_time: startTime || null,
       end_time: endTime || null,
       cover_url: coverUrl,
+      destinations: segments,
     })
     setSaving(false)
     if (result.error) {
@@ -498,75 +565,95 @@ export default function ScheduleEditClient({
               />
             </div>
 
-            {/* 목적지 */}
-            <div>
-              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
-                {t('destination')}
+            {/* 목적지 & 기간 (세그먼트) */}
+            <div className="space-y-3">
+              <label className="text-ink2 block text-[12px] font-semibold">
+                {t('destination')} / {t('period')}
               </label>
-              <DestinationInput value={destination} onChange={setDestination} />
+
+              {segments.map((seg, i) => (
+                <div key={i} className="space-y-2">
+                  {segments.length > 1 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-ink3 text-[11px] font-semibold">
+                        {i === 0
+                          ? (locale === 'ko' ? '첫 번째 목적지' : '1st destination')
+                          : locale === 'ko' ? `경유지 ${i}` : `Stop ${i}`}
+                      </span>
+                      {i > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSegment(i)}
+                          className="text-ink3 text-[11px]"
+                        >
+                          {locale === 'ko' ? '삭제' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <DestinationInput
+                    value={seg.destination}
+                    onChange={(d) => updateSegment(i, { destination: d })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDatePickerFor(i)}
+                    className={`border-border flex w-full items-center gap-2 rounded-xl border bg-white px-3 py-2.5 text-left transition-colors ${
+                      seg.startDate ? 'border-primary/30 bg-primary/5' : ''
+                    }`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={seg.startDate ? 'text-primary' : 'text-ink3'}>
+                      <rect x="1.5" y="2" width="11" height="10.5" rx="2" stroke="currentColor" strokeWidth="1.3" />
+                      <path d="M1.5 6h11M4.5 1v2.5M9.5 1v2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    </svg>
+                    <span className={`text-[13px] ${seg.startDate ? 'font-medium text-ink' : 'text-ink3'}`}>
+                      {formatDateRangeLabel(seg.startDate, seg.endDate, locale)}
+                    </span>
+                  </button>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={addSegment}
+                className="border-border text-ink3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2.5 text-[12px]"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                {locale === 'ko' ? '경유지 추가' : 'Add stop'}
+              </button>
             </div>
 
-            {/* 기간 — 날짜와 시간을 한 블록에서 같이 잡는다.
-                시간을 따로 떼어두면 서로 무관한 설정처럼 보인다. */}
+            {/* 시간 */}
             <div>
               <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
-                {t('period')}
+                {locale === 'ko' ? '출발·도착 시간' : 'Departure / Arrival time'}
               </label>
-
               <div className="border-border divide-border divide-y rounded-xl border bg-white">
                 <div className="flex items-center gap-2 px-3 py-2.5">
                   <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
                     {t('rangeStart')}
                   </span>
                   <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value)
-                      if (endDate && e.target.value > endDate) setEndDate(e.target.value)
-                    }}
-                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
-                  />
-                  <input
-                    /* 폭을 고정하지 않는다 — iOS는 '오후 3:30', 크롬은 '15:30'으로
-                       렌더돼 필요한 폭이 달라서 고정하면 잘린다 */
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="text-ink2 flex-shrink-0 bg-transparent text-right text-[14px] focus:outline-none"
+                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
                   />
                 </div>
-
                 <div className="flex items-center gap-2 px-3 py-2.5">
                   <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
                     {t('rangeEnd')}
                   </span>
                   <input
-                    type="date"
-                    value={endDate}
-                    min={startDate || undefined}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
-                  />
-                  <input
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="text-ink2 flex-shrink-0 bg-transparent text-right text-[14px] focus:outline-none"
+                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
                   />
                 </div>
               </div>
-
-              {startDate && endDate && expectedDays.length > 0 && (
-                <p className="text-primary mt-1.5 text-[12px]">
-                  {expectedDays.length === 1
-                    ? t('dayTrip')
-                    : t('nights', {
-                        nights: expectedDays.length - 1,
-                        days: expectedDays.length,
-                      })}
-                </p>
-              )}
               <p className="text-ink3 mt-1 text-[12px]">{t('rangeHint')}</p>
             </div>
           </div>
@@ -780,6 +867,20 @@ export default function ScheduleEditClient({
           </div>
         )}
       </div>
+
+      {/* 날짜 레인지 피커 */}
+      {datePickerFor !== null && (
+        <DateRangePicker
+          startDate={segments[datePickerFor]?.startDate ?? ''}
+          endDate={segments[datePickerFor]?.endDate ?? ''}
+          minDate={datePickerFor > 0 ? segments[datePickerFor - 1]?.endDate || '' : ''}
+          onChange={(start, end) => {
+            const idx = datePickerFor
+            updateSegment(idx, { startDate: start, endDate: end })
+          }}
+          onClose={() => setDatePickerFor(null)}
+        />
+      )}
 
       {/* 범위 밖 날짜 삭제 확인 다이얼로그 */}
       {confirmDialog && (

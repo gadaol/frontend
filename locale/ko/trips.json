@@ -126,7 +126,12 @@
       "nature": "자연·힐링",
       "photo": "사진 스팟"
     },
-    "savingAll": "일정 저장하는 중..."
+    "savingAll": "일정 저장하는 중...",
+    "visitCitiesLabel": "방문 도시",
+    "estimateCostLabel": "예상 비용 산출",
+    "estimateCostDesc": "장소별 예상 비용을 함께 생성해 경비 탭에 자동 등록합니다",
+    "personCountLabel": "인원",
+    "dayRangeLabel": "{start}~{end}일차"
   },
   "memoTitle": "메모",
   "memoPlaceholderPlace": "이 장소에 대한 메모를 남겨보세요",

@@ -23,10 +23,13 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const startTime = (formData.get('start_time') as string) || null
   const endTime = (formData.get('end_time') as string) || null
   const invitedIds = (formData.getAll('invited_user_ids') as string[]).filter(Boolean)
+  const destinationsRaw = (formData.get('destinations') as string) || null
+  const destinations = destinationsRaw ? (() => { try { return JSON.parse(destinationsRaw) } catch { return null } })() : null
 
   if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
 
-  const { data: trip, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: trip, error } = await (supabase as any)
     .from('trips')
     .insert({
       title,
@@ -37,6 +40,7 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
       start_time: startTime,
       end_time: endTime,
       owner_id: user.id,
+      ...(destinations ? { destinations } : {}),
     })
     .select('id')
     .single()
@@ -524,6 +528,7 @@ export async function updateTrip(
     start_time?: string | null
     end_time?: string | null
     cover_url?: string | null
+    destinations?: { destination: string; startDate: string; endDate: string }[] | null
   },
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -532,7 +537,8 @@ export async function updateTrip(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'unauthorized' }
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from('trips')
     .update(data)
     .eq('id', tripId)

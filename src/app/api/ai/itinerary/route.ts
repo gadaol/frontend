@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
 
   const {
     destination,
+    segments,
     startDate,
     endDate,
     startTime = '',
@@ -62,23 +63,16 @@ export async function POST(req: NextRequest) {
     locale = 'ko',
   } = (await req.json()) as {
     destination: string
+    /** 다중 목적지일 때 목적지별 날짜 범위. 단일 목적지면 undefined */
+    segments?: Array<{ destination: string; dayStart: number; dayEnd: number }>
     startDate: string
     endDate: string
-    /** 첫날 일정을 시작할 수 있는 시각 (도착 시간) */
     startTime?: string
-    /** 마지막날 일정을 끝내야 하는 시각 (출발 시간) */
     endTime?: string
-    /**
-     * 채울 날만 지정한다. 비면 전체 기간.
-     * day_number까지 함께 주는 이유: 날짜만 주면 모델이 1일차부터 새로
-     * 번호를 붙여서 "3,4일차를 채워야 하는데 1,2일차를 짜는" 일이 생긴다.
-     */
     targetDays?: Array<{ dayNumber: number; dayDate: string }>
-    /** 이미 여행에 담긴 장소명. 중복 추천을 막는다 */
     excludePlaces?: string[]
     style?: string[]
     companion?: string
-    /** 사용자가 자유롭게 적은 추가 요청 (가고 싶은 곳, 피하고 싶은 것 등) */
     notes?: string
     withCost?: boolean
     locale?: Locale
@@ -95,10 +89,19 @@ export async function POST(req: NextRequest) {
   const targetStr = targetDays.map((d) => `${d.dayNumber}일차(${d.dayDate})`).join(', ')
   const targetStrEn = targetDays.map((d) => `day ${d.dayNumber} (${d.dayDate})`).join(', ')
 
+  const segmentsKo = segments
+    ? segments.map((s) => `- ${s.destination}: ${s.dayStart}일차~${s.dayEnd}일차`).join('\n')
+    : null
+  const segmentsEn = segments
+    ? segments.map((s) => `- ${s.destination}: day ${s.dayStart}–day ${s.dayEnd}`).join('\n')
+    : null
+
   const userPrompt =
     locale === 'ko'
       ? [
-          `목적지: ${destination}`,
+          segmentsKo
+            ? `목적지(날짜별):\n${segmentsKo}\n위 날짜 범위에 맞게 각 도시의 장소를 배치하라. 예: 1~3일차는 도쿄 장소, 4~5일차는 오사카 장소만.`
+            : `목적지: ${destination}`,
           `전체 여행 기간: ${startDate} ~ ${endDate}`,
           targetStr &&
             `이 중 아래 날만 짜라. 나머지 날은 이미 일정이 있으니 절대 포함하지 마라.\n` +
@@ -116,7 +119,9 @@ export async function POST(req: NextRequest) {
           .filter(Boolean)
           .join('\n')
       : [
-          `Destination: ${destination}`,
+          segmentsEn
+            ? `Destinations by day:\n${segmentsEn}\nAssign places from the correct city for each day range. e.g. days 1–3 are Tokyo places, days 4–5 are Osaka places only.`
+            : `Destination: ${destination}`,
           `Full trip range: ${startDate} to ${endDate}`,
           targetStrEn &&
             `Plan ONLY these days — the others already have plans, never include them.\n` +
