@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
+import AssistantPanel from '@/components/features/ai/AssistantPanel'
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -14,5 +15,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return () => window.removeEventListener('auth:unauthorized', handler)
   }, [router, locale])
 
-  return <>{children}</>
+  return (
+    <>
+      {children}
+      <AssistantPanel />
+    </>
+  )
 }
