@@ -63,7 +63,7 @@ export default function SubscriptionClient({
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab') as Plan | null
   const [activeTab, setActiveTab] = useState<Plan>(
-    tabParam && PLAN_KEYS.includes(tabParam) ? tabParam : plan
+    tabParam && PLAN_KEYS.includes(tabParam) ? tabParam : plan,
   )
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -146,6 +146,14 @@ export default function SubscriptionClient({
             </Button>
           )}
         </div>
+
+        {/* 신규 무료 플랜 안내 */}
+        {!isPaid && activeTab === 'free' && (
+          <div className="border-border rounded-2xl border bg-white p-5">
+            <p className="text-ink mb-1 text-[14px] font-semibold">{t('freeNoticeTitle')}</p>
+            <p className="text-ink3 text-[13px]">{t('freeNoticeDesc')}</p>
+          </div>
+        )}
 
         {/* 현재 구독 정보 — 유료 플랜일 때만 */}
         {isPaid && isCurrentPlan && (

@@ -8,14 +8,19 @@ import { useAssistantStore } from '@/lib/ai/store'
 import { usePlanStore } from '@/lib/planStore'
 import { canAccess, FEATURE_PLAN } from '@/lib/planGate'
 import { useVoice } from '@/hooks/useVoice'
-import UpgradeSheet from '@/components/features/subscription/UpgradeSheet'
+import UpgradeSheet, { type UpgradeFeature } from '@/components/features/subscription/UpgradeSheet'
 import CharacterAvatar from './CharacterAvatar'
 import CharacterFigure from './CharacterFigure'
 import VoiceMode, { type VoiceNote } from './VoiceMode'
 import type { VoiceState } from './VoiceOrb'
 import ConversationHistory from './ConversationHistory'
 import MarkdownContent from '@/components/ui/MarkdownContent'
-import { CHARACTER_META, pickGreeting, pickVoiceGreeting, type CharacterId } from '@/lib/ai/characters'
+import {
+  CHARACTER_META,
+  pickGreeting,
+  pickVoiceGreeting,
+  type CharacterId,
+} from '@/lib/ai/characters'
 import {
   loadConversations,
   saveConversation,
@@ -34,7 +39,10 @@ export default function AssistantPanel() {
   const locale = useLocale() as 'ko' | 'en'
   const isKo = locale === 'ko'
   const t = useTranslations('ai')
-  const [upgradeSheet, setUpgradeSheet] = useState<{ required: 'pro' | 'plus'; feature: string } | null>(null)
+  const [upgradeSheet, setUpgradeSheet] = useState<{
+    required: 'pro' | 'plus'
+    feature: UpgradeFeature
+  } | null>(null)
 
   const [inputText, setInputText] = useState('')
   const [voiceMode, setVoiceMode] = useState(false)
@@ -83,23 +91,38 @@ export default function AssistantPanel() {
 
   const { messages, sendMessage, status, setMessages } = useChat({ transport })
 
-  // 패널이 열릴 때마다 / 캐릭터가 바뀔 때마다 인사말 새로 뽑기
+  /* 인사말은 pickGreeting이 매번 랜덤이라 렌더 중에 뽑으면 리렌더마다 바뀐다.
+     열림/캐릭터 변경 시점에만 한 번 고정해야 하므로 effect에서 set하는 게 맞다. */
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isOpen) setGreeting(pickGreeting(character, locale))
   }, [isOpen, character, locale])
 
-  // trip 생성 완료 감지
-  const createdTrip = useMemo(() => {
-    for (const msg of [...messages].reverse()) {
-      for (const part of msg.parts) {
-        const p = part as { type?: string; toolName?: string; state?: string; result?: { success?: boolean; tripId?: string; title?: string } }
-        if (p.type === 'tool-invocation' && p.toolName === 'create_trip' && p.state === 'result' && p.result?.success && p.result.tripId) {
+  /* trip 생성 완료 감지.
+     수동 useMemo는 React Compiler가 보존하지 못해 이 컴포넌트 최적화를 통째로 건너뛰게 만들었다.
+     메시지 순회는 저렴하고 컴파일러가 알아서 메모이즈하므로 직접 계산한다. */
+  const createdTrip = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      for (const part of messages[i].parts) {
+        const p = part as {
+          type?: string
+          toolName?: string
+          state?: string
+          result?: { success?: boolean; tripId?: string; title?: string }
+        }
+        if (
+          p.type === 'tool-invocation' &&
+          p.toolName === 'create_trip' &&
+          p.state === 'result' &&
+          p.result?.success &&
+          p.result.tripId
+        ) {
           return { tripId: p.result.tripId, title: p.result.title ?? '' }
         }
       }
     }
     return null
-  }, [messages])
+  })()
 
   const isLoading = status === 'submitted' || status === 'streaming'
   const hasMessages = messages.length > 0
@@ -162,6 +185,7 @@ export default function AssistantPanel() {
      * 요약이 돌아오면 그 한 문장만 말하고, 자세한 내용은 화면에 남긴다.
      * 요약이 실패하면 말이 아예 없어지는 게 더 나쁘니 전문으로 되돌린다.
      */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSummarizing(true)
     void fetch('/api/ai/summarize', {
       method: 'POST',
@@ -183,6 +207,15 @@ export default function AssistantPanel() {
       .then(() => {
         if (live.current.voice) startListening()
       })
+      /*
+       * speak()는 iOS 오디오 정책·TTS 네트워크 실패·플랜 게이트(403)로 reject될 수 있다.
+       * 위 .catch는 체인 중간이라 여기까지 못 잡는다. 종단에서 받아주지 않으면
+       * startListening이 안 돌아 음성 대화가 아무 표시 없이 멎는다.
+       */
+      .catch(() => {
+        setIsSummarizing(false)
+        if (live.current.voice) startListening()
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceMode, isLoading, messages, speak, startListening, locale])
 
@@ -195,7 +228,7 @@ export default function AssistantPanel() {
 
   function enterVoiceMode() {
     if (!canAccess(plan, FEATURE_PLAN.voice)) {
-      setUpgradeSheet({ required: 'plus', feature: '음성 모드' })
+      setUpgradeSheet({ required: 'plus', feature: 'voice' })
       return
     }
     // 기존 대화가 있으면 마지막 메시지를 이미 읽은 것으로 표시 — 인사말과 겹치지 않게
@@ -213,7 +246,7 @@ export default function AssistantPanel() {
 
   function handleSetCharacter(c: CharacterId) {
     if (c === 'rog' && !canAccess(plan, FEATURE_PLAN.characterRog)) {
-      setUpgradeSheet({ required: 'pro', feature: '로그 캐릭터' })
+      setUpgradeSheet({ required: 'pro', feature: 'characterRog' })
       return
     }
     setCharacter(c)
@@ -354,367 +387,386 @@ export default function AssistantPanel() {
 
   return (
     <>
-    {upgradeSheet && (
-      <UpgradeSheet
-        required={upgradeSheet.required}
-        feature={upgradeSheet.feature}
-        onClose={() => setUpgradeSheet(null)}
-      />
-    )}
-    <div
-      className={`fixed inset-0 z-[100] flex flex-col bg-white transition-transform duration-300 ease-out ${
-        isOpen ? 'translate-y-0' : 'translate-y-full'
-      }`}
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
-    >
-      {voiceMode ? (
-        <VoiceMode
-          character={character}
-          locale={locale}
-          state={voiceState}
-          interim={interim}
-          spoken={lastAssistantText}
-          notes={notes}
-          error={voiceError}
-          onToggleMic={toggleMic}
-          onExit={exitVoiceMode}
+      {upgradeSheet && (
+        <UpgradeSheet
+          required={upgradeSheet.required}
+          feature={upgradeSheet.feature}
+          onClose={() => setUpgradeSheet(null)}
+          onNavigate={() => close()}
         />
-      ) : (
-        <>
-          {/* Header */}
-          <div className="flex flex-shrink-0 items-center justify-between px-3 py-2.5">
-            <button
-              onClick={close}
-              className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
-              aria-label={t('close')}
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M5 5l10 10M15 5L5 15"
-                  stroke="var(--color-ink2)"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-
-            <div className="bg-bg2 flex items-center gap-0.5 rounded-full p-1">
-              {(['gada', 'rog'] as CharacterId[]).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => handleSetCharacter(c)}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all ${
-                    character === c ? 'text-ink bg-white shadow-sm' : 'text-ink3'
-                  }`}
-                >
-                  <CharacterAvatar character={c} size="xs" />
-                  {CHARACTER_META[c].name[locale]}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center">
-              {voiceSupported && (
-                <button
-                  onClick={enterVoiceMode}
-                  className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
-                  aria-label={t('voiceChat')}
-                >
-                  <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
-                    <rect x="9.5" y="3" width="7" height="12" rx="3.5" stroke="var(--color-ink2)" strokeWidth="1.7" />
-                    <path d="M6 12a7 7 0 0 0 14 0M13 19v3.5" stroke="var(--color-ink2)" strokeWidth="1.7" strokeLinecap="round" />
-                  </svg>
-                </button>
-              )}
-
+      )}
+      <div
+        className={`fixed inset-0 z-[100] flex flex-col bg-white transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        {voiceMode ? (
+          <VoiceMode
+            character={character}
+            locale={locale}
+            state={voiceState}
+            interim={interim}
+            spoken={lastAssistantText}
+            notes={notes}
+            error={voiceError}
+            onToggleMic={toggleMic}
+            onExit={exitVoiceMode}
+          />
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex flex-shrink-0 items-center justify-between px-3 py-2.5">
               <button
-                onClick={openHistory}
+                onClick={close}
                 className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
-                aria-label={t('pastChats')}
+                aria-label={t('close')}
               >
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <circle cx="9" cy="9" r="6.6" stroke="var(--color-ink2)" strokeWidth="1.5" />
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
-                    d="M9 5.4V9l2.4 1.5"
+                    d="M5 5l10 10M15 5L5 15"
                     stroke="var(--color-ink2)"
-                    strokeWidth="1.5"
+                    strokeWidth="1.6"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
                 </svg>
               </button>
 
-              <button
-                onClick={startNewChat}
-                disabled={!hasMessages}
-                className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
-                aria-label={t('newChat')}
-              >
-                {/* 새 대화 — 통용되는 '작성' 아이콘이라 +보다 뜻이 분명하다 */}
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M8 3H4.2A1.2 1.2 0 0 0 3 4.2v9.6A1.2 1.2 0 0 0 4.2 15h9.6a1.2 1.2 0 0 0 1.2-1.2V10"
-                    stroke="var(--color-ink2)"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12.4 2.6a1.4 1.4 0 0 1 2 2L9.6 9.4l-2.6.6.6-2.6 4.8-4.8z"
-                    stroke="var(--color-ink2)"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+              <div className="bg-bg2 flex items-center gap-0.5 rounded-full p-1">
+                {(['gada', 'rog'] as CharacterId[]).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => handleSetCharacter(c)}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all ${
+                      character === c ? 'text-ink bg-white shadow-sm' : 'text-ink3'
+                    }`}
+                  >
+                    <CharacterAvatar character={c} size="xs" />
+                    {CHARACTER_META[c].name[locale]}
+                  </button>
+                ))}
+              </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto">
-            {!hasMessages ? (
-              <div className="px-5 pt-6 pb-6">
-                {/* 캐릭터 소개 — 좌측 정렬 편집형 */}
-                <div className="flex items-end justify-between gap-3">
-                  <div className="min-w-0 pb-1">
-                    <span className="bg-primary/10 text-primary mb-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold">
-                      {meta.type[locale]}
-                    </span>
-                    <p className="text-ink text-[26px] leading-tight font-bold">
-                      {meta.name[locale]}
-                    </p>
-                    <p className="text-ink3 mt-0.5 text-[13px]">{meta.tagline[locale]}</p>
-                  </div>
-                  <CharacterFigure character={character} size="md" />
-                </div>
-
-                <p className="text-ink2 mt-5 text-[17px] leading-relaxed whitespace-pre-line">
-                  {greeting}
-                </p>
-
-                {/* 음성 대화 진입 */}
+              <div className="flex items-center">
                 {voiceSupported && (
                   <button
                     onClick={enterVoiceMode}
-                    className="mt-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:opacity-90"
-                    style={{ background: meta.color }}
+                    className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
+                    aria-label={t('voiceChat')}
                   >
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
-                      <svg width="17" height="17" viewBox="0 0 26 26" fill="none">
-                        <rect
-                          x="9.5"
-                          y="3"
-                          width="7"
-                          height="12"
-                          rx="3.5"
-                          stroke="#fff"
-                          strokeWidth="1.9"
-                        />
-                        <path
-                          d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
-                          stroke="#fff"
-                          strokeWidth="1.9"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[14px] font-bold text-white">
-                        {t('talkOutLoud')}
-                      </span>
-                      <span className="block text-[12px] text-white/75">
-                        {t('talkOutLoudDesc')}
-                      </span>
-                    </span>
+                    <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
+                      <rect
+                        x="9.5"
+                        y="3"
+                        width="7"
+                        height="12"
+                        rx="3.5"
+                        stroke="var(--color-ink2)"
+                        strokeWidth="1.7"
+                      />
+                      <path
+                        d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                        stroke="var(--color-ink2)"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </button>
                 )}
 
-                {/* 추천 질문 — 왼쪽 색 띠로 캐릭터와 묶고, 눈썹 문구로 성격을 구분한다 */}
-                <p className="text-ink3 mt-7 mb-2.5 pl-0.5 text-[12px] font-semibold">
-                  {t('tryAsking')}
-                </p>
-                <div className="space-y-2">
-                  {SUGGESTION_KEYS.map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => sendMessage({ text: t(`suggest.${key}Text` as never) })}
-                      className="bg-bg2 group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl py-3 pr-3 pl-4 text-left transition-transform active:scale-[0.98]"
-                    >
-                      <span
-                        className="absolute inset-y-0 left-0 w-[3px]"
-                        style={{ background: meta.color }}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className="mb-0.5 block text-[11px] font-bold"
-                          style={{ color: meta.color }}
-                        >
-                          {t(`suggest.${key}Eyebrow` as never)}
-                        </span>
-                        <span className="text-ink block text-[14px] leading-snug font-medium">
-                          {t(`suggest.${key}Text` as never)}
-                        </span>
-                      </span>
-                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white">
-                        <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
-                          <path
-                            d="M5.5 3.5l4 4-4 4"
-                            stroke="var(--color-ink3)"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3 px-4 py-4">
-                {messages.map((message) => {
-                  const text = textOf(message)
-
-                  if (message.role === 'user') {
-                    return (
-                      <div key={message.id} className="flex justify-end">
-                        <div
-                          className="max-w-[78%] rounded-[20px] rounded-br-[6px] px-4 py-2.5 text-[15px] leading-relaxed text-white"
-                          style={{ background: meta.color }}
-                        >
-                          {text}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div key={message.id} className="flex items-start gap-2">
-                      <CharacterAvatar character={character} size="sm" />
-                      <div className="bg-bg2 max-w-[78%] rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
-                        {text ? <MarkdownContent text={text} /> : <TypingDots />}
-                      </div>
-                    </div>
-                  )
-                })}
-
-                {isLoading && lastIsUser && (
-                  <div className="flex items-start gap-2">
-                    <CharacterAvatar character={character} size="sm" />
-                    <div className="bg-bg2 rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
-                      <TypingDots />
-                    </div>
-                  </div>
-                )}
-
-                {/* 여행 생성 완료 배너 */}
-                {createdTrip && (
-                  <div className="mx-4 mb-2 overflow-hidden rounded-2xl" style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-[12px] font-semibold text-white/70">{isKo ? '여행이 만들어졌어요 ✓' : 'Trip created ✓'}</p>
-                        <p className="text-[15px] font-bold text-white">{createdTrip.title}</p>
-                      </div>
-                      <a
-                        href={`/${locale}/trips/${createdTrip.tripId}`}
-                        onClick={close}
-                        className="rounded-xl bg-white/20 px-3 py-2 text-[13px] font-semibold text-white active:opacity-70"
-                      >
-                        {isKo ? '여행 보기 →' : 'View →'}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-
-          {/* Input bar */}
-          <div
-            className="border-border flex-shrink-0 border-t bg-white px-3 pt-2.5"
-            style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}
-          >
-            <div className="flex items-end gap-1.5">
-              {voiceSupported && (
                 <button
-                  type="button"
-                  onClick={enterVoiceMode}
-                  className="bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full active:opacity-70"
-                  aria-label={t('voiceChat')}
+                  onClick={openHistory}
+                  className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full"
+                  aria-label={t('pastChats')}
                 >
-                  <svg width="19" height="19" viewBox="0 0 26 26" fill="none">
-                    <rect
-                      x="9.5"
-                      y="3"
-                      width="7"
-                      height="12"
-                      rx="3.5"
-                      stroke="var(--color-ink2)"
-                      strokeWidth="1.8"
-                    />
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="9" cy="9" r="6.6" stroke="var(--color-ink2)" strokeWidth="1.5" />
                     <path
-                      d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                      d="M9 5.4V9l2.4 1.5"
                       stroke="var(--color-ink2)"
-                      strokeWidth="1.8"
+                      strokeWidth="1.5"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </svg>
                 </button>
-              )}
 
-              <textarea
-                ref={inputRef}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onCompositionStart={() => {
-                  isComposingRef.current = true
-                }}
-                onCompositionEnd={() => {
-                  isComposingRef.current = false
-                }}
-                placeholder={t('inputPlaceholder')}
-                rows={1}
-                className="bg-bg2 text-ink placeholder:text-ink3 flex-1 resize-none rounded-[20px] px-4 py-2.5 text-[15px] outline-none"
-                style={{ maxHeight: 120, overflowY: 'auto' }}
-              />
-
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={!inputText.trim() || isLoading}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
-                style={{ background: meta.color }}
-                aria-label={t('send')}
-              >
-                <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M9 14V4M9 4L5 8M9 4l4 4"
-                    stroke="white"
-                    strokeWidth="1.9"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+                <button
+                  onClick={startNewChat}
+                  disabled={!hasMessages}
+                  className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
+                  aria-label={t('newChat')}
+                >
+                  {/* 새 대화 — 통용되는 '작성' 아이콘이라 +보다 뜻이 분명하다 */}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M8 3H4.2A1.2 1.2 0 0 0 3 4.2v9.6A1.2 1.2 0 0 0 4.2 15h9.6a1.2 1.2 0 0 0 1.2-1.2V10"
+                      stroke="var(--color-ink2)"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M12.4 2.6a1.4 1.4 0 0 1 2 2L9.6 9.4l-2.6.6.6-2.6 4.8-4.8z"
+                      stroke="var(--color-ink2)"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-        </>
-      )}
 
-      {showHistory && (
-        <ConversationHistory
-          conversations={conversations}
-          locale={locale}
-          onOpen={openConversation}
-          onDelete={removeConversation}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
-    </div>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto">
+              {!hasMessages ? (
+                <div className="px-5 pt-6 pb-6">
+                  {/* 캐릭터 소개 — 좌측 정렬 편집형 */}
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="min-w-0 pb-1">
+                      <span className="bg-primary/10 text-primary mb-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold">
+                        {meta.type[locale]}
+                      </span>
+                      <p className="text-ink text-[26px] leading-tight font-bold">
+                        {meta.name[locale]}
+                      </p>
+                      <p className="text-ink3 mt-0.5 text-[13px]">{meta.tagline[locale]}</p>
+                    </div>
+                    <CharacterFigure character={character} size="md" />
+                  </div>
+
+                  <p className="text-ink2 mt-5 text-[17px] leading-relaxed whitespace-pre-line">
+                    {greeting}
+                  </p>
+
+                  {/* 음성 대화 진입 */}
+                  {voiceSupported && (
+                    <button
+                      onClick={enterVoiceMode}
+                      className="mt-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:opacity-90"
+                      style={{ background: meta.color }}
+                    >
+                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20">
+                        <svg width="17" height="17" viewBox="0 0 26 26" fill="none">
+                          <rect
+                            x="9.5"
+                            y="3"
+                            width="7"
+                            height="12"
+                            rx="3.5"
+                            stroke="#fff"
+                            strokeWidth="1.9"
+                          />
+                          <path
+                            d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                            stroke="#fff"
+                            strokeWidth="1.9"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[14px] font-bold text-white">
+                          {t('talkOutLoud')}
+                        </span>
+                        <span className="block text-[12px] text-white/75">
+                          {t('talkOutLoudDesc')}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+
+                  {/* 추천 질문 — 왼쪽 색 띠로 캐릭터와 묶고, 눈썹 문구로 성격을 구분한다 */}
+                  <p className="text-ink3 mt-7 mb-2.5 pl-0.5 text-[12px] font-semibold">
+                    {t('tryAsking')}
+                  </p>
+                  <div className="space-y-2">
+                    {SUGGESTION_KEYS.map((key) => (
+                      <button
+                        key={key}
+                        onClick={() => sendMessage({ text: t(`suggest.${key}Text` as never) })}
+                        className="bg-bg2 group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl py-3 pr-3 pl-4 text-left transition-transform active:scale-[0.98]"
+                      >
+                        <span
+                          className="absolute inset-y-0 left-0 w-[3px]"
+                          style={{ background: meta.color }}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className="mb-0.5 block text-[11px] font-bold"
+                            style={{ color: meta.color }}
+                          >
+                            {t(`suggest.${key}Eyebrow` as never)}
+                          </span>
+                          <span className="text-ink block text-[14px] leading-snug font-medium">
+                            {t(`suggest.${key}Text` as never)}
+                          </span>
+                        </span>
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white">
+                          <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+                            <path
+                              d="M5.5 3.5l4 4-4 4"
+                              stroke="var(--color-ink3)"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 px-4 py-4">
+                  {messages.map((message) => {
+                    const text = textOf(message)
+
+                    if (message.role === 'user') {
+                      return (
+                        <div key={message.id} className="flex justify-end">
+                          <div
+                            className="max-w-[78%] rounded-[20px] rounded-br-[6px] px-4 py-2.5 text-[15px] leading-relaxed text-white"
+                            style={{ background: meta.color }}
+                          >
+                            {text}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div key={message.id} className="flex items-start gap-2">
+                        <CharacterAvatar character={character} size="sm" />
+                        <div className="bg-bg2 max-w-[78%] rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
+                          {text ? <MarkdownContent text={text} /> : <TypingDots />}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {isLoading && lastIsUser && (
+                    <div className="flex items-start gap-2">
+                      <CharacterAvatar character={character} size="sm" />
+                      <div className="bg-bg2 rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
+                        <TypingDots />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 여행 생성 완료 배너 */}
+                  {createdTrip && (
+                    <div
+                      className="mx-4 mb-2 overflow-hidden rounded-2xl"
+                      style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}
+                    >
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <div>
+                          <p className="text-[12px] font-semibold text-white/70">
+                            {isKo ? '여행이 만들어졌어요 ✓' : 'Trip created ✓'}
+                          </p>
+                          <p className="text-[15px] font-bold text-white">{createdTrip.title}</p>
+                        </div>
+                        <a
+                          href={`/${locale}/trips/${createdTrip.tripId}`}
+                          onClick={close}
+                          className="rounded-xl bg-white/20 px-3 py-2 text-[13px] font-semibold text-white active:opacity-70"
+                        >
+                          {isKo ? '여행 보기 →' : 'View →'}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Input bar */}
+            <div
+              className="border-border flex-shrink-0 border-t bg-white px-3 pt-2.5"
+              style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom))' }}
+            >
+              <div className="flex items-end gap-1.5">
+                {voiceSupported && (
+                  <button
+                    type="button"
+                    onClick={enterVoiceMode}
+                    className="bg-bg2 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full active:opacity-70"
+                    aria-label={t('voiceChat')}
+                  >
+                    <svg width="19" height="19" viewBox="0 0 26 26" fill="none">
+                      <rect
+                        x="9.5"
+                        y="3"
+                        width="7"
+                        height="12"
+                        rx="3.5"
+                        stroke="var(--color-ink2)"
+                        strokeWidth="1.8"
+                      />
+                      <path
+                        d="M6 12a7 7 0 0 0 14 0M13 19v3.5"
+                        stroke="var(--color-ink2)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                )}
+
+                <textarea
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onCompositionStart={() => {
+                    isComposingRef.current = true
+                  }}
+                  onCompositionEnd={() => {
+                    isComposingRef.current = false
+                  }}
+                  placeholder={t('inputPlaceholder')}
+                  rows={1}
+                  className="bg-bg2 text-ink placeholder:text-ink3 flex-1 resize-none rounded-[20px] px-4 py-2.5 text-[15px] outline-none"
+                  style={{ maxHeight: 120, overflowY: 'auto' }}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleSend}
+                  disabled={!inputText.trim() || isLoading}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
+                  style={{ background: meta.color }}
+                  aria-label={t('send')}
+                >
+                  <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+                    <path
+                      d="M9 14V4M9 4L5 8M9 4l4 4"
+                      stroke="white"
+                      strokeWidth="1.9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {showHistory && (
+          <ConversationHistory
+            conversations={conversations}
+            locale={locale}
+            onOpen={openConversation}
+            onDelete={removeConversation}
+            onClose={() => setShowHistory(false)}
+          />
+        )}
+      </div>
     </>
   )
 }

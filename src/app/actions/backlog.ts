@@ -97,6 +97,14 @@ export async function addToBacklog(input: AddToBacklogInput) {
   return { success: true, id: item.id }
 }
 
+/**
+ * AI가 추천한 장소를 Google Places가 못 찾았을 때 쓰는 합성 ID.
+ * 이름 기준으로 결정적이라 같은 장소를 두 번 담아도 중복 생성되지 않는다.
+ */
+function fallbackPlaceId(name: string): string {
+  return `ai:${name.trim().toLowerCase().replace(/\s+/g, '-')}`
+}
+
 export async function addRecommendedPlaceToBacklog({
   googleSearchQuery,
   fallbackName,
@@ -108,9 +116,19 @@ export async function addRecommendedPlaceToBacklog({
 }): Promise<{ success?: boolean; alreadyExists?: boolean; error?: string }> {
   const { searchPlacesText } = await import('@/lib/googlePlaces')
   const places = await searchPlacesText(googleSearchQuery)
-  if (!places || places.length === 0) return { error: 'place_not_found' }
+  const place = places?.[0]
 
-  const place = places[0]
+  // Google이 못 찾아도 사용자가 담으려던 장소는 이름만으로라도 저장한다.
+  if (!place) {
+    if (!fallbackName.trim()) return { error: 'place_not_found' }
+    return addToBacklog({
+      googlePlaceId: fallbackPlaceId(fallbackName),
+      name: fallbackName,
+      address: null,
+      categoryName: category || null,
+    })
+  }
+
   return addToBacklog({
     googlePlaceId: place.id,
     name: place.displayName.text,
@@ -174,17 +192,25 @@ export async function addRecommendedPlaceToTrip({
 }): Promise<{ success?: boolean; error?: string }> {
   const { searchPlacesText } = await import('@/lib/googlePlaces')
   const places = await searchPlacesText(googleSearchQuery)
-  if (!places || places.length === 0) return { error: 'place_not_found' }
+  const place = places?.[0]
+  if (!place && !fallbackName.trim()) return { error: 'place_not_found' }
 
-  const place = places[0]
-  const placeId = await getOrCreatePlace({
-    googlePlaceId: place.id,
-    name: place.displayName.text,
-    address: place.formattedAddress ?? null,
-    categoryName: category || null,
-    lat: place.location?.latitude ?? null,
-    lng: place.location?.longitude ?? null,
-  })
+  // Google이 못 찾아도 사용자가 담으려던 장소는 이름만으로라도 저장한다.
+  const placeId = place
+    ? await getOrCreatePlace({
+        googlePlaceId: place.id,
+        name: place.displayName.text,
+        address: place.formattedAddress ?? null,
+        categoryName: category || null,
+        lat: place.location?.latitude ?? null,
+        lng: place.location?.longitude ?? null,
+      })
+    : await getOrCreatePlace({
+        googlePlaceId: fallbackPlaceId(fallbackName),
+        name: fallbackName,
+        address: null,
+        categoryName: category || null,
+      })
   if (!placeId) return { error: 'place_create_failed' }
 
   const supabase = await createClient()

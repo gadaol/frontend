@@ -50,18 +50,22 @@ function formatDateRangeLabel(startDate: string, endDate: string, locale: string
   if (!startDate) return locale === 'ko' ? '날짜 선택' : 'Select dates'
   const [sy, sm, sd] = startDate.split('-').map(Number)
   const sDate = new Date(sy, sm - 1, sd)
-  const wd = locale === 'ko'
-    ? ['일', '월', '화', '수', '목', '금', '토'][sDate.getDay()]
-    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][sDate.getDay()]
+  const wd =
+    locale === 'ko'
+      ? ['일', '월', '화', '수', '목', '금', '토'][sDate.getDay()]
+      : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][sDate.getDay()]
   const sLabel = locale === 'ko' ? `${sm}/${sd}(${wd})` : `${sm}/${sd}`
   if (!endDate || startDate === endDate) return sLabel
   const [ey, em, ed] = endDate.split('-').map(Number)
   const eDate = new Date(ey, em - 1, ed)
-  const ewd = locale === 'ko'
-    ? ['일', '월', '화', '수', '목', '금', '토'][eDate.getDay()]
-    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][eDate.getDay()]
+  const ewd =
+    locale === 'ko'
+      ? ['일', '월', '화', '수', '목', '금', '토'][eDate.getDay()]
+      : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][eDate.getDay()]
   const eLabel = locale === 'ko' ? `${em}/${ed}(${ewd})` : `${em}/${ed}`
-  const nights = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000)
+  const nights = Math.round(
+    (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000,
+  )
   const nightsLabel = locale === 'ko' ? `${nights}박 ${nights + 1}일` : `${nights}N ${nights + 1}D`
   return `${sLabel} → ${eLabel}  ·  ${nightsLabel}`
 }
@@ -91,7 +95,13 @@ export default function ScheduleEditClient({
   const [segments, setSegments] = useState<DestSegment[]>(() => {
     const saved = (trip as unknown as { destinations?: DestSegment[] | null }).destinations
     if (saved && saved.length > 0) return saved
-    return [{ destination: trip.destination ?? '', startDate: trip.start_date ?? '', endDate: trip.end_date ?? '' }]
+    return [
+      {
+        destination: trip.destination ?? '',
+        startDate: trip.start_date ?? '',
+        endDate: trip.end_date ?? '',
+      },
+    ]
   })
   const [datePickerFor, setDatePickerFor] = useState<number | null>(null)
   // time 컬럼은 'HH:MM:SS'로 오는데 input[type=time]은 'HH:MM'만 받는다
@@ -99,7 +109,11 @@ export default function ScheduleEditClient({
   const [endTime, setEndTime] = useState((trip.end_time ?? '').slice(0, 5))
 
   // 세그먼트에서 전체 여행 날짜 추론
-  const overallStart = segments.map((s) => s.startDate).filter(Boolean).sort()[0] ?? ''
+  const overallStart =
+    segments
+      .map((s) => s.startDate)
+      .filter(Boolean)
+      .sort()[0] ?? ''
   const overallEnd = [...segments.map((s) => s.endDate).filter(Boolean)].sort().at(-1) ?? ''
 
   function updateSegment(i: number, patch: Partial<DestSegment>) {
@@ -257,7 +271,8 @@ export default function ScheduleEditClient({
     setSaving(true)
     setSaveError(null)
     setConfirmDialog(null)
-    if (deleteDays && overallStart && overallEnd) await deleteOutOfRangeDays(trip.id, overallStart, overallEnd)
+    if (deleteDays && overallStart && overallEnd)
+      await deleteOutOfRangeDays(trip.id, overallStart, overallEnd)
     const result = await updateTrip(trip.id, {
       title: title.trim(),
       destination: segments[0]?.destination.trim() || null,
@@ -413,567 +428,606 @@ export default function ScheduleEditClient({
 
   return (
     <>
-    {expenseUpgrade && (
-      <UpgradeSheet
-        required="pro"
-        feature="경비 추가"
-        onClose={() => setExpenseUpgrade(false)}
-      />
-    )}
-    <div className="bg-bg2 relative flex h-[100dvh] flex-col">
-      <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
-      {/* 헤더 */}
-      <div className="border-border flex h-14 flex-shrink-0 items-center justify-between border-b bg-white px-2 pr-3">
-        <button
-          onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="var(--color-ink)"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <span className="text-ink text-[17px] font-semibold">{t('editTitle')}</span>
-        {activeTab === 'info' ? (
-          <Button onClick={handleSaveInfo} disabled={saving} size="sm">
-            {saving ? t('saving') : tc('save')}
-          </Button>
-        ) : (
-          <Button onClick={() => router.back()} size="sm">
-            {t('done')}
-          </Button>
-        )}
-      </div>
-
-      {/* 탭 바 */}
-      <div className="border-border flex flex-shrink-0 [scrollbar-width:none] overflow-x-auto border-b bg-white px-3 [&::-webkit-scrollbar]:hidden">
-        {/* 정보 탭 */}
-        <button
-          onClick={() => setActiveTab('info')}
-          className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-            activeTab === 'info' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
-          }`}
-        >
-          {t('info')}
-        </button>
-
-        {/* 비용 탭 */}
-        <button
-          onClick={() => setActiveTab('expense')}
-          className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
-            activeTab === 'expense' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
-          }`}
-        >
-          {t('costTab')}
-          {totalExpenses > 0 && (
-            <span
-              className={`text-[10px] font-semibold ${activeTab === 'expense' ? 'text-primary' : 'text-ink3'}`}
-            >
-              {totalExpenses >= 10000
-                ? `${Math.round(totalExpenses / 1000)}k`
-                : totalExpenses.toLocaleString()}
-            </span>
-          )}
-        </button>
-
-        <div className="bg-border mx-1 my-3 w-px flex-shrink-0" />
-
-        {/* Day 탭들 */}
-        {expectedDays.map((day, idx) => (
+      {expenseUpgrade && (
+        <UpgradeSheet required="pro" feature="expense" onClose={() => setExpenseUpgrade(false)} />
+      )}
+      <div className="bg-bg2 relative flex h-[100dvh] flex-col">
+        <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
+        {/* 헤더 */}
+        <div className="border-border flex h-14 flex-shrink-0 items-center justify-between border-b bg-white px-2 pr-3">
           <button
-            key={day.dayDate}
-            onClick={() => setActiveTab(idx)}
-            className={`flex flex-shrink-0 flex-col items-center gap-0.5 border-b-2 px-4 py-2.5 text-[13px] font-medium transition-colors ${
-              activeTab === idx ? 'border-primary text-primary' : 'text-ink3 border-transparent'
+            onClick={() => router.back()}
+            className="flex h-10 w-10 items-center justify-center"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M15 18l-6-6 6-6"
+                stroke="var(--color-ink)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <span className="text-ink text-[17px] font-semibold">{t('editTitle')}</span>
+          {activeTab === 'info' ? (
+            <Button onClick={handleSaveInfo} disabled={saving} size="sm">
+              {saving ? t('saving') : tc('save')}
+            </Button>
+          ) : (
+            <Button onClick={() => router.back()} size="sm">
+              {t('done')}
+            </Button>
+          )}
+        </div>
+
+        {/* 탭 바 */}
+        <div className="border-border flex flex-shrink-0 [scrollbar-width:none] overflow-x-auto border-b bg-white px-3 [&::-webkit-scrollbar]:hidden">
+          {/* 정보 탭 */}
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
+              activeTab === 'info' ? 'border-primary text-primary' : 'text-ink3 border-transparent'
             }`}
           >
-            <span>DAY {day.dayNumber}</span>
-            <span className="text-[10px]">{dayjs(day.dayDate).format('M/D')}</span>
+            {t('info')}
           </button>
-        ))}
-        {expectedDays.length === 0 && (
-          <span className="text-ink3 flex items-center px-2 py-3 text-[12px]">
-            {t('needDateToEdit')}
-          </span>
-        )}
-      </div>
 
-      {/* 컨텐츠 */}
-      <div className="flex-1 [scrollbar-width:none] overflow-y-auto [&::-webkit-scrollbar]:hidden">
-        {/* ── 기본 정보 탭 ── */}
-        {activeTab === 'info' && (
-          <div className="flex flex-col gap-4 p-4 pb-12">
-            {saveError && (
-              <div className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
-                {saveError}
-              </div>
+          {/* 비용 탭 */}
+          <button
+            onClick={() => setActiveTab('expense')}
+            className={`flex flex-shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors ${
+              activeTab === 'expense'
+                ? 'border-primary text-primary'
+                : 'text-ink3 border-transparent'
+            }`}
+          >
+            {t('costTab')}
+            {totalExpenses > 0 && (
+              <span
+                className={`text-[10px] font-semibold ${activeTab === 'expense' ? 'text-primary' : 'text-ink3'}`}
+              >
+                {totalExpenses >= 10000
+                  ? `${Math.round(totalExpenses / 1000)}k`
+                  : totalExpenses.toLocaleString()}
+              </span>
             )}
+          </button>
 
-            {/* 커버 */}
-            <div>
-              <div className="mb-3 h-[120px] w-full overflow-hidden rounded-2xl">
-                {isGradient(coverUrl) ? (
-                  <div className="h-full w-full" style={{ background: coverUrl }} />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={coverUrl} alt={t('cover')} className="h-full w-full object-cover" />
-                )}
-              </div>
-              <p className="text-ink2 mb-2 text-[12px] font-semibold">{t('cover')}</p>
-              <div className="grid grid-cols-5 gap-2">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="border-ink3 bg-bg2 relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed disabled:opacity-50"
-                >
-                  {uploading ? (
-                    <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+          <div className="bg-border mx-1 my-3 w-px flex-shrink-0" />
+
+          {/* Day 탭들 */}
+          {expectedDays.map((day, idx) => (
+            <button
+              key={day.dayDate}
+              onClick={() => setActiveTab(idx)}
+              className={`flex flex-shrink-0 flex-col items-center gap-0.5 border-b-2 px-4 py-2.5 text-[13px] font-medium transition-colors ${
+                activeTab === idx ? 'border-primary text-primary' : 'text-ink3 border-transparent'
+              }`}
+            >
+              <span>DAY {day.dayNumber}</span>
+              <span className="text-[10px]">{dayjs(day.dayDate).format('M/D')}</span>
+            </button>
+          ))}
+          {expectedDays.length === 0 && (
+            <span className="text-ink3 flex items-center px-2 py-3 text-[12px]">
+              {t('needDateToEdit')}
+            </span>
+          )}
+        </div>
+
+        {/* 컨텐츠 */}
+        <div className="flex-1 [scrollbar-width:none] overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {/* ── 기본 정보 탭 ── */}
+          {activeTab === 'info' && (
+            <div className="flex flex-col gap-4 p-4 pb-12">
+              {saveError && (
+                <div className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
+                  {saveError}
+                </div>
+              )}
+
+              {/* 커버 */}
+              <div>
+                <div className="mb-3 h-[120px] w-full overflow-hidden rounded-2xl">
+                  {isGradient(coverUrl) ? (
+                    <div className="h-full w-full" style={{ background: coverUrl }} />
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M9 4v10M4 9h10"
-                        stroke="var(--color-ink3)"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={coverUrl} alt={t('cover')} className="h-full w-full object-cover" />
                   )}
-                  {!isGradient(coverUrl) && (
-                    <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
-                  )}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic"
-                  className="sr-only"
-                  onChange={handleImageSelect}
-                />
-                {COVER_PRESETS.map((preset) => (
+                </div>
+                <p className="text-ink2 mb-2 text-[12px] font-semibold">{t('cover')}</p>
+                <div className="grid grid-cols-5 gap-2">
                   <button
-                    key={preset}
-                    onClick={() => setCoverUrl(preset)}
-                    className="relative h-10 rounded-xl"
-                    style={{ background: preset }}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="border-ink3 bg-bg2 relative flex h-10 items-center justify-center rounded-xl border-2 border-dashed disabled:opacity-50"
                   >
-                    {coverUrl === preset && (
+                    {uploading ? (
+                      <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M9 4v10M4 9h10"
+                          stroke="var(--color-ink3)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    )}
+                    {!isGradient(coverUrl) && (
                       <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
                     )}
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 여행 이름 */}
-            <div>
-              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
-                {t('tripName')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t('namePlaceholder')}
-                className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
-              />
-            </div>
-
-            {/* 목적지 & 기간 (세그먼트) */}
-            <div className="space-y-3">
-              <label className="text-ink2 block text-[12px] font-semibold">
-                {t('destination')} / {t('period')}
-              </label>
-
-              {segments.map((seg, i) => (
-                <div key={i} className="space-y-2">
-                  {segments.length > 1 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-ink3 text-[11px] font-semibold">
-                        {i === 0
-                          ? (locale === 'ko' ? '첫 번째 목적지' : '1st destination')
-                          : locale === 'ko' ? `경유지 ${i}` : `Stop ${i}`}
-                      </span>
-                      {i > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => removeSegment(i)}
-                          className="text-ink3 text-[11px]"
-                        >
-                          {locale === 'ko' ? '삭제' : 'Remove'}
-                        </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic"
+                    className="sr-only"
+                    onChange={handleImageSelect}
+                  />
+                  {COVER_PRESETS.map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setCoverUrl(preset)}
+                      className="relative h-10 rounded-xl"
+                      style={{ background: preset }}
+                    >
+                      {coverUrl === preset && (
+                        <span className="ring-primary absolute inset-0 rounded-xl ring-2 ring-offset-2" />
                       )}
-                    </div>
-                  )}
-                  <DestinationInput
-                    value={seg.destination}
-                    onChange={(d) => updateSegment(i, { destination: d })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setDatePickerFor(i)}
-                    className={`border-border flex w-full items-center gap-2 rounded-xl border bg-white px-3 py-2.5 text-left transition-colors ${
-                      seg.startDate ? 'border-primary/30 bg-primary/5' : ''
-                    }`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={seg.startDate ? 'text-primary' : 'text-ink3'}>
-                      <rect x="1.5" y="2" width="11" height="10.5" rx="2" stroke="currentColor" strokeWidth="1.3" />
-                      <path d="M1.5 6h11M4.5 1v2.5M9.5 1v2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                    <span className={`text-[13px] ${seg.startDate ? 'font-medium text-ink' : 'text-ink3'}`}>
-                      {formatDateRangeLabel(seg.startDate, seg.endDate, locale)}
-                    </span>
-                  </button>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addSegment}
-                className="border-border text-ink3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2.5 text-[12px]"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-                {locale === 'ko' ? '경유지 추가' : 'Add stop'}
-              </button>
-            </div>
-
-            {/* 시간 */}
-            <div>
-              <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
-                {locale === 'ko' ? '출발·도착 시간' : 'Departure / Arrival time'}
-              </label>
-              <div className="border-border divide-border divide-y rounded-xl border bg-white">
-                <div className="flex items-center gap-2 px-3 py-2.5">
-                  <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
-                    {t('rangeStart')}
-                  </span>
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
-                  />
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2.5">
-                  <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
-                    {t('rangeEnd')}
-                  </span>
-                  <input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
-                  />
+                    </button>
+                  ))}
                 </div>
               </div>
-              <p className="text-ink3 mt-1 text-[12px]">{t('rangeHint')}</p>
-            </div>
-          </div>
-        )}
 
-        {/* ── 비용 탭 ── */}
-        {activeTab === 'expense' && (
-          <div className="p-4 pb-12">
-            {/* 경비 추가 */}
-            <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white">
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-ink text-[13px] font-semibold">{t('addExpense')}</span>
+              {/* 여행 이름 */}
+              <div>
+                <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
+                  {t('tripName')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t('namePlaceholder')}
+                  className="border-border text-ink placeholder:text-ink3 focus:border-primary w-full rounded-xl border bg-white px-4 py-3 text-[14px] focus:outline-none"
+                />
+              </div>
+
+              {/* 목적지 & 기간 (세그먼트) */}
+              <div className="space-y-3">
+                <label className="text-ink2 block text-[12px] font-semibold">
+                  {t('destination')} / {t('period')}
+                </label>
+
+                {segments.map((seg, i) => (
+                  <div key={i} className="space-y-2">
+                    {segments.length > 1 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-ink3 text-[11px] font-semibold">
+                          {i === 0
+                            ? locale === 'ko'
+                              ? '첫 번째 목적지'
+                              : '1st destination'
+                            : locale === 'ko'
+                              ? `경유지 ${i}`
+                              : `Stop ${i}`}
+                        </span>
+                        {i > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => removeSegment(i)}
+                            className="text-ink3 text-[11px]"
+                          >
+                            {locale === 'ko' ? '삭제' : 'Remove'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    <DestinationInput
+                      value={seg.destination}
+                      onChange={(d) => updateSegment(i, { destination: d })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDatePickerFor(i)}
+                      className={`border-border flex w-full items-center gap-2 rounded-xl border bg-white px-3 py-2.5 text-left transition-colors ${
+                        seg.startDate ? 'border-primary/30 bg-primary/5' : ''
+                      }`}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        className={seg.startDate ? 'text-primary' : 'text-ink3'}
+                      >
+                        <rect
+                          x="1.5"
+                          y="2"
+                          width="11"
+                          height="10.5"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                        />
+                        <path
+                          d="M1.5 6h11M4.5 1v2.5M9.5 1v2.5"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span
+                        className={`text-[13px] ${seg.startDate ? 'text-ink font-medium' : 'text-ink3'}`}
+                      >
+                        {formatDateRangeLabel(seg.startDate, seg.endDate, locale)}
+                      </span>
+                    </button>
+                  </div>
+                ))}
+
                 <button
-                  onClick={() => setShowExpenseForm((v) => !v)}
-                  className={`text-[13px] font-semibold ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
+                  type="button"
+                  onClick={addSegment}
+                  className="border-border text-ink3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2.5 text-[12px]"
                 >
-                  {showExpenseForm ? t('hide') : t('add')}
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path
+                      d="M5 1v8M1 5h8"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {locale === 'ko' ? '경유지 추가' : 'Add stop'}
                 </button>
               </div>
 
-              {showExpenseForm && (
-                <div className="border-border border-t bg-gray-50 p-3">
-                  {/* 날짜 선택 */}
-                  {expectedDays.length > 0 && (
-                    <div className="mb-2.5 flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
-                      {expectedDays.map((day, idx) => (
+              {/* 시간 */}
+              <div>
+                <label className="text-ink2 mb-1.5 block text-[12px] font-semibold">
+                  {locale === 'ko' ? '출발·도착 시간' : 'Departure / Arrival time'}
+                </label>
+                <div className="border-border divide-border divide-y rounded-xl border bg-white">
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
+                      {t('rangeStart')}
+                    </span>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    <span className="text-ink3 w-8 flex-shrink-0 text-[12px] font-semibold">
+                      {t('rangeEnd')}
+                    </span>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="text-ink min-w-0 flex-1 bg-transparent text-[14px] focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <p className="text-ink3 mt-1 text-[12px]">{t('rangeHint')}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── 비용 탭 ── */}
+          {activeTab === 'expense' && (
+            <div className="p-4 pb-12">
+              {/* 경비 추가 */}
+              <div className="border-border mb-4 overflow-hidden rounded-2xl border bg-white">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-ink text-[13px] font-semibold">{t('addExpense')}</span>
+                  <button
+                    onClick={() => {
+                      if (!canAccess(plan, FEATURE_PLAN.expense)) {
+                        setExpenseUpgrade(true)
+                        return
+                      }
+                      setShowExpenseForm((v) => !v)
+                    }}
+                    className={`text-[13px] font-semibold ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}
+                  >
+                    {showExpenseForm ? t('hide') : t('add')}
+                  </button>
+                </div>
+
+                {showExpenseForm && (
+                  <div className="border-border border-t bg-gray-50 p-3">
+                    {/* 날짜 선택 */}
+                    {expectedDays.length > 0 && (
+                      <div className="mb-2.5 flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
+                        {expectedDays.map((day, idx) => (
+                          <button
+                            key={day.dayDate}
+                            onClick={() => setExpenseDayIdx(idx)}
+                            className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${expenseDayIdx === idx ? 'bg-primary text-white' : 'border-border text-ink2 border bg-white'}`}
+                          >
+                            DAY {day.dayNumber} ({dayjs(day.dayDate).format('M/D')})
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {/* 카테고리 */}
+                    <div className="mb-2.5 flex flex-wrap gap-1.5">
+                      {EXPENSE_CATEGORIES.map((cat) => (
                         <button
-                          key={day.dayDate}
-                          onClick={() => setExpenseDayIdx(idx)}
-                          className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${expenseDayIdx === idx ? 'bg-primary text-white' : 'border-border text-ink2 border bg-white'}`}
+                          key={t(expenseCategoryKey(cat) as never)}
+                          onClick={() => setExpenseCategory(cat)}
+                          className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${expenseCategory === cat ? 'bg-primary text-white' : 'border-border text-ink2 border bg-white'}`}
                         >
-                          DAY {day.dayNumber} ({dayjs(day.dayDate).format('M/D')})
+                          {cat}
                         </button>
                       ))}
                     </div>
-                  )}
-                  {/* 카테고리 */}
-                  <div className="mb-2.5 flex flex-wrap gap-1.5">
-                    {EXPENSE_CATEGORIES.map((cat) => (
-                      <button
-                        key={t(expenseCategoryKey(cat) as never)}
-                        onClick={() => setExpenseCategory(cat)}
-                        className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition-colors ${expenseCategory === cat ? 'bg-primary text-white' : 'border-border text-ink2 border bg-white'}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                  {/* 금액 */}
-                  <div className="border-border mb-2 flex items-center gap-1 rounded-xl border bg-white px-3 py-2">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={expenseAmount}
-                      onChange={(e) => setExpenseAmount(e.target.value)}
-                      placeholder={t('amount')}
-                      autoFocus
-                      className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
-                    />
-                    <span className="text-ink3 flex-shrink-0 text-[13px]">{t('currencyUnit')}</span>
-                  </div>
-                  {/* 메모 */}
-                  <div className="border-border mb-3 flex items-center rounded-xl border bg-white px-3 py-2">
-                    <input
-                      type="text"
-                      value={expenseNote}
-                      onChange={(e) => setExpenseNote(e.target.value)}
-                      placeholder={t('memoOptional')}
-                      className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
-                    />
-                  </div>
-                  <button
-                    onClick={handleAddExpense}
-                    disabled={addingExpense || !expenseAmount}
-                    className="bg-primary w-full rounded-xl py-2.5 text-[14px] font-semibold text-white disabled:opacity-50"
-                  >
-                    {t('addExpense')}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* 날짜별 경비 목록 */}
-            {expectedDays.length === 0 ? (
-              <p className="text-ink3 py-8 text-center text-[13px]">{t('needDateForExpense')}</p>
-            ) : (
-              expectedDays.map((day) => {
-                const db = dayMap.get(day.dayDate)
-                const dayExpenses = db ? (expensesByDay.get(db.id) ?? []) : []
-                const dayTotal = dayExpenses.reduce((s, e) => s + e.amount, 0)
-                return (
-                  <div
-                    key={day.dayDate}
-                    className="border-border mb-3 overflow-hidden rounded-2xl border bg-white"
-                  >
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <div>
-                        <span className="text-ink text-[13px] font-bold">DAY {day.dayNumber}</span>
-                        <span className="text-ink3 ml-2 text-[11px]">
-                          {dayjs(day.dayDate).format('M/D (ddd)')}
-                        </span>
-                      </div>
-                      {dayTotal > 0 && (
-                        <span className="text-primary ml-auto text-[13px] font-bold">
-                          {t('amountWithUnit', { amount: dayTotal.toLocaleString() })}
-                        </span>
-                      )}
+                    {/* 금액 */}
+                    <div className="border-border mb-2 flex items-center gap-1 rounded-xl border bg-white px-3 py-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={expenseAmount}
+                        onChange={(e) => setExpenseAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder={t('amount')}
+                        autoFocus
+                        className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
+                      />
+                      <span className="text-ink3 flex-shrink-0 text-[13px]">
+                        {t('currencyUnit')}
+                      </span>
                     </div>
-                    {dayExpenses.length > 0 ? (
-                      <div className="border-border border-t">
-                        {dayExpenses.map((expense, i) => {
-                          const isPending = expense.id.startsWith('pending-')
-                          return (
-                            <div
-                              key={expense.id}
-                              className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-border border-t' : ''} ${isPending ? 'opacity-60' : ''}`}
-                            >
-                              <span className="text-ink2 text-[12px] font-semibold">
-                                {t(expenseCategoryKey(expense.category) as never)}
-                              </span>
-                              {expense.note && (
-                                <span className="text-ink3 min-w-0 flex-1 truncate text-[11px]">
-                                  {expense.note}
-                                </span>
-                              )}
-                              <span className="text-ink ml-auto flex-shrink-0 text-[13px] font-bold">
-                                {t('amountWithUnit', { amount: expense.amount.toLocaleString() })}
-                              </span>
-                              {!isPending && (
-                                <button
-                                  onClick={() => handleRemoveExpense(expense.id)}
-                                  className="text-ink3 flex-shrink-0 p-0.5 hover:text-red-500"
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path
-                                      d="M3 3l8 8M11 3L3 11"
-                                      stroke="currentColor"
-                                      strokeWidth="1.4"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <div className="border-border border-t px-4 py-3">
-                        <p className="text-ink3 text-[12px]">{t('noExpense')}</p>
-                      </div>
-                    )}
-                  </div>
-                )
-              })
-            )}
-          </div>
-        )}
-
-        {/* ── Day 탭 컨텐츠 ── */}
-        {typeof activeTab === 'number' && selectedDay && (
-          <div className="p-3 pb-32">
-            {/* Day 요약 카드 */}
-            <div className="border-border mb-3 flex items-center gap-5 rounded-2xl border bg-white px-4 py-3.5">
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-ink text-[18px] font-bold">
-                  {visibleItems.filter((i) => i.item_type !== 'memo').length}
-                </span>
-                <span className="text-ink3 text-[10px]">{t('place')}</span>
-              </div>
-              {visibleItems.some((i) => i.item_type === 'memo') && (
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[18px] font-bold text-amber-500">
-                    {visibleItems.filter((i) => i.item_type === 'memo').length}
-                  </span>
-                  <span className="text-ink3 text-[10px]">{t('memo')}</span>
-                </div>
-              )}
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-ink text-[18px] font-bold">
-                  {dayjs(selectedDay.dayDate).format('M/D')}
-                </span>
-                <span className="text-ink3 text-[10px]">{t('tabDate')}</span>
-              </div>
-              {selectedDayDB &&
-                (expensesByDay.get(selectedDayDB.id) ?? []).reduce((s, e) => s + e.amount, 0) >
-                  0 && (
-                  <div className="ml-auto flex flex-col items-end gap-0.5">
-                    <span className="text-primary text-[15px] font-bold">
-                      {(expensesByDay.get(selectedDayDB.id) ?? [])
-                        .reduce((s, e) => s + e.amount, 0)
-                        .toLocaleString()}
-                      {t('currencyUnit')}
-                    </span>
-                    <span className="text-ink3 text-[10px]">{t('tabExpense')}</span>
+                    {/* 메모 */}
+                    <div className="border-border mb-3 flex items-center rounded-xl border bg-white px-3 py-2">
+                      <input
+                        type="text"
+                        value={expenseNote}
+                        onChange={(e) => setExpenseNote(e.target.value)}
+                        placeholder={t('memoOptional')}
+                        className="text-ink min-w-0 flex-1 bg-transparent text-[14px] outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={handleAddExpense}
+                      disabled={addingExpense || !expenseAmount}
+                      className="bg-primary w-full rounded-xl py-2.5 text-[14px] font-semibold text-white disabled:opacity-50"
+                    >
+                      {t('addExpense')}
+                    </button>
                   </div>
                 )}
-            </div>
+              </div>
 
-            {/* 아이템 리스트 */}
-            {selectedDayDB?.id && (
-              <DraggableTimelineList
-                items={visibleItems}
-                onRemove={handleRemove}
-                onTimeChange={handleTimeChange}
-                dayId={selectedDayDB.id}
-                onReorder={handleReorder}
-                onTapItem={(item) => setActiveSheetItem(item)}
-              />
-            )}
+              {/* 날짜별 경비 목록 */}
+              {expectedDays.length === 0 ? (
+                <p className="text-ink3 py-8 text-center text-[13px]">{t('needDateForExpense')}</p>
+              ) : (
+                expectedDays.map((day) => {
+                  const db = dayMap.get(day.dayDate)
+                  const dayExpenses = db ? (expensesByDay.get(db.id) ?? []) : []
+                  const dayTotal = dayExpenses.reduce((s, e) => s + e.amount, 0)
+                  return (
+                    <div
+                      key={day.dayDate}
+                      className="border-border mb-3 overflow-hidden rounded-2xl border bg-white"
+                    >
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        <div>
+                          <span className="text-ink text-[13px] font-bold">
+                            DAY {day.dayNumber}
+                          </span>
+                          <span className="text-ink3 ml-2 text-[11px]">
+                            {dayjs(day.dayDate).format('M/D (ddd)')}
+                          </span>
+                        </div>
+                        {dayTotal > 0 && (
+                          <span className="text-primary ml-auto text-[13px] font-bold">
+                            {t('amountWithUnit', { amount: dayTotal.toLocaleString() })}
+                          </span>
+                        )}
+                      </div>
+                      {dayExpenses.length > 0 ? (
+                        <div className="border-border border-t">
+                          {dayExpenses.map((expense, i) => {
+                            const isPending = expense.id.startsWith('pending-')
+                            return (
+                              <div
+                                key={expense.id}
+                                className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-border border-t' : ''} ${isPending ? 'opacity-60' : ''}`}
+                              >
+                                <span className="text-ink2 text-[12px] font-semibold">
+                                  {t(expenseCategoryKey(expense.category) as never)}
+                                </span>
+                                {expense.note && (
+                                  <span className="text-ink3 min-w-0 flex-1 truncate text-[11px]">
+                                    {expense.note}
+                                  </span>
+                                )}
+                                <span className="text-ink ml-auto flex-shrink-0 text-[13px] font-bold">
+                                  {t('amountWithUnit', { amount: expense.amount.toLocaleString() })}
+                                </span>
+                                {!isPending && (
+                                  <button
+                                    onClick={() => handleRemoveExpense(expense.id)}
+                                    className="text-ink3 flex-shrink-0 p-0.5 hover:text-red-500"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                      <path
+                                        d="M3 3l8 8M11 3L3 11"
+                                        stroke="currentColor"
+                                        strokeWidth="1.4"
+                                        strokeLinecap="round"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <div className="border-border border-t px-4 py-3">
+                          <p className="text-ink3 text-[12px]">{t('noExpense')}</p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
+
+          {/* ── Day 탭 컨텐츠 ── */}
+          {typeof activeTab === 'number' && selectedDay && (
+            <div className="p-3 pb-32">
+              {/* Day 요약 카드 */}
+              <div className="border-border mb-3 flex items-center gap-5 rounded-2xl border bg-white px-4 py-3.5">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-ink text-[18px] font-bold">
+                    {visibleItems.filter((i) => i.item_type !== 'memo').length}
+                  </span>
+                  <span className="text-ink3 text-[10px]">{t('place')}</span>
+                </div>
+                {visibleItems.some((i) => i.item_type === 'memo') && (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[18px] font-bold text-amber-500">
+                      {visibleItems.filter((i) => i.item_type === 'memo').length}
+                    </span>
+                    <span className="text-ink3 text-[10px]">{t('memo')}</span>
+                  </div>
+                )}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-ink text-[18px] font-bold">
+                    {dayjs(selectedDay.dayDate).format('M/D')}
+                  </span>
+                  <span className="text-ink3 text-[10px]">{t('tabDate')}</span>
+                </div>
+                {selectedDayDB &&
+                  (expensesByDay.get(selectedDayDB.id) ?? []).reduce((s, e) => s + e.amount, 0) >
+                    0 && (
+                    <div className="ml-auto flex flex-col items-end gap-0.5">
+                      <span className="text-primary text-[15px] font-bold">
+                        {(expensesByDay.get(selectedDayDB.id) ?? [])
+                          .reduce((s, e) => s + e.amount, 0)
+                          .toLocaleString()}
+                        {t('currencyUnit')}
+                      </span>
+                      <span className="text-ink3 text-[10px]">{t('tabExpense')}</span>
+                    </div>
+                  )}
+              </div>
+
+              {/* 아이템 리스트 */}
+              {selectedDayDB?.id && (
+                <DraggableTimelineList
+                  items={visibleItems}
+                  onRemove={handleRemove}
+                  onTimeChange={handleTimeChange}
+                  dayId={selectedDayDB.id}
+                  onReorder={handleReorder}
+                  onTapItem={(item) => setActiveSheetItem(item)}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 날짜 레인지 피커 */}
+        {datePickerFor !== null && (
+          <DateRangePicker
+            startDate={segments[datePickerFor]?.startDate ?? ''}
+            endDate={segments[datePickerFor]?.endDate ?? ''}
+            minDate={datePickerFor > 0 ? segments[datePickerFor - 1]?.endDate || '' : ''}
+            onChange={(start, end) => {
+              const idx = datePickerFor
+              updateSegment(idx, { startDate: start, endDate: end })
+            }}
+            onClose={() => setDatePickerFor(null)}
+          />
+        )}
+
+        {/* 범위 밖 날짜 삭제 확인 다이얼로그 */}
+        {confirmDialog && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-5">
+              <p className="text-ink mb-1 text-[16px] font-bold">{t('placesWillBeDeleted')}</p>
+              <p className="text-ink2 mb-3 text-[13px]">{t('outOfRangeDesc')}</p>
+              <div className="bg-bg2 mb-4 flex flex-col gap-1 rounded-xl px-4 py-3">
+                {confirmDialog.affectedDays.map((d) => (
+                  <div key={d.dayDate} className="flex items-center justify-between text-[13px]">
+                    <span className="text-ink2">
+                      {dayjs(d.dayDate).locale(locale).format(t('dateFormat'))}
+                    </span>
+                    <span className="font-semibold text-red-500">
+                      {t('placesDeletedCount', { count: d.itemCount })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDialog(null)}
+                  className="border-border text-ink2 flex-1 rounded-xl border py-3 text-[14px] font-medium"
+                >
+                  {tc('cancel')}
+                </button>
+                <button
+                  onClick={() => doSave(true)}
+                  disabled={saving}
+                  className="flex-1 rounded-xl bg-red-500 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
+                >
+                  {saving ? t('savingDots') : t('deleteAndSave')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* 날짜 레인지 피커 */}
-      {datePickerFor !== null && (
-        <DateRangePicker
-          startDate={segments[datePickerFor]?.startDate ?? ''}
-          endDate={segments[datePickerFor]?.endDate ?? ''}
-          minDate={datePickerFor > 0 ? segments[datePickerFor - 1]?.endDate || '' : ''}
-          onChange={(start, end) => {
-            const idx = datePickerFor
-            updateSegment(idx, { startDate: start, endDate: end })
-          }}
-          onClose={() => setDatePickerFor(null)}
-        />
-      )}
-
-      {/* 범위 밖 날짜 삭제 확인 다이얼로그 */}
-      {confirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5">
-            <p className="text-ink mb-1 text-[16px] font-bold">{t('placesWillBeDeleted')}</p>
-            <p className="text-ink2 mb-3 text-[13px]">{t('outOfRangeDesc')}</p>
-            <div className="bg-bg2 mb-4 flex flex-col gap-1 rounded-xl px-4 py-3">
-              {confirmDialog.affectedDays.map((d) => (
-                <div key={d.dayDate} className="flex items-center justify-between text-[13px]">
-                  <span className="text-ink2">
-                    {dayjs(d.dayDate).locale(locale).format(t('dateFormat'))}
-                  </span>
-                  <span className="font-semibold text-red-500">
-                    {t('placesDeletedCount', { count: d.itemCount })}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setConfirmDialog(null)}
-                className="border-border text-ink2 flex-1 rounded-xl border py-3 text-[14px] font-medium"
-              >
-                {tc('cancel')}
-              </button>
-              <button
-                onClick={() => doSave(true)}
-                disabled={saving}
-                className="flex-1 rounded-xl bg-red-500 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
-              >
-                {saving ? t('savingDots') : t('deleteAndSave')}
-              </button>
-            </div>
+        {/* 하단 고정 버튼 (Day 탭) */}
+        {typeof activeTab === 'number' && selectedDay && (
+          <div
+            className="border-border fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t bg-white px-4 pt-3"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
+          >
+            <Link
+              href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
+              className="bg-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[14px] font-semibold text-white"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              {t('addPlace')}
+            </Link>
+            <button
+              onClick={handleAddMemo}
+              className="border-border text-ink2 flex items-center justify-center gap-1.5 rounded-xl border px-4 py-3 text-[14px] font-medium"
+            >
+              {t('memoTab')}
+            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 하단 고정 버튼 (Day 탭) */}
-      {typeof activeTab === 'number' && selectedDay && (
-        <div
-          className="border-border fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t bg-white px-4 pt-3"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
-        >
-          <Link
-            href={`/${locale}/trips/${trip.id}/places?day=${selectedDay.dayNumber}&date=${selectedDay.dayDate}`}
-            className="bg-primary flex flex-1 items-center justify-center gap-1.5 rounded-xl py-3 text-[14px] font-semibold text-white"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            {t('addPlace')}
-          </Link>
-          <button
-            onClick={handleAddMemo}
-            className="border-border text-ink2 flex items-center justify-center gap-1.5 rounded-xl border px-4 py-3 text-[14px] font-medium"
-          >
-            {t('memoTab')}
-          </button>
-        </div>
-      )}
-
-      {/* ItemDetailSheet */}
-      {activeSheetItem && (
-        <ItemDetailSheet
-          item={activeSheetItem}
-          expenses={expensesByItem.get(activeSheetItem.id) ?? []}
-          onClose={() => setActiveSheetItem(null)}
-          onMemoSave={handleMemoSave}
-          onAddExpense={handleAddExpenseFromSheet}
-          onRemoveExpense={handleRemoveExpenseFromSheet}
-          canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
-          onExpenseUpgrade={() => setExpenseUpgrade(true)}
-        />
-      )}
-    </div>
+        {/* ItemDetailSheet */}
+        {activeSheetItem && (
+          <ItemDetailSheet
+            item={activeSheetItem}
+            expenses={expensesByItem.get(activeSheetItem.id) ?? []}
+            onClose={() => setActiveSheetItem(null)}
+            onMemoSave={handleMemoSave}
+            onAddExpense={handleAddExpenseFromSheet}
+            onRemoveExpense={handleRemoveExpenseFromSheet}
+            canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
+            onExpenseUpgrade={() => setExpenseUpgrade(true)}
+          />
+        )}
+      </div>
     </>
   )
 }

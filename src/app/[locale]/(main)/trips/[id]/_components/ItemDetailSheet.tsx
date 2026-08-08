@@ -239,7 +239,10 @@ export default function ItemDetailSheet({
             </div>
             <button
               onClick={() => {
-                if (!canAddExpense) { onExpenseUpgrade?.(); return }
+                if (!canAddExpense) {
+                  onExpenseUpgrade?.()
+                  return
+                }
                 setShowExpenseForm((v) => !v)
               }}
               className={`text-[13px] font-semibold transition-colors ${showExpenseForm ? 'text-ink3' : 'text-primary'}`}

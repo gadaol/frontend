@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
       .limit(500),
   ])
 
-  const settled = <T,>(r: PromiseSettledResult<T>): T | null =>
+  const settled = <T>(r: PromiseSettledResult<T>): T | null =>
     r.status === 'fulfilled' ? r.value : null
 
   const profile = settled(profileResult)?.data ?? null

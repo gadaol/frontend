@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import Badge, { type BadgeProps } from '@/components/ui/Badge'
-import type { Tables } from '@/types/supabase'
+import type { Tables } from '@/types/database/database.types'
 
 const PAGE_SIZE = 20
 

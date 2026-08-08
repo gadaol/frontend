@@ -35,7 +35,20 @@ function formatDisplay(ymd: string, locale: string) {
   const date = new Date(y, m - 1, d)
   const wd = locale === 'ko' ? WEEKDAYS_KO[date.getDay()] : WEEKDAYS_EN[date.getDay()]
   if (locale === 'ko') return `${m}월 ${d}일 (${wd})`
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
   return `${months[m - 1]} ${d} (${wd})`
 }
 
@@ -130,7 +143,11 @@ export default function DateRangePicker({ startDate, endDate, onChange, onClose,
               {locale === 'ko' ? '출발일' : 'Start'}
             </p>
             <p className={`text-[13px] font-bold ${localStart ? 'text-ink' : 'text-ink3'}`}>
-              {localStart ? formatDisplay(localStart, locale) : (locale === 'ko' ? '날짜 선택' : 'Select date')}
+              {localStart
+                ? formatDisplay(localStart, locale)
+                : locale === 'ko'
+                  ? '날짜 선택'
+                  : 'Select date'}
             </p>
           </button>
 
@@ -160,7 +177,11 @@ export default function DateRangePicker({ startDate, endDate, onChange, onClose,
               {locale === 'ko' ? '도착일' : 'End'}
             </p>
             <p className={`text-[13px] font-bold ${localEnd ? 'text-ink' : 'text-ink3'}`}>
-              {localEnd ? formatDisplay(localEnd, locale) : (locale === 'ko' ? '날짜 선택' : 'Select date')}
+              {localEnd
+                ? formatDisplay(localEnd, locale)
+                : locale === 'ko'
+                  ? '날짜 선택'
+                  : 'Select date'}
             </p>
           </button>
 
@@ -240,14 +261,12 @@ export default function DateRangePicker({ startDate, endDate, onChange, onClose,
                 className="relative flex h-10 items-center justify-center disabled:cursor-not-allowed"
               >
                 {/* Range background strips */}
-                {isInRange && (
-                  <span className="absolute inset-y-1 inset-x-0 bg-primary/10" />
-                )}
+                {isInRange && <span className="bg-primary/10 absolute inset-x-0 inset-y-1" />}
                 {isStart && localEnd && !isSingleDay && (
-                  <span className="absolute inset-y-1 left-1/2 right-0 bg-primary/10" />
+                  <span className="bg-primary/10 absolute inset-y-1 right-0 left-1/2" />
                 )}
                 {isEnd && localStart && !isSingleDay && (
-                  <span className="absolute inset-y-1 left-0 right-1/2 bg-primary/10" />
+                  <span className="bg-primary/10 absolute inset-y-1 right-1/2 left-0" />
                 )}
 
                 {/* Day circle */}
@@ -260,7 +279,7 @@ export default function DateRangePicker({ startDate, endDate, onChange, onClose,
                         : isInRange
                           ? 'text-primary'
                           : isToday
-                            ? 'font-bold text-primary'
+                            ? 'text-primary font-bold'
                             : col === 0
                               ? 'text-red-400'
                               : col === 6

@@ -21,7 +21,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     fetch('/api/user/plan')
       .then((r) => r.json())
-      .then((d) => { if (d?.plan) setPlan(d.plan as Plan) })
+      .then((d) => {
+        if (d?.plan) setPlan(d.plan as Plan)
+      })
       .catch(() => null)
   }, [setPlan])
 

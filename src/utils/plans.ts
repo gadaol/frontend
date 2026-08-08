@@ -5,7 +5,7 @@ export type Plan = 'free' | 'pro' | 'plus'
 export const PLAN_KEYS: Plan[] = ['free', 'pro', 'plus']
 
 /** MypageClient 등 기존(비-i18n) 화면에서 계속 쓰는 라벨 — 신규 화면은 subscription.planLabel.* 번역 사용 */
-export const PLAN_LABEL: Record<Plan, string> = { free: 'Free', pro: 'Pro', plus: 'Plus' }
+export const PLAN_LABEL: Record<Plan, string> = { free: '무료', pro: 'Pro', plus: 'Plus' }
 
 export const PLAN_BADGE_VARIANT: Record<Plan, NonNullable<BadgeProps['variant']>> = {
   free: 'gray',

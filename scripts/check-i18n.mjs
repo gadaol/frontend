@@ -22,7 +22,9 @@ const fail = (msg) => {
 }
 
 /* ── 1. locale 폴더의 파일이 모두 NAMESPACES에 등록됐는가 ───────── */
-const locales = fs.readdirSync(LOCALE_DIR).filter((d) => fs.statSync(path.join(LOCALE_DIR, d)).isDirectory())
+const locales = fs
+  .readdirSync(LOCALE_DIR)
+  .filter((d) => fs.statSync(path.join(LOCALE_DIR, d)).isDirectory())
 const [base, ...others] = locales
 
 const registered = new Set(
@@ -43,7 +45,8 @@ const paths = (o, p = '') =>
     ? Object.entries(o).flatMap(([k, v]) => paths(v, p ? `${p}.${k}` : k))
     : [p]
 
-const read = (loc, ns) => JSON.parse(fs.readFileSync(path.join(LOCALE_DIR, loc, ns + '.json'), 'utf8'))
+const read = (loc, ns) =>
+  JSON.parse(fs.readFileSync(path.join(LOCALE_DIR, loc, ns + '.json'), 'utf8'))
 
 for (const ns of files) {
   const baseKeys = new Set(paths(read(base, ns)))

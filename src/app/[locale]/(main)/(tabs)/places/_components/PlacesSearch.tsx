@@ -39,31 +39,31 @@ export default function PlacesSearch({ initialAvatar, initialName }: Props) {
 
   return (
     <div style={{ height: 'calc(100dvh - 69px - env(safe-area-inset-bottom, 0px))' }}>
-    <PlaceMapSearch
-      initialAvatar={initialAvatar}
-      initialName={initialName}
-      renderListAction={(place) => {
-        const isSaved = savedIds.has(place.id)
-        const isSaving = savingIds.has(place.id)
-        return (
-          <button
-            onClick={(e) => handleSave(place, e)}
-            disabled={isSaved || isSaving}
-            className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-          >
-            {isSaving ? (
-              <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-            ) : (
-              <BacklogIcon
-                size={20}
-                filled={isSaved}
-                className={isSaved ? 'text-primary' : 'text-[#C4C8CF]'}
-              />
-            )}
-          </button>
-        )
-      }}
-    />
+      <PlaceMapSearch
+        initialAvatar={initialAvatar}
+        initialName={initialName}
+        renderListAction={(place) => {
+          const isSaved = savedIds.has(place.id)
+          const isSaving = savingIds.has(place.id)
+          return (
+            <button
+              onClick={(e) => handleSave(place, e)}
+              disabled={isSaved || isSaving}
+              className="ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
+            >
+              {isSaving ? (
+                <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+              ) : (
+                <BacklogIcon
+                  size={20}
+                  filled={isSaved}
+                  className={isSaved ? 'text-primary' : 'text-[#C4C8CF]'}
+                />
+              )}
+            </button>
+          )
+        }}
+      />
     </div>
   )
 }

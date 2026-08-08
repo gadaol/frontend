@@ -50,6 +50,8 @@ export default function DestinationSheet({ destination, onClose }: Props) {
 
   const [places, setPlaces] = useState<DestinationPlace[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const [backlogMap, setBacklogMap] = useState<Record<string, BacklogStatus>>({})
   const [photoErrorIds, setPhotoErrorIds] = useState<Set<string>>(new Set())
 
@@ -75,14 +77,28 @@ export default function DestinationSheet({ destination, onClose }: Props) {
       return
     }
     setLoading(true)
+    setLoadError(false)
     /* eslint-enable react-hooks/set-state-in-effect */
     const q = encodeURIComponent(destination.searchQuery)
-    fetch(`/api/places/destination?q=${q}`)
-      .then((r) => r.json())
-      .then((data) => setPlaces(data.places ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [destination])
+    /* 목적지를 빠르게 바꾸면 이전 요청 응답이 늦게 도착해 엉뚱한 도시의 장소가 남는다.
+       cleanup에서 abort해 순서 역전을 막는다. */
+    const ac = new AbortController()
+    fetch(`/api/places/destination?q=${q}`, { signal: ac.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error('failed')
+        return r.json()
+      })
+      .then((data) => {
+        setPlaces(data.places ?? [])
+        setLoading(false)
+      })
+      .catch((e: Error) => {
+        if (e.name === 'AbortError') return
+        setLoadError(true)
+        setLoading(false)
+      })
+    return () => ac.abort()
+  }, [destination, reloadKey])
 
   async function openTripPicker(placeId: string) {
     setTripPickerFor(placeId)
@@ -228,9 +244,21 @@ export default function DestinationSheet({ destination, onClose }: Props) {
                 </div>
               ))}
             </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <p className="text-ink3 text-[14px]">
+                {isKo ? '장소를 불러오지 못했어요.' : "Couldn't load places."}
+              </p>
+              <button
+                onClick={() => setReloadKey((k) => k + 1)}
+                className="text-primary text-[13px] font-semibold underline underline-offset-2"
+              >
+                {isKo ? '다시 시도' : 'Try again'}
+              </button>
+            </div>
           ) : places.length === 0 ? (
             <div className="text-ink3 py-16 text-center text-[14px]">
-              {isKo ? '장소를 불러오지 못했어요.' : 'No places found.'}
+              {isKo ? '표시할 장소가 없어요.' : 'No places found.'}
             </div>
           ) : (
             <div className="divide-border divide-y">

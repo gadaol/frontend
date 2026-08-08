@@ -30,6 +30,28 @@
     "upgradeButton": "Upgrade to {plan}",
     "free": "Free",
     "perMonth": "/ mo",
+    "freePlanSub": "(New free plan)",
+    "freeNoticeTitle": "You're on the new free plan",
+    "freeNoticeDesc": "This is the free plan you get on sign-up. Upgrading to Pro or Plus unlocks AI recommendations, expense tracking, invites, and more.",
+    "withdrawalNotice": "Service starts immediately on payment, which may limit your right to withdraw.",
+    "upgradeSheet": {
+      "exclusive": "only",
+      "body": "<feat>{feature}</feat> is available on the <hl>{plan}</hl> plan and above.",
+      "cta": "Upgrade to {plan}",
+      "later": "Maybe later",
+      "feature": {
+        "collection": "Collections",
+        "invite": "Trip invites",
+        "expense": "Expense tracking",
+        "multiDestination": "Multiple destinations",
+        "characterRog": "The Rog character",
+        "aiSearch": "AI place search",
+        "aiRecommend": "AI recommendations",
+        "voice": "Voice mode",
+        "itinerary": "AI itinerary generation",
+        "tripLimit": "More than 3 trips"
+      }
+    },
     "planLabel": {
       "free": "Free",
       "pro": "Pro",
@@ -38,26 +60,23 @@
     "benefits": {
       "free": [
         "Up to 3 trips",
-        "Up to 2 mates",
-        "3 AI recommendations / month",
+        "Basic place search & saves",
         "Unlimited backlog saves"
       ],
       "pro": [
         "Unlimited trips",
-        "Up to 10 mates",
-        "20 AI recommendations / month",
-        "Saved folders & tags",
-        "Team permission management",
-        "No ads"
+        "Trip invites & collaboration",
+        "Collection folder management",
+        "Expense tracking",
+        "Multi-destination trips",
+        "AI place search",
+        "AI trip recommendations",
+        "Log character"
       ],
       "plus": [
-        "Unlimited trips",
-        "Unlimited mates",
-        "Unlimited AI recommendations",
-        "Saved folders & tags",
-        "Team permission management",
-        "Shared backlog",
-        "No ads"
+        "Everything in Pro",
+        "Voice-to-itinerary with AI",
+        "AI auto itinerary generation"
       ]
     },
     "billingMonthly": "Monthly",

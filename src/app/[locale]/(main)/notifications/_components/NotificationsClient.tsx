@@ -82,11 +82,26 @@ function InfoIcon() {
   )
 }
 
+function PaymentFailedIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="7" stroke="var(--color-error)" strokeWidth="1.4" />
+      <path
+        d="M10 6.5v4M10 13v.5"
+        stroke="var(--color-error)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 const TYPE_CONFIG: Record<string, IconConfig> = {
   invite: { bg: 'var(--color-primary-light)', icon: <TripInviteIcon /> },
   vote: { bg: 'var(--color-warning-light)', icon: <VoteIcon /> },
   edit: { bg: 'var(--color-success-light)', icon: <EditIcon /> },
   system: { bg: 'var(--color-bg2)', icon: <InfoIcon /> },
+  payment_failed: { bg: 'var(--color-error-light)', icon: <PaymentFailedIcon /> },
 }
 
 function getConfig(type: string): IconConfig {
@@ -255,6 +270,8 @@ function NotifItem({
   const place = (n.payload.place_name as string) ?? ''
   const daysUntil = n.payload.days_until as number | undefined
 
+  const planLabel = (n.payload.plan_label as string) ?? ''
+
   function getTitle(): string {
     switch (n.type) {
       case 'invite':
@@ -267,6 +284,8 @@ function NotifItem({
         if (daysUntil === 1) return t('systemTomorrow')
         if (daysUntil === 3) return t('systemInDays')
         return t('systemGeneric')
+      case 'payment_failed':
+        return t('paymentFailedTitle')
       default:
         return (n.payload.message as string) ?? t('defaultTitle')
     }
@@ -282,6 +301,8 @@ function NotifItem({
         return t('editDesc', { trip, place })
       case 'system':
         return t('systemDesc', { trip })
+      case 'payment_failed':
+        return t('paymentFailedDesc', { plan: planLabel })
       default:
         return ''
     }
@@ -289,6 +310,10 @@ function NotifItem({
 
   function handleCardClick() {
     if (!n.is_read) onRead(n.id)
+    if (n.type === 'payment_failed') {
+      router.push(`/${locale}/mypage/subscription`)
+      return
+    }
     if (!tripId) return
     if (n.type === 'vote') {
       router.push(`/${locale}/trips/${tripId}/vote`)

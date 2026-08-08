@@ -17,7 +17,9 @@ const ItineraryItemSchema = z.object({
   google_search_query: z.string().describe('Query to search this place on Google Places'),
   estimated_cost_krw: z
     .number()
-    .describe('Per-person estimated cost in KRW. Fill only when cost estimation is requested. Otherwise 0.')
+    .describe(
+      'Per-person estimated cost in KRW. Fill only when cost estimation is requested. Otherwise 0.',
+    )
     .default(0),
   cost_category: z
     .string()

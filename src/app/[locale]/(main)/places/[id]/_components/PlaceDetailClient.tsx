@@ -6,7 +6,11 @@ import { useTranslations, useLocale } from 'next-intl'
 import { ChevronLeftIcon } from '@/components/icons'
 import Button from '@/components/ui/Button'
 import { getCategoryInfo, getDbCategory } from '@/utils/placeCategory'
-import { addToBacklog, removeFromBacklogByGooglePlaceId, getOrCreatePlace } from '@/app/actions/backlog'
+import {
+  addToBacklog,
+  removeFromBacklogByGooglePlaceId,
+  getOrCreatePlace,
+} from '@/app/actions/backlog'
 import { addCandidatePlace } from '@/app/actions/candidate'
 import { addItineraryItem } from '@/app/actions/trip'
 import { getUpcomingTrips, type UpcomingTrip } from '@/app/actions/destinations'
@@ -422,7 +426,10 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
                         : []
 
                     return (
-                      <div key={trip.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                      <div
+                        key={trip.id}
+                        className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+                      >
                         <button
                           onClick={() => setSelectedTripId(isExpanded ? null : trip.id)}
                           className="flex w-full items-center justify-between px-3 py-3 text-left active:bg-gray-50"
@@ -503,7 +510,8 @@ export default function PlaceDetailClient({ place, initialSaved = false }: Props
                             {days.length > 0 ? (
                               <div className="flex flex-col gap-1">
                                 {days.map((day) => {
-                                  const s = tripStatusMap[trip.id]?.[String(day.dayNumber)] ?? 'idle'
+                                  const s =
+                                    tripStatusMap[trip.id]?.[String(day.dayNumber)] ?? 'idle'
                                   return (
                                     <button
                                       key={day.dayNumber}

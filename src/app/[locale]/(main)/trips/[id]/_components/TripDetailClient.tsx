@@ -11,7 +11,6 @@ import Tabs from '@/components/ui/Tabs'
 import PlacesMapTab from './PlacesMapTab'
 import ItemDetailSheet from './ItemDetailSheet'
 import AIItinerarySheet from '@/components/features/trips/AIItinerarySheet'
-import { useAssistantStore } from '@/lib/ai/store'
 import { isGradient } from '@/utils/uploadCover'
 import { getCategoryInfoByLabel } from '@/utils/placeCategory'
 import PlacePhoto from '@/components/features/places/PlacePhoto'
@@ -258,7 +257,6 @@ export default function TripDetailClient({
   )
 
   const isMapTab = activeTab === 'places'
-  const openAssistant = useAssistantStore((s) => s.open)
 
   const backfillIds = trip.itinerary_days
     .flatMap((d) => d.itinerary_items)
@@ -268,256 +266,256 @@ export default function TripDetailClient({
 
   return (
     <>
-    {expenseUpgrade && (
-      <UpgradeSheet
-        required="pro"
-        feature="경비 추가"
-        onClose={() => setExpenseUpgrade(false)}
-      />
-    )}
-    <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
-      <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
-      {/* 커버 */}
-      <div
-        className={`relative h-[220px] flex-shrink-0 ${isMapTab ? 'hidden' : ''}`}
-        style={
-          trip.cover_url && !isGradient(trip.cover_url)
-            ? {
-                backgroundImage: `url(${trip.cover_url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }
-            : {
-                background:
-                  trip.cover_url ??
-                  'linear-gradient(160deg,var(--color-hero-top) 0%,var(--color-primary) 70%,var(--color-hero-bot) 100%)',
-              }
-        }
-      >
+      {expenseUpgrade && (
+        <UpgradeSheet required="pro" feature="expense" onClose={() => setExpenseUpgrade(false)} />
+      )}
+      <div className={`bg-bg2 flex flex-col ${isMapTab ? 'h-dvh' : 'min-h-full'}`}>
+        <PhotoBackfillTrigger googlePlaceIds={backfillIds} />
+        {/* 커버 */}
         <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5))' }}
-        />
-        <div className="absolute right-4 bottom-4 left-4">
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
-            {ongoing && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
-            <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
-          </div>
-          <h1 className="mb-1 text-[24px] font-extrabold tracking-tight text-white">
-            {trip.title}
-          </h1>
-          {trip.destination && (
-            <div className="mb-0.5 flex items-center gap-1">
-              <MapPinIcon size={12} className="text-white/60" />
-              <span className="text-[12px] text-white/70">{trip.destination}</span>
+          className={`relative h-[220px] flex-shrink-0 ${isMapTab ? 'hidden' : ''}`}
+          style={
+            trip.cover_url && !isGradient(trip.cover_url)
+              ? {
+                  backgroundImage: `url(${trip.cover_url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }
+              : {
+                  background:
+                    trip.cover_url ??
+                    'linear-gradient(160deg,var(--color-hero-top) 0%,var(--color-primary) 70%,var(--color-hero-bot) 100%)',
+                }
+          }
+        >
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5))' }}
+          />
+          <div className="absolute right-4 bottom-4 left-4">
+            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
+              {ongoing && (
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              )}
+              <span className="text-[11px] font-semibold text-white">{statusLabel}</span>
             </div>
-          )}
-          <p className="text-[13px] text-white/70">
-            {trip.start_date
-              ? `${formatDateRange(trip.start_date, trip.end_date, locale)}${durationLabel ? ` · ${durationLabel}` : ''}`
-              : t('noDate')}
-          </p>
+            <h1 className="mb-1 text-[24px] font-extrabold tracking-tight text-white">
+              {trip.title}
+            </h1>
+            {trip.destination && (
+              <div className="mb-0.5 flex items-center gap-1">
+                <MapPinIcon size={12} className="text-white/60" />
+                <span className="text-[12px] text-white/70">{trip.destination}</span>
+              </div>
+            )}
+            <p className="text-[13px] text-white/70">
+              {trip.start_date
+                ? `${formatDateRange(trip.start_date, trip.end_date, locale)}${durationLabel ? ` · ${durationLabel}` : ''}`
+                : t('noDate')}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* 바디 카드 */}
-      <div
-        className={`relative z-10 flex flex-1 flex-col bg-white ${isMapTab ? 'overflow-hidden' : '-mt-3 rounded-t-3xl'}`}
-      >
-        {/* 멤버 row */}
-        <div className={`flex items-center gap-2.5 px-4 pt-4 pb-0 ${isMapTab ? 'hidden' : ''}`}>
-          <div className="flex">
-            {trip.trip_members.slice(0, 5).map((m, i) => {
-              const profile = profileMap.get(m.user_id)
-              const name = profile?.name ?? '?'
-              const avatarUrl = profile?.avatar_url ?? null
-              return avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={m.user_id}
-                  src={avatarUrl}
-                  alt={name}
-                  className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white object-cover"
-                  style={{
-                    marginLeft: i > 0 ? -8 : 0,
-                    position: 'relative',
-                    zIndex: trip.trip_members.length - i,
-                  }}
-                />
-              ) : (
-                <div
-                  key={m.user_id}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
-                  style={{
-                    backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                    marginLeft: i > 0 ? -8 : 0,
-                    position: 'relative',
-                    zIndex: trip.trip_members.length - i,
-                  }}
-                >
-                  {name[0]}
-                </div>
-              )
-            })}
-            <button
-              onClick={handleInvite}
-              className="border-border relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed bg-white"
-              style={{ marginLeft: -8, zIndex: 0 }}
-            >
-              <PlusIcon size={12} className="text-ink3" />
+        {/* 바디 카드 */}
+        <div
+          className={`relative z-10 flex flex-1 flex-col bg-white ${isMapTab ? 'overflow-hidden' : '-mt-3 rounded-t-3xl'}`}
+        >
+          {/* 멤버 row */}
+          <div className={`flex items-center gap-2.5 px-4 pt-4 pb-0 ${isMapTab ? 'hidden' : ''}`}>
+            <div className="flex">
+              {trip.trip_members.slice(0, 5).map((m, i) => {
+                const profile = profileMap.get(m.user_id)
+                const name = profile?.name ?? '?'
+                const avatarUrl = profile?.avatar_url ?? null
+                return avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={m.user_id}
+                    src={avatarUrl}
+                    alt={name}
+                    className="h-8 w-8 flex-shrink-0 rounded-full border-2 border-white object-cover"
+                    style={{
+                      marginLeft: i > 0 ? -8 : 0,
+                      position: 'relative',
+                      zIndex: trip.trip_members.length - i,
+                    }}
+                  />
+                ) : (
+                  <div
+                    key={m.user_id}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white"
+                    style={{
+                      backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                      marginLeft: i > 0 ? -8 : 0,
+                      position: 'relative',
+                      zIndex: trip.trip_members.length - i,
+                    }}
+                  >
+                    {name[0]}
+                  </div>
+                )
+              })}
+              <button
+                onClick={handleInvite}
+                className="border-border relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed bg-white"
+                style={{ marginLeft: -8, zIndex: 0 }}
+              >
+                <PlusIcon size={12} className="text-ink3" />
+              </button>
+            </div>
+            <button onClick={handleInvite} className="text-ink2 text-[13px]">
+              {t('membersJoined', { count: trip.trip_members.length })} ·{' '}
+              <span className="text-primary font-medium">{t('inviteMate')}</span>
             </button>
           </div>
-          <button onClick={handleInvite} className="text-ink2 text-[13px]">
-            {t('membersJoined', { count: trip.trip_members.length })} ·{' '}
-            <span className="text-primary font-medium">{t('inviteMate')}</span>
-          </button>
-        </div>
 
-        {/* Quick action 2버튼 */}
-        <div
-          className={`border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4 ${isMapTab ? 'hidden' : ''}`}
-        >
-          <Link
-            href={`/${locale}/trips/${trip.id}/edit`}
-            className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
+          {/* Quick action 2버튼 */}
+          <div
+            className={`border-border mt-3 grid grid-cols-2 gap-2.5 border-b px-4 pb-4 ${isMapTab ? 'hidden' : ''}`}
           >
-            <div className="border-border flex h-10 w-10 items-center justify-center rounded-[10px] border bg-white">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect
-                  x="2"
-                  y="3"
-                  width="16"
-                  height="14"
-                  rx="2"
-                  stroke="var(--color-ink2)"
-                  strokeWidth="1.4"
-                />
-                <path
-                  d="M6 3V1M14 3V1M2 8h16"
-                  stroke="var(--color-ink2)"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <span className="text-ink2 text-[11px] font-medium">{t('editItinerary')}</span>
-          </Link>
-          <Link
-            href={`/${locale}/trips/${trip.id}/vote`}
-            className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
+            <Link
+              href={`/${locale}/trips/${trip.id}/edit`}
+              className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
+            >
+              <div className="border-border flex h-10 w-10 items-center justify-center rounded-[10px] border bg-white">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect
+                    x="2"
+                    y="3"
+                    width="16"
+                    height="14"
+                    rx="2"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.4"
+                  />
+                  <path
+                    d="M6 3V1M14 3V1M2 8h16"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <span className="text-ink2 text-[11px] font-medium">{t('editItinerary')}</span>
+            </Link>
+            <Link
+              href={`/${locale}/trips/${trip.id}/vote`}
+              className="bg-bg2 flex flex-col items-center gap-1.5 rounded-xl py-3"
+            >
+              <div className="border-border flex h-10 w-10 items-center justify-center rounded-[10px] border bg-white">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 3.5l1.8 3.7 4 .6-2.9 2.8.7 4L10 12.4l-3.6 1.9.7-4L4.2 7.8l4-.6L10 3.5z"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.4"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <span className="text-ink2 text-[11px] font-medium">{t('vote')}</span>
+            </Link>
+          </div>
+
+          {/* 탭 */}
+          <Tabs
+            items={[
+              { key: 'itinerary' as Tab, label: t('tabItinerary') },
+              { key: 'cost' as Tab, label: t('tabCost') },
+              { key: 'places' as Tab, label: t('tabPlaces') },
+              { key: 'mates' as Tab, label: t('tabMates') },
+            ]}
+            value={activeTab}
+            onChange={handleTabChange}
+            className="px-4"
+          />
+
+          {/* 탭 컨텐츠 */}
+          <div
+            className={isMapTab ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1 pb-20'}
           >
-            <div className="border-border flex h-10 w-10 items-center justify-center rounded-[10px] border bg-white">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 3.5l1.8 3.7 4 .6-2.9 2.8.7 4L10 12.4l-3.6 1.9.7-4L4.2 7.8l4-.6L10 3.5z"
-                  stroke="var(--color-ink2)"
-                  strokeWidth="1.4"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <span className="text-ink2 text-[11px] font-medium">{t('vote')}</span>
-          </Link>
-        </div>
-
-        {/* 탭 */}
-        <Tabs
-          items={[
-            { key: 'itinerary' as Tab, label: t('tabItinerary') },
-            { key: 'cost' as Tab, label: t('tabCost') },
-            { key: 'places' as Tab, label: t('tabPlaces') },
-            { key: 'mates' as Tab, label: t('tabMates') },
-          ]}
-          value={activeTab}
-          onChange={handleTabChange}
-          className="px-4"
-        />
-
-        {/* 탭 컨텐츠 */}
-        <div className={isMapTab ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1 pb-20'}>
-          {activeTab === 'itinerary' && (
-            <ItineraryTab
-              expectedDays={expectedDays}
-              dayMap={effectiveDayMap}
-              removedItemIds={removedItemIds}
-              onRemove={handleRemoveItem}
-              onTimeChange={handleTimeChange}
-              onReorder={handleReorder}
-              onAddMemo={handleAddMemo}
-              onItemTap={setActiveSheetItem}
-              tripId={trip.id}
-              locale={locale}
-              isOwner={isOwner}
-              expensesByDay={expensesByDay}
-              destination={trip.destination}
-              onGenerateAI={() => setShowAISheet(true)}
-            />
-          )}
-          {activeTab === 'cost' && (
-            <ExpenseTab
-              expenses={localExpenses}
-              expectedDays={expectedDays}
-              dayMap={dayMap}
-              expensesByDay={expensesByDay}
-              memberCount={trip.trip_members.length}
-              locale={locale}
-            />
-          )}
-          {activeTab === 'places' && (
-            <div className="relative flex min-h-0 flex-1 flex-col">
-              <PlacesMapTab
-                trip={trip}
-                currentUserAvatar={currentUserAvatar}
-                currentUserName={currentUserName}
+            {activeTab === 'itinerary' && (
+              <ItineraryTab
+                expectedDays={expectedDays}
+                dayMap={effectiveDayMap}
+                removedItemIds={removedItemIds}
+                onRemove={handleRemoveItem}
+                onTimeChange={handleTimeChange}
+                onReorder={handleReorder}
+                onAddMemo={handleAddMemo}
+                onItemTap={setActiveSheetItem}
+                tripId={trip.id}
+                locale={locale}
+                isOwner={isOwner}
+                expensesByDay={expensesByDay}
+                destination={trip.destination}
+                onGenerateAI={() => setShowAISheet(true)}
               />
-            </div>
-          )}
-          {activeTab === 'mates' && (
-            <MateTab
-              members={trip.trip_members}
-              profileMap={profileMap}
-              onInvite={handleInvite}
-              isOwner={isOwner}
-              currentUserId={currentUserId}
-              tripId={trip.id}
-            />
-          )}
+            )}
+            {activeTab === 'cost' && (
+              <ExpenseTab
+                expenses={localExpenses}
+                expectedDays={expectedDays}
+                dayMap={dayMap}
+                expensesByDay={expensesByDay}
+                memberCount={trip.trip_members.length}
+                locale={locale}
+              />
+            )}
+            {activeTab === 'places' && (
+              <div className="relative flex min-h-0 flex-1 flex-col">
+                <PlacesMapTab
+                  trip={trip}
+                  currentUserAvatar={currentUserAvatar}
+                  currentUserName={currentUserName}
+                />
+              </div>
+            )}
+            {activeTab === 'mates' && (
+              <MateTab
+                members={trip.trip_members}
+                profileMap={profileMap}
+                onInvite={handleInvite}
+                isOwner={isOwner}
+                currentUserId={currentUserId}
+                tripId={trip.id}
+              />
+            )}
+          </div>
         </div>
+
+        {/* 장소/메모 상세 시트 */}
+        {activeSheetItem && (
+          <ItemDetailSheet
+            item={activeSheetItem}
+            expenses={expensesByItem.get(activeSheetItem.id) ?? []}
+            onClose={() => setActiveSheetItem(null)}
+            onMemoSave={handleMemoSave}
+            onAddExpense={handleAddExpense}
+            onRemoveExpense={handleRemoveExpense}
+            canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
+            onExpenseUpgrade={() => setExpenseUpgrade(true)}
+          />
+        )}
+
+        {showAISheet && trip.start_date && trip.end_date && (
+          <AIItinerarySheet
+            title={trip.title}
+            destination={trip.destination ?? ''}
+            startDate={trip.start_date}
+            endDate={trip.end_date}
+            startTime={(trip.start_time ?? '').slice(0, 5)}
+            endTime={(trip.end_time ?? '').slice(0, 5)}
+            coverUrl={trip.cover_url ?? ''}
+            tripId={trip.id}
+            targetDays={emptyDays}
+            excludePlaces={existingPlaceNames}
+            memberCount={trip.trip_members.length}
+            onClose={() => setShowAISheet(false)}
+          />
+        )}
+
+        <BottomNav />
       </div>
-
-      {/* 장소/메모 상세 시트 */}
-      {activeSheetItem && (
-        <ItemDetailSheet
-          item={activeSheetItem}
-          expenses={expensesByItem.get(activeSheetItem.id) ?? []}
-          onClose={() => setActiveSheetItem(null)}
-          onMemoSave={handleMemoSave}
-          onAddExpense={handleAddExpense}
-          onRemoveExpense={handleRemoveExpense}
-          canAddExpense={canAccess(plan, FEATURE_PLAN.expense)}
-          onExpenseUpgrade={() => setExpenseUpgrade(true)}
-        />
-      )}
-
-      {showAISheet && trip.start_date && trip.end_date && (
-        <AIItinerarySheet
-          title={trip.title}
-          destination={trip.destination ?? ''}
-          startDate={trip.start_date}
-          endDate={trip.end_date}
-          startTime={(trip.start_time ?? '').slice(0, 5)}
-          endTime={(trip.end_time ?? '').slice(0, 5)}
-          coverUrl={trip.cover_url ?? ''}
-          tripId={trip.id}
-          targetDays={emptyDays}
-          excludePlaces={existingPlaceNames}
-          memberCount={trip.trip_members.length}
-          onClose={() => setShowAISheet(false)}
-        />
-      )}
-
-      <BottomNav />
-    </div>
     </>
   )
 }

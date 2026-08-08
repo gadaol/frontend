@@ -17,6 +17,8 @@
   "systemInDays": "Your trip starts in 3 days",
   "systemGeneric": "Trip reminder",
   "systemDesc": "Ready for {trip}? Check your itinerary now",
+  "paymentFailedTitle": "Subscription payment failed",
+  "paymentFailedDesc": "Your {plan} renewal payment failed. Please check your payment method",
   "defaultTitle": "New notification",
   "settings": {
     "title": "Notification settings",

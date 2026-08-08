@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -42,16 +43,18 @@ export default async function SubscriptionPage() {
   const isCanceled = subscriptionRow?.status === 'canceled'
 
   return (
-    <SubscriptionClient
-      plan={plan}
-      isTrial={isTrial}
-      isCanceled={isCanceled}
-      period={(subscriptionRow?.period as 'monthly' | 'yearly' | undefined) ?? 'monthly'}
-      expiresAt={subscriptionRow?.expires_at ?? null}
-      canceledAt={subscriptionRow?.canceled_at ?? null}
-      cardCompany={billingKey?.card_company ?? null}
-      cardNumber={billingKey?.card_number ?? null}
-      payments={payments ?? []}
-    />
+    <Suspense>
+      <SubscriptionClient
+        plan={plan}
+        isTrial={isTrial}
+        isCanceled={isCanceled}
+        period={(subscriptionRow?.period as 'monthly' | 'yearly' | undefined) ?? 'monthly'}
+        expiresAt={subscriptionRow?.expires_at ?? null}
+        canceledAt={subscriptionRow?.canceled_at ?? null}
+        cardCompany={billingKey?.card_company ?? null}
+        cardNumber={billingKey?.card_number ?? null}
+        payments={payments ?? []}
+      />
+    </Suspense>
   )
 }

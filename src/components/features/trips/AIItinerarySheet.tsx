@@ -73,7 +73,11 @@ export default function AIItinerarySheet({
     Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000) + 1,
   )
 
-  interface DestSegment { destination: string; dayStart: number; dayEnd: number }
+  interface DestSegment {
+    destination: string
+    dayStart: number
+    dayEnd: number
+  }
 
   // propSegments(날짜 기반)를 dayStart/dayEnd(일차 기반)로 변환
   function propSegmentsToDaySegments(): DestSegment[] {
@@ -85,7 +89,10 @@ export default function AIItinerarySheet({
       const sd = s.startDate ? new Date(s.startDate + 'T00:00:00') : tripStart
       const ed = s.endDate ? new Date(s.endDate + 'T00:00:00') : sd
       const dayStart = Math.max(1, Math.round((sd.getTime() - tripStart.getTime()) / 86400000) + 1)
-      const dayEnd = Math.max(dayStart, Math.round((ed.getTime() - tripStart.getTime()) / 86400000) + 1)
+      const dayEnd = Math.max(
+        dayStart,
+        Math.round((ed.getTime() - tripStart.getTime()) / 86400000) + 1,
+      )
       return { destination: s.destination || destination, dayStart, dayEnd }
     })
   }
@@ -123,9 +130,12 @@ export default function AIItinerarySheet({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          destination: destSegments.length === 1
-            ? destSegments[0].destination
-            : destSegments.map((s) => `${s.destination}(${s.dayStart}~${s.dayEnd}일차)`).join(', '),
+          destination:
+            destSegments.length === 1
+              ? destSegments[0].destination
+              : destSegments
+                  .map((s) => `${s.destination}(${s.dayStart}~${s.dayEnd}일차)`)
+                  .join(', '),
           segments: destSegments.length > 1 ? destSegments : undefined,
           startDate,
           endDate,
@@ -164,6 +174,9 @@ export default function AIItinerarySheet({
       setStreaming(false)
     }
   }, [
+    // plan은 레이아웃에서 비동기로 채워진다. deps에 없으면 초기값 'free'가 캡처돼
+    // 유료 사용자에게도 업그레이드 시트가 뜬다.
+    plan,
     canGenerate,
     destination,
     startDate,
@@ -249,11 +262,7 @@ export default function AIItinerarySheet({
   return (
     <>
       {upgradeSheet && (
-        <UpgradeSheet
-          required="plus"
-          feature="AI 일정 생성"
-          onClose={() => setUpgradeSheet(false)}
-        />
+        <UpgradeSheet required="plus" feature="itinerary" onClose={() => setUpgradeSheet(false)} />
       )}
       {/* 등록 중엔 앱 전체에서 쓰는 제출 오버레이를 그대로 쓴다
           (로그인/회원가입과 같은 패턴) */}
@@ -305,7 +314,9 @@ export default function AIItinerarySheet({
             <div className="space-y-4 px-5 py-4">
               {/* 방문 도시 (읽기 전용) */}
               <div>
-                <p className="text-ink mb-2 text-[13px] font-semibold">{t('ai.visitCitiesLabel')}</p>
+                <p className="text-ink mb-2 text-[13px] font-semibold">
+                  {t('ai.visitCitiesLabel')}
+                </p>
                 <div className="space-y-1.5">
                   {destSegments.map((seg, i) => (
                     <div
@@ -414,17 +425,19 @@ export default function AIItinerarySheet({
                     )}
                   </div>
                   <div>
-                    <p className="text-ink text-[13px] font-semibold">{t('ai.estimateCostLabel')}</p>
-                    <p className="text-ink3 text-[11px]">
-                      {t('ai.estimateCostDesc')}
+                    <p className="text-ink text-[13px] font-semibold">
+                      {t('ai.estimateCostLabel')}
                     </p>
+                    <p className="text-ink3 text-[11px]">{t('ai.estimateCostDesc')}</p>
                   </div>
                 </button>
 
                 {/* 인원 선택 — 체크됐을 때만 */}
                 {withCost && (
                   <div className="border-primary/20 flex items-center justify-between border-t px-4 py-2.5">
-                    <span className="text-ink text-[13px] font-medium">{t('ai.personCountLabel')}</span>
+                    <span className="text-ink text-[13px] font-medium">
+                      {t('ai.personCountLabel')}
+                    </span>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setPersonCount((v) => Math.max(1, v - 1))}
@@ -432,19 +445,31 @@ export default function AIItinerarySheet({
                         className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm disabled:opacity-30"
                       >
                         <svg width="12" height="2" viewBox="0 0 12 2" fill="none">
-                          <path d="M1 1h10" stroke="var(--color-ink)" strokeWidth="1.8" strokeLinecap="round" />
+                          <path
+                            d="M1 1h10"
+                            stroke="var(--color-ink)"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       </button>
                       <span className="text-ink w-8 text-center text-[15px] font-bold">
                         {personCount}
                       </span>
                       <button
-                        onClick={() => setPersonCount((v) => Math.min(memberCount > 1 ? memberCount : 99, v + 1))}
+                        onClick={() =>
+                          setPersonCount((v) => Math.min(memberCount > 1 ? memberCount : 99, v + 1))
+                        }
                         disabled={memberCount > 1 && personCount >= memberCount}
                         className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm disabled:opacity-30"
                       >
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M6 1v10M1 6h10" stroke="var(--color-ink)" strokeWidth="1.8" strokeLinecap="round" />
+                          <path
+                            d="M6 1v10M1 6h10"
+                            stroke="var(--color-ink)"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       </button>
                       {memberCount > 1 && (
@@ -558,7 +583,6 @@ export default function AIItinerarySheet({
           </div>
         )}
       </div>
-
     </>
   )
 }

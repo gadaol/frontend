@@ -2,7 +2,6 @@ import { generateText } from 'ai'
 import { NextRequest } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
 import { createClient } from '@/lib/supabase/server'
-import { getUserPlan } from '@/lib/planGate'
 import type { Locale } from '@/lib/ai/characters'
 
 const COMPANION_LABELS: Record<string, string> = {

@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import Badge, { type BadgeProps } from '@/components/ui/Badge'
-import type { Tables } from '@/types/supabase'
+import type { Tables } from '@/types/database/database.types'
 
 const CATEGORY_VARIANT: Record<string, NonNullable<BadgeProps['variant']>> = {
   공지: 'blue',

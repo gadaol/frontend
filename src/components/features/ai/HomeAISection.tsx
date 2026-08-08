@@ -18,7 +18,12 @@ import type { RecommendResult } from '@/app/api/ai/recommend/route'
 
 type SaveState = 'idle' | 'loading' | 'saved' | 'exists' | 'error'
 type TripAddState = 'idle' | 'loading' | 'done' | 'error'
-type ActiveTrip = { id: string; title: string; destination: string | null; start_date: string | null }
+type ActiveTrip = {
+  id: string
+  title: string
+  destination: string | null
+  start_date: string | null
+}
 
 export default function HomeAISection() {
   const locale = useLocale() as 'ko' | 'en'
@@ -165,11 +170,7 @@ export default function HomeAISection() {
   return (
     <>
       {upgradeSheet && (
-        <UpgradeSheet
-          required="pro"
-          feature="AI 맞춤 추천"
-          onClose={() => setUpgradeSheet(false)}
-        />
+        <UpgradeSheet required="pro" feature="aiRecommend" onClose={() => setUpgradeSheet(false)} />
       )}
       {/* 배너 버튼 */}
       <button
@@ -180,7 +181,14 @@ export default function HomeAISection() {
         <svg
           aria-hidden
           viewBox="0 0 48 48"
-          style={{ position: 'absolute', right: -8, top: -10, width: 72, height: 72, opacity: 0.15 }}
+          style={{
+            position: 'absolute',
+            right: -8,
+            top: -10,
+            width: 72,
+            height: 72,
+            opacity: 0.15,
+          }}
         >
           <g transform="translate(10 9)">
             <path d="M3 24L23 4L18 24L12 17Z" fill="white" />
@@ -368,9 +376,15 @@ export default function HomeAISection() {
                                     ) : saveState === 'exists' ? (
                                       <>✓ {isKo ? '이미 백로그에 있음' : 'Already in backlog'}</>
                                     ) : saveState === 'error' ? (
-                                      isKo ? '저장 실패' : 'Error'
+                                      isKo ? (
+                                        '저장 실패'
+                                      ) : (
+                                        'Error'
+                                      )
+                                    ) : isKo ? (
+                                      '백로그에 저장'
                                     ) : (
-                                      isKo ? '백로그에 저장' : 'Save to backlog'
+                                      'Save to backlog'
                                     )}
                                   </button>
 
@@ -385,8 +399,21 @@ export default function HomeAISection() {
                                     style={{ backgroundColor: '#6366f118', color: '#6366f1' }}
                                   >
                                     <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                                      <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                                      <path d="M3.5 1v2M7.5 1v2M1 5h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                                      <rect
+                                        x="1"
+                                        y="2"
+                                        width="9"
+                                        height="8"
+                                        rx="1.5"
+                                        stroke="currentColor"
+                                        strokeWidth="1.2"
+                                      />
+                                      <path
+                                        d="M3.5 1v2M7.5 1v2M1 5h9"
+                                        stroke="currentColor"
+                                        strokeWidth="1.2"
+                                        strokeLinecap="round"
+                                      />
                                     </svg>
                                     {isKo ? '여행에 추가' : 'Add to trip'}
                                   </button>
@@ -439,11 +466,21 @@ export default function HomeAISection() {
                                                 {state === 'loading' ? (
                                                   <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#6366f1] border-t-transparent" />
                                                 ) : state === 'done' ? (
-                                                  isKo ? '추가됨 ✓' : 'Added ✓'
+                                                  isKo ? (
+                                                    '추가됨 ✓'
+                                                  ) : (
+                                                    'Added ✓'
+                                                  )
                                                 ) : state === 'error' ? (
-                                                  isKo ? '실패' : 'Error'
+                                                  isKo ? (
+                                                    '실패'
+                                                  ) : (
+                                                    'Error'
+                                                  )
+                                                ) : isKo ? (
+                                                  '추가'
                                                 ) : (
-                                                  isKo ? '추가' : 'Add'
+                                                  'Add'
                                                 )}
                                               </span>
                                             </button>
@@ -465,7 +502,7 @@ export default function HomeAISection() {
 
               {/* 하단 버튼 */}
               {!loading && result && (
-                <div className="border-border pb-safe flex-shrink-0 border-t px-4 py-3 flex gap-2">
+                <div className="border-border pb-safe flex flex-shrink-0 gap-2 border-t px-4 py-3">
                   <button
                     onClick={handleAskForTrip}
                     className="flex-1 rounded-2xl py-3 text-[14px] font-semibold text-white"

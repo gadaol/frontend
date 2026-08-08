@@ -45,10 +45,13 @@ export async function POST(request: Request) {
     const expiresAt = new Date()
     expiresAt.setMonth(expiresAt.getMonth() + 1)
 
+    /* 'active'가 아니라 'trial'로 넣는다.
+       - UI는 status === 'trial'일 때만 "Pro(체험)"으로 표시한다
+       - 갱신 크론이 체험을 결제 실패로 오인해 알림을 보내지 않게 한다 */
     const { error: subError } = await adminSupabase.from('subscriptions').insert({
       user_id: user.id,
       plan: 'pro',
-      status: 'active',
+      status: 'trial',
       expires_at: expiresAt.toISOString(),
     })
 

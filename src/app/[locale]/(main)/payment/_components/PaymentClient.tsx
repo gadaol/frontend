@@ -150,6 +150,8 @@ export default function PaymentClient({ plan, period: initialPeriod, userId, loc
         <div className="flex-1" />
 
         <p className="text-ink3 mx-4 mt-4 text-center text-[12px] leading-relaxed">
+          {t('withdrawalNotice')}
+          <br />
           {t('cancelAnytime')}
           <br />
           {t('cardSafe')}

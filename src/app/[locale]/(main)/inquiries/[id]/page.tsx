@@ -4,7 +4,7 @@ import { INQUIRY_CAT_KEY } from '../page'
 import { createClient } from '@/lib/supabase/server'
 import AppHeader from '@/components/common/AppHeader'
 import Badge from '@/components/ui/Badge'
-import type { Tables } from '@/types/supabase'
+import type { Tables } from '@/types/database/database.types'
 
 type InquiryWithAnswer = Tables<'inquiries'> & {
   inquiry_answers: Tables<'inquiry_answers'>[]

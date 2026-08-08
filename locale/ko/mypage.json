@@ -31,33 +31,52 @@
     "free": "무료",
     "perMonth": "/ 월",
     "planLabel": {
-      "free": "Free",
+      "free": "무료",
       "pro": "Pro",
       "plus": "Plus"
     },
+    "freePlanSub": "(신규 무료플랜)",
+    "freeNoticeTitle": "신규 무료플랜 이용 중",
+    "freeNoticeDesc": "가입 시 제공되는 무료플랜이에요. Pro 또는 Plus로 업그레이드하면 AI 추천·경비관리·초대 등 더 많은 기능을 쓸 수 있어요.",
+    "withdrawalNotice": "결제 즉시 서비스가 제공되어 청약철회가 제한될 수 있습니다.",
+    "upgradeSheet": {
+      "exclusive": "전용 기능",
+      "body": "<feat>{feature}</feat> 기능은 <hl>{plan}</hl> 플랜부터 사용할 수 있어요.",
+      "cta": "{plan} 업그레이드",
+      "later": "나중에",
+      "feature": {
+        "collection": "컬렉션",
+        "invite": "메이트 초대",
+        "expense": "경비 추가",
+        "multiDestination": "다중 목적지",
+        "characterRog": "로그 캐릭터",
+        "aiSearch": "AI 장소 검색",
+        "aiRecommend": "AI 맞춤 추천",
+        "voice": "음성 모드",
+        "itinerary": "AI 일정 생성",
+        "tripLimit": "여행 3개 초과 생성"
+      }
+    },
     "benefits": {
       "free": [
-        "여행 최대 3개",
-        "메이트 최대 2명",
-        "AI 추천 3회/월",
+        "여행 최대 3개 생성",
+        "기본 장소 탐색 및 저장",
         "백로그 무제한 저장"
       ],
       "pro": [
-        "여행 무제한",
-        "메이트 최대 10명",
-        "AI 추천 월 20회",
-        "백로그 폴더/태그 정리",
-        "팀 권한 관리",
-        "광고 없음"
+        "여행 무제한 생성",
+        "여행 초대 및 공동 편집",
+        "컬렉션 폴더 관리",
+        "경비 관리",
+        "복수 여행지 설정",
+        "AI 장소 검색",
+        "AI 여행 추천",
+        "로그 캐릭터"
       ],
       "plus": [
-        "여행 무제한",
-        "메이트 무제한",
-        "AI 추천 무제한",
-        "백로그 폴더/태그 정리",
-        "팀 권한 관리",
-        "공유 백로그",
-        "광고 없음"
+        "Pro의 모든 기능",
+        "AI 음성으로 일정 생성",
+        "AI 자동 일정 생성"
       ]
     },
     "billingMonthly": "월간",

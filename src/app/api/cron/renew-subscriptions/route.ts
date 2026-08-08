@@ -23,10 +23,11 @@ export async function GET(req: NextRequest) {
   const cutoff = new Date(now)
   cutoff.setDate(cutoff.getDate() + 1)
 
+  // 체험(trial)도 만료 처리 대상이다. 빌링키가 있으면 유료로 전환되고, 없으면 그냥 만료된다.
   const { data: dueSubs, error } = await supabase
     .from('subscriptions')
-    .select('id, user_id, plan, period, expires_at')
-    .eq('status', 'active')
+    .select('id, user_id, plan, period, expires_at, status')
+    .in('status', ['active', 'trial'])
     .lte('expires_at', cutoff.toISOString())
 
   if (error) {
@@ -46,9 +47,19 @@ export async function GET(req: NextRequest) {
         .maybeSingle()
 
       if (!billingKey) {
-        // 빌링키 없으면 만료 처리
         await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
-        return { subId: sub.id, result: 'expired_no_billing_key' }
+        /* 체험은 애초에 결제한 적이 없다. "결제 실패" 알림을 보내면 안 된다. */
+        if (sub.status !== 'trial') {
+          await supabase.from('notifications').insert({
+            user_id: sub.user_id,
+            type: 'payment_failed',
+            payload: { plan: sub.plan, plan_label: sub.plan === 'plus' ? 'Plus' : 'Pro' },
+          })
+        }
+        return {
+          subId: sub.id,
+          result: sub.status === 'trial' ? 'trial_ended' : 'expired_no_billing_key',
+        }
       }
 
       const plan = sub.plan as 'pro' | 'plus'
@@ -94,8 +105,13 @@ export async function GET(req: NextRequest) {
         const msg = err instanceof Error ? err.message : 'charge_failed'
         console.error(`[cron] charge failed for sub ${sub.id}:`, msg)
 
-        // 결제 실패 → 만료 처리
+        // 결제 실패 → 만료 처리 + 알림
         await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
+        await supabase.from('notifications').insert({
+          user_id: sub.user_id,
+          type: 'payment_failed',
+          payload: { plan, plan_label: plan === 'plus' ? 'Plus' : 'Pro' },
+        })
 
         return { subId: sub.id, result: 'expired_charge_failed', error: msg }
       }

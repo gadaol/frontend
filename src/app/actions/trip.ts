@@ -25,7 +25,15 @@ export async function createTrip(formData: FormData): Promise<{ error?: string }
   const endTime = (formData.get('end_time') as string) || null
   const invitedIds = (formData.getAll('invited_user_ids') as string[]).filter(Boolean)
   const destinationsRaw = (formData.get('destinations') as string) || null
-  const destinations = destinationsRaw ? (() => { try { return JSON.parse(destinationsRaw) } catch { return null } })() : null
+  const destinations = destinationsRaw
+    ? (() => {
+        try {
+          return JSON.parse(destinationsRaw)
+        } catch {
+          return null
+        }
+      })()
+    : null
 
   if (!title) return { error: (await getTranslations('trips'))('titleRequired') }
 

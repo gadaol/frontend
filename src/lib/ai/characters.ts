@@ -351,12 +351,12 @@ export const CHARACTER_META: Record<
       en: [
         "How many places have you saved online and still haven't been to?\nLet's actually book one today.",
         "Rough day, huh.\nYou're here because you want to get away from it all — right?",
-        "Not the tourist traps.\nWhere do you want to go and actually brag about later?",
+        'Not the tourist traps.\nWhere do you want to go and actually brag about later?',
         "Dreaming of quitting and just... leaving?\nLet's plan that trip. Work can wait.",
         "How do you want to remember this trip?\nLet's start from that feeling.",
         "When did you last stop and think 'wow, this place exists'?\nLet's find that feeling again.",
         "If your phone wallpaper is a landscape, that's where you want to go.\nWhat is it?",
-        "You know that feeling of needing to go somewhere but not knowing where?\nYou came to the right place.",
+        'You know that feeling of needing to go somewhere but not knowing where?\nYou came to the right place.',
       ],
     },
     voiceGreetings: {
@@ -370,9 +370,9 @@ export const CHARACTER_META: Record<
       en: [
         "Hi, I'm Gada. You're here because you want to escape, right?",
         "Hey, it's Gada. Got places saved that you still haven't visited?",
-        "Hi there. How do you want to feel after this trip?",
-        "Gada here. Not the obvious spots — where do you actually want to brag about going?",
-        "Hi. That feeling of needing to just go somewhere — I got you.",
+        'Hi there. How do you want to feel after this trip?',
+        'Gada here. Not the obvious spots — where do you actually want to brag about going?',
+        'Hi. That feeling of needing to just go somewhere — I got you.',
       ],
     },
     color: 'var(--color-gada)',
@@ -380,7 +380,10 @@ export const CHARACTER_META: Record<
   rog: {
     name: { ko: '로그', en: 'Rog' },
     type: { ko: '팩트형 메이트', en: 'Fact-Based Mate' },
-    tagline: { ko: '팩트만. 감성은 다른 데 가서.', en: 'Facts only. Take your feelings elsewhere.' },
+    tagline: {
+      ko: '팩트만. 감성은 다른 데 가서.',
+      en: 'Facts only. Take your feelings elsewhere.',
+    },
     greetings: {
       ko: [
         '가다한테 갔다가 결국 나한테 온 거야?\n그럴 줄 알았어. 어디야.',
@@ -393,7 +396,7 @@ export const CHARACTER_META: Record<
         '가고 싶은 데 있는데 예산이랑 안 맞을 것 같은 거지.\n어디야. 맞게 잘라줄게.',
       ],
       en: [
-        "Tried Gada first and ended up here anyway?\nFigured. Where to.",
+        'Tried Gada first and ended up here anyway?\nFigured. Where to.',
         "Made a plan without adding up travel times?\nYeah. That's why you're here.",
         "Going on a Tuesday? Half those places are closed Tuesdays.\nThat's why you need me. Where to.",
         "Don't know where to go? Just tell me your budget.\nI'll decide.",
@@ -412,9 +415,9 @@ export const CHARACTER_META: Record<
         '일정 짜러 온 거지. 설레는 건 가다한테 가고. 어디야.',
       ],
       en: [
-        "Came from Gada? Figured. Where to.",
-        "Got a plan without travel times? Yeah. Tell me.",
-        "Going Tuesday? Half those places are closed. Where is it.",
+        'Came from Gada? Figured. Where to.',
+        'Got a plan without travel times? Yeah. Tell me.',
+        'Going Tuesday? Half those places are closed. Where is it.',
         "No idea where to go? Just give me your budget. I'll sort it.",
         "Itinerary, not vibes. Gada's next door. Where to.",
       ],

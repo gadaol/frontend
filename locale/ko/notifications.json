@@ -17,6 +17,8 @@
   "systemInDays": "3일 후 여행이 시작돼요",
   "systemGeneric": "여행 알림",
   "systemDesc": "{trip} 준비됐나요? 지금 일정을 확인해보세요",
+  "paymentFailedTitle": "구독 결제에 실패했어요",
+  "paymentFailedDesc": "{plan} 구독 갱신 결제가 실패했어요. 결제 수단을 확인해주세요",
   "defaultTitle": "새 알림이 있어요",
   "settings": {
     "title": "알림 설정",

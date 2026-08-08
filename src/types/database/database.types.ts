@@ -528,6 +528,8 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           id: string
+          location_agreed_at: string | null
+          marketing_agreed_at: string | null
           name: string | null
           onboarding_completed: boolean
           phone: string | null
@@ -541,6 +543,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id: string
+          location_agreed_at?: string | null
+          marketing_agreed_at?: string | null
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -554,6 +558,8 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id?: string
+          location_agreed_at?: string | null
+          marketing_agreed_at?: string | null
           name?: string | null
           onboarding_completed?: boolean
           phone?: string | null
