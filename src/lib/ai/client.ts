@@ -5,6 +5,6 @@ export const cerebras = createCerebras({
 })
 
 export const MODELS = {
-  default: 'llama-3.3-70b',
-  fast: 'llama3.1-8b',
+  default: 'gpt-oss-120b',
+  fast: 'gemma-4-31b',
 } as const

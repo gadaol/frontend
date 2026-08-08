@@ -6,6 +6,7 @@ import { DefaultChatTransport, isTextUIPart } from 'ai'
 import { useLocale } from 'next-intl'
 import { useAssistantStore } from '@/lib/ai/store'
 import CharacterAvatar from './CharacterAvatar'
+import MarkdownContent from '@/components/ui/MarkdownContent'
 import type { CharacterId } from '@/lib/ai/characters'
 
 const CHARACTER_INFO: Record<CharacterId, { name: string; greeting: string; greetingEn: string }> = {
@@ -197,8 +198,8 @@ export default function AssistantPanel() {
               return (
                 <div key={message.id} className="flex items-start gap-2">
                   <CharacterAvatar character={character} size="sm" />
-                  <div className="max-w-[78%] rounded-[18px] rounded-bl-[4px] bg-bg2 px-4 py-3 text-[14px] leading-relaxed text-ink">
-                    {text || <TypingDots />}
+                  <div className="max-w-[78%] rounded-[18px] rounded-bl-[4px] bg-bg2 px-4 py-3">
+                    {text ? <MarkdownContent text={text} /> : <TypingDots />}
                   </div>
                 </div>
               )

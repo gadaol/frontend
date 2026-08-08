@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, OverlayView } from '@react-google-maps/api'
 import { SearchIcon, ChevronRightIcon } from '@/components/icons'
+import MarkdownContent from '@/components/ui/MarkdownContent'
 import { getCategoryInfo, getCategoryStyle, getMarkerColor } from '@/utils/placeCategory'
+import PlacePhoto from '@/components/features/places/PlacePhoto'
 import { createClient } from '@/lib/supabase/client'
 import type { GooglePlace } from '@/types/place'
 
@@ -480,12 +482,12 @@ export default function PlaceMapSearch({
                   </div>
                 )}
                 {aiText && (
-                  <p className="whitespace-pre-wrap text-[13px] leading-[1.75] text-ink">
-                    {aiText}
+                  <>
+                    <MarkdownContent text={aiText} size="sm" />
                     {aiLoading && (
                       <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-ink3 align-text-bottom" />
                     )}
-                  </p>
+                  </>
                 )}
                 {aiDone && (
                   <button
@@ -556,7 +558,6 @@ export default function PlaceMapSearch({
               >
                 {results.map((place) => {
                   const category = getCategoryInfo(place.types)
-                  const Icon = category.icon
                   return (
                     <div
                       key={place.id}
@@ -566,11 +567,12 @@ export default function PlaceMapSearch({
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
                         onClick={() => focusPlace(place)}
                       >
-                        <div
-                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${category.bg}`}
-                        >
-                          <Icon size={18} className={category.color} />
-                        </div>
+                        <PlacePhoto
+                          photoRef={place.photos?.[0]?.name ?? null}
+                          categoryStyle={category}
+                          iconSize={18}
+                          className="h-9 w-9 flex-shrink-0 rounded-[10px]"
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="text-ink truncate text-[14px] font-semibold">
                             {place.displayName.text}
