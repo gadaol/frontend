@@ -12,7 +12,7 @@ import VoiceMode, { type VoiceNote } from './VoiceMode'
 import type { VoiceState } from './VoiceOrb'
 import ConversationHistory from './ConversationHistory'
 import MarkdownContent from '@/components/ui/MarkdownContent'
-import { CHARACTER_META, type CharacterId } from '@/lib/ai/characters'
+import { CHARACTER_META, pickGreeting, pickVoiceGreeting, type CharacterId } from '@/lib/ai/characters'
 import {
   loadConversations,
   saveConversation,
@@ -28,6 +28,7 @@ export default function AssistantPanel() {
   const { isOpen, close, character, setCharacter, initialPrompt, clearInitialPrompt } =
     useAssistantStore()
   const locale = useLocale() as 'ko' | 'en'
+  const isKo = locale === 'ko'
   const t = useTranslations('ai')
 
   const [inputText, setInputText] = useState('')
@@ -35,6 +36,7 @@ export default function AssistantPanel() {
   const [notes, setNotes] = useState<VoiceNote[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [greeting, setGreeting] = useState('')
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -74,6 +76,24 @@ export default function AssistantPanel() {
   )
 
   const { messages, sendMessage, status, setMessages } = useChat({ transport })
+
+  // 패널이 열릴 때마다 / 캐릭터가 바뀔 때마다 인사말 새로 뽑기
+  useEffect(() => {
+    if (isOpen) setGreeting(pickGreeting(character, locale))
+  }, [isOpen, character, locale])
+
+  // trip 생성 완료 감지
+  const createdTrip = useMemo(() => {
+    for (const msg of [...messages].reverse()) {
+      for (const part of msg.parts) {
+        const p = part as { type?: string; toolName?: string; state?: string; result?: { success?: boolean; tripId?: string; title?: string } }
+        if (p.type === 'tool-invocation' && p.toolName === 'create_trip' && p.state === 'result' && p.result?.success && p.result.tripId) {
+          return { tripId: p.result.tripId, title: p.result.title ?? '' }
+        }
+      }
+    }
+    return null
+  }, [messages])
 
   const isLoading = status === 'submitted' || status === 'streaming'
   const hasMessages = messages.length > 0
@@ -167,7 +187,7 @@ export default function AssistantPanel() {
     setVoiceMode(true)
     live.current.voice = true
     // iOS는 사용자 제스처 안에서 첫 재생이 일어나야 이후 재생이 허용된다
-    void speak(CHARACTER_META[character].voiceGreeting[locale]).then(() => {
+    void speak(pickVoiceGreeting(character, locale)).then(() => {
       if (live.current.voice) startListening()
     })
   }
@@ -422,7 +442,7 @@ export default function AssistantPanel() {
                 </div>
 
                 <p className="text-ink2 mt-5 text-[17px] leading-relaxed whitespace-pre-line">
-                  {meta.greeting[locale]}
+                  {greeting}
                 </p>
 
                 {/* 음성 대화 진입 */}
@@ -536,6 +556,25 @@ export default function AssistantPanel() {
                     <CharacterAvatar character={character} size="sm" />
                     <div className="bg-bg2 rounded-[20px] rounded-bl-[6px] px-4 py-2.5">
                       <TypingDots />
+                    </div>
+                  </div>
+                )}
+
+                {/* 여행 생성 완료 배너 */}
+                {createdTrip && (
+                  <div className="mx-4 mb-2 overflow-hidden rounded-2xl" style={{ background: 'linear-gradient(135deg, #0891b2 0%, #6366f1 100%)' }}>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-[12px] font-semibold text-white/70">{isKo ? '여행이 만들어졌어요 ✓' : 'Trip created ✓'}</p>
+                        <p className="text-[15px] font-bold text-white">{createdTrip.title}</p>
+                      </div>
+                      <a
+                        href={`/${locale}/trips/${createdTrip.tripId}`}
+                        onClick={close}
+                        className="rounded-xl bg-white/20 px-3 py-2 text-[13px] font-semibold text-white active:opacity-70"
+                      >
+                        {isKo ? '여행 보기 →' : 'View →'}
+                      </a>
                     </div>
                   </div>
                 )}

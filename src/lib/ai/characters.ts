@@ -282,6 +282,18 @@ export function getVoicePrompt(character: CharacterId, locale: Locale): string {
   return CHARACTERS[character][locale] + VOICE_RULES[locale]
 }
 
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+export function pickGreeting(character: CharacterId, locale: Locale): string {
+  return pick(CHARACTER_META[character].greetings[locale])
+}
+
+export function pickVoiceGreeting(character: CharacterId, locale: Locale): string {
+  return pick(CHARACTER_META[character].voiceGreetings[locale])
+}
+
 /**
  * 화면에 노출되는 캐릭터 문구. 이름·소개·첫 인사를 한곳에서 관리한다.
  * 위 시스템 프롬프트의 성격 설정과 말투가 어긋나지 않게 함께 수정할 것.
@@ -292,9 +304,10 @@ export const CHARACTER_META: Record<
     name: Record<Locale, string>
     type: Record<Locale, string>
     tagline: Record<Locale, string>
-    greeting: Record<Locale, string>
-    /** 음성 모드 진입 시 소리내어 말하는 첫 마디 */
-    voiceGreeting: Record<Locale, string>
+    /** 처음 열릴 때 랜덤으로 하나 선택되는 인사말 풀 */
+    greetings: Record<Locale, string[]>
+    /** 음성 모드 진입 시 소리내어 말하는 첫 마디 풀 */
+    voiceGreetings: Record<Locale, string[]>
     /** 캐릭터 시그니처 컬러 (오브·강조에 사용) */
     color: string
   }
@@ -303,13 +316,33 @@ export const CHARACTER_META: Record<
     name: { ko: '가다', en: 'Gada' },
     type: { ko: '감성형 메이트', en: 'Emotional Mate' },
     tagline: { ko: '감성으로 먼저 읽는 여행 메이트', en: 'Vibes first, logistics second' },
-    greeting: {
-      ko: '요즘 어디가 끌리세요?\n막연해도 괜찮아요. 느낌부터 같이 얘기해봐요.',
-      en: "Anywhere calling to you lately?\nVague is fine — let's start with the feeling.",
+    greetings: {
+      ko: [
+        '요즘 어디가 끌리세요?\n막연해도 괜찮아요. 느낌부터 같이 얘기해봐요.',
+        '어떤 기분으로 떠나고 싶으세요?\n설레는 마음 있으면 같이 그려봐요.',
+        '여행이 당기는 계절이에요.\n어떤 곳이 머릿속에 자꾸 떠오르세요?',
+        '오늘 어떤 여행 얘기 해볼까요?\n아직 아무것도 정하지 않아도 괜찮아요.',
+        '오늘 어디로 도망가고 싶으세요?\n같이 찾아봐요.',
+      ],
+      en: [
+        "Anywhere calling to you lately?\nVague is fine — let's start with the feeling.",
+        "What kind of mood are you chasing?\nLet's figure out where that takes you.",
+        "Any place keeps coming to mind?\nTell me about it.",
+        "Ready to plan something? Or just dreaming?\nEither works — let's talk.",
+        "Where would you escape to today?\nLet's find it together.",
+      ],
     },
-    voiceGreeting: {
-      ko: '안녕하세요, 가다예요. 요즘 어디가 끌리세요?',
-      en: "Hi, I'm Gada. Anywhere been calling to you lately?",
+    voiceGreetings: {
+      ko: [
+        '안녕하세요, 가다예요. 요즘 어디가 끌리세요?',
+        '가다예요. 어떤 여행 생각하고 계세요?',
+        '안녕하세요. 오늘 어떤 곳이 떠오르세요?',
+      ],
+      en: [
+        "Hi, I'm Gada. Anywhere been calling to you?",
+        "Hey, it's Gada. What kind of trip are you thinking?",
+        "Hi there. What place keeps coming to mind?",
+      ],
     },
     color: 'var(--color-gada)',
   },
@@ -317,13 +350,33 @@ export const CHARACTER_META: Record<
     name: { ko: '로그', en: 'Rog' },
     type: { ko: '팩트형 메이트', en: 'Fact-Based Mate' },
     tagline: { ko: '팩트만. 감성은 다른 데 가서.', en: 'Facts only. Take your feelings elsewhere.' },
-    greeting: {
-      ko: '...계획 잡아줄게.\n어디 가는 거야, 며칠이야.',
-      en: "...Let's get your plan sorted.\nWhere to, how many days.",
+    greetings: {
+      ko: [
+        '...계획 잡아줄게.\n어디 가는 거야, 며칠이야.',
+        '...왔어. 목적지랑 날짜 말해.',
+        '...뭐야. 어디 가고 싶은 건데.',
+        '일정 짜줄게. 여행지가 어디야.',
+        '...말해. 어디, 언제, 며칠.',
+      ],
+      en: [
+        "...Let's get your plan sorted.\nWhere to, how many days.",
+        "...You're here. Destination and dates.",
+        "...Fine. Where do you want to go.",
+        "I'll sort the itinerary. Where to.",
+        "...Go ahead. Where, when, how long.",
+      ],
     },
-    voiceGreeting: {
-      ko: '...왔어. 어디 갈 건데, 며칠이야.',
-      en: "...You're here. Where to, how many days.",
+    voiceGreetings: {
+      ko: [
+        '...왔어. 어디 갈 건데, 며칠이야.',
+        '...말해. 목적지랑 날짜.',
+        '...뭐야. 빨리 말해.',
+      ],
+      en: [
+        "...You're here. Where to, how many days.",
+        "...Go. Destination and dates.",
+        "...Fine. Talk.",
+      ],
     },
     color: 'var(--color-rog)',
   },

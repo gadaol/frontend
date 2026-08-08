@@ -38,6 +38,7 @@ export default function PlacesSearch({ initialAvatar, initialName }: Props) {
   }
 
   return (
+    <div style={{ height: 'calc(100dvh - 69px - env(safe-area-inset-bottom, 0px))' }}>
     <PlaceMapSearch
       initialAvatar={initialAvatar}
       initialName={initialName}
@@ -63,5 +64,6 @@ export default function PlacesSearch({ initialAvatar, initialName }: Props) {
         )
       }}
     />
+    </div>
   )
 }

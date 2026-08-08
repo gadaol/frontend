@@ -51,9 +51,6 @@ export default function VoiceMode({
     notesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [notes])
 
-  // 말하는 중엔 캐릭터 말이, 그 외엔 내 말이 자막에 뜬다
-  const caption = state === 'speaking' || state === 'thinking' ? spoken : interim
-
   return (
     <div className="flex h-full flex-col bg-white">
       {/* 상단 — 나가기 */}
@@ -77,27 +74,24 @@ export default function VoiceMode({
         <div className="w-[92px]" />
       </div>
 
-      {/* 오브 + 자막 */}
+      {/* 오브 + 상태 */}
       <div className="flex flex-shrink-0 flex-col items-center px-8 pt-4 pb-2">
         <VoiceOrb character={character} state={state} />
-
-        <p className="text-ink3 mt-5 text-[12px] font-medium tracking-wide">
+        <p className="text-ink3 mt-4 text-[12px] font-medium tracking-wide">
           {error ? ta('micUnavailable') : LABEL[state][locale]}
         </p>
-
-        <div className="mt-2 flex min-h-[56px] w-full items-start justify-center">
-          {caption && (
-            <p
-              key={caption.slice(-24)}
-              className={`caption-rise text-center text-[17px] leading-relaxed ${
-                state === 'listening' ? 'text-ink' : 'text-ink2 font-medium'
-              }`}
-            >
-              {caption}
-            </p>
-          )}
-        </div>
+        {/* 사용자 말하는 중 실시간 자막 */}
+        {state === 'listening' && interim && (
+          <p className="text-ink3 mt-2 text-center text-[14px] leading-relaxed">{interim}</p>
+        )}
       </div>
+
+      {/* AI 마지막 말 — 상태가 바뀌어도 유지 */}
+      {spoken && (
+        <div className="mx-4 mb-2 flex-shrink-0 rounded-2xl bg-[#F7F7F9] px-4 py-3">
+          <p className="text-ink2 text-[15px] leading-relaxed">{spoken}</p>
+        </div>
+      )}
 
       {/* 정리 노트 — 대화는 흘러가고 여기에 결론만 쌓인다 */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4">
