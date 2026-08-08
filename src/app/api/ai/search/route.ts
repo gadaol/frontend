@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       prompt: query,
       schema: RecommendSchema,
       abortSignal: AbortSignal.timeout(45_000),
-      maxRetries: 0,
+      maxRetries: 2,
     })
     return NextResponse.json(object)
   } catch {

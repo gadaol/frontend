@@ -243,7 +243,7 @@ export async function POST(req: NextRequest) {
       prompt,
       schema: RecommendSchema,
       abortSignal: AbortSignal.timeout(45_000),
-      maxRetries: 0,
+      maxRetries: 2,
     })
 
     void supabase.from('recommendation_logs').insert({
