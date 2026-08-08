@@ -1,4 +1,4 @@
-import { streamObject } from 'ai'
+import { generateObject } from 'ai'
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import { cerebras, MODELS } from '@/lib/ai/client'
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     dislikedResult,
     interactionsResult,
     completedTripsResult,
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     supabase
       .from('profiles')
       .select('name, travel_companion, travel_pace, travel_places')
@@ -133,7 +133,10 @@ export async function POST(req: NextRequest) {
       .limit(3),
   ])
 
-  const profile = profileResult.data
+  const settled = <T,>(r: PromiseSettledResult<T>): T | null =>
+    r.status === 'fulfilled' ? r.value : null
+
+  const profile = settled(profileResult)?.data ?? null
   const sections: string[] = []
 
   const prefLines = [
@@ -149,7 +152,7 @@ export async function POST(req: NextRequest) {
   ].filter(Boolean)
   if (prefLines.length) sections.push(`[사용자 취향]\n${prefLines.join('\n')}`)
 
-  const backlogNames = (backlogResult.data ?? [])
+  const backlogNames = (settled(backlogResult)?.data ?? [])
     .map((b) => formatPlace(b.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
   if (backlogNames.length) {
@@ -158,21 +161,21 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const likedNames = (likedResult.data ?? [])
+  const likedNames = (settled(likedResult)?.data ?? [])
     .map((v) => formatPlace(v.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
   if (likedNames.length) {
     sections.push(`[좋아요한 장소 — 선호 확실]\n${likedNames.map((n) => `- ${n}`).join('\n')}`)
   }
 
-  const dislikedNames = (dislikedResult.data ?? [])
+  const dislikedNames = (settled(dislikedResult)?.data ?? [])
     .map((v) => formatPlace(v.places as PlaceWithCategory))
     .filter((x): x is string => x !== null)
   if (dislikedNames.length) {
     sections.push(`[싫어요한 장소 — 추천 제외]\n${dislikedNames.map((n) => `- ${n}`).join('\n')}`)
   }
 
-  const interactionNames = (interactionsResult.data ?? [])
+  const interactionNames = (settled(interactionsResult)?.data ?? [])
     .map((i) => {
       const p = i.places as PlaceWithCategory
       if (!p) return null
@@ -188,7 +191,7 @@ export async function POST(req: NextRequest) {
     destination: string | null
     itinerary_days: { itinerary_items: { places: PlaceWithCategory }[] }[]
   }
-  const visitedLines = ((completedTripsResult.data as CompletedTrip[]) ?? [])
+  const visitedLines = ((settled(completedTripsResult)?.data as CompletedTrip[]) ?? [])
     .map((trip) => {
       const names = trip.itinerary_days
         .flatMap((d) => d.itinerary_items)
@@ -249,19 +252,29 @@ export async function POST(req: NextRequest) {
       .join('\n')
   })()
 
-  const stream = streamObject({
-    model: cerebras(MODELS.default),
-    system,
-    prompt,
-    schema: RecommendSchema,
-  })
-  const object = await stream.object
+  try {
+    const { object } = await generateObject({
+      model: cerebras(MODELS.default),
+      system,
+      prompt,
+      schema: RecommendSchema,
+      abortSignal: AbortSignal.timeout(45_000),
+    })
 
-  void supabase.from('recommendation_logs').insert({
-    user_id: user.id,
-    trip_id: tripId ?? null,
-    recommended_places: { categories, destination, placeCount: object.places.length },
-  })
+    void supabase.from('recommendation_logs').insert({
+      user_id: user.id,
+      trip_id: tripId ?? null,
+      recommended_places: { categories, destination, placeCount: object.places.length },
+    })
 
-  return NextResponse.json(object)
+    return NextResponse.json(object)
+  } catch (err) {
+    const isTimeout =
+      err instanceof Error && (err.name === 'AbortError' || err.message.includes('timeout'))
+    console.error('[recommend] AI error:', err)
+    return NextResponse.json(
+      { error: isTimeout ? 'timeout' : 'ai_failed' },
+      { status: isTimeout ? 408 : 500 },
+    )
+  }
 }
