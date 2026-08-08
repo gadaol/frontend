@@ -988,8 +988,11 @@ function TimelineItemRow({
       setSwiped(false)
       return
     }
-    // 탭으로 인식
-    if (!swiped && Math.abs(dx) < 8) onTap()
+    if (Math.abs(dx) < 8) {
+      e.preventDefault() // ghost click 방지 (touchEnd 후 synthetic click이 backdrop으로 전파되는 문제)
+      if (swiped) setSwiped(false)
+      else onTap()
+    }
   }
 
   return (
