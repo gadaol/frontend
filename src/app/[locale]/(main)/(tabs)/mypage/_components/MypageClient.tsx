@@ -421,7 +421,6 @@ export default function MypageClient({
           <p className="text-ink mb-3 text-[13px] font-medium">{t('aiPickMate')}</p>
           <div className="flex gap-3">
             {(['gada', 'rog'] as CharacterId[]).map((id) => {
-              // 이 화면은 원래부터 한국어 하드코딩이라 ko 문구를 그대로 쓴다
               const info = CHARACTER_META[id]
               const active = character === id
               return (
@@ -435,9 +434,11 @@ export default function MypageClient({
                   <CharacterFigure character={id} size="md" />
                   <div>
                     <p className={`text-[14px] font-bold ${active ? 'text-primary' : 'text-ink'}`}>
-                      {info.name.ko}
+                      {info.name[locale as 'ko' | 'en']}
                     </p>
-                    <p className="text-ink3 mt-0.5 text-[11px]">{info.tagline.ko}</p>
+                    <p className="text-ink3 mt-0.5 text-[11px]">
+                      {info.tagline[locale as 'ko' | 'en']}
+                    </p>
                   </div>
                 </button>
               )

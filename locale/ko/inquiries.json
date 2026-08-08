@@ -1,0 +1,21 @@
+{
+  "title": "문의하기",
+  "newTitle": "문의 작성",
+  "category": "카테고리",
+  "subject": "제목",
+  "content": "내용",
+  "publicInquiry": "공개 문의",
+  "submit": "문의 제출",
+  "submitting": "제출 중...",
+  "subjectRequired": "제목을 입력해주세요",
+  "contentPlaceholder": "문의 내용을 자세히 작성해주세요",
+  "submitFailed": "제출에 실패했어요. 다시 시도해주세요.",
+  "cat": {
+    "service": "서비스 이용",
+    "billing": "결제/구독",
+    "bug": "오류/버그",
+    "account": "계정",
+    "etc": "기타"
+  },
+  "publicInquiryDesc": "공개 시 다른 사용자도 문의와 답변을 볼 수 있어요"
+}

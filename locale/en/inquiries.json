@@ -1,0 +1,21 @@
+{
+  "title": "Contact us",
+  "newTitle": "New inquiry",
+  "category": "Category",
+  "subject": "Subject",
+  "content": "Message",
+  "publicInquiry": "Public inquiry",
+  "submit": "Submit",
+  "submitting": "Submitting...",
+  "subjectRequired": "Please enter a subject",
+  "contentPlaceholder": "Tell us what happened, in detail",
+  "submitFailed": "Couldn't submit. Please try again.",
+  "cat": {
+    "service": "Using the app",
+    "billing": "Billing",
+    "bug": "Bug report",
+    "account": "Account",
+    "etc": "Other"
+  },
+  "publicInquiryDesc": "Anyone can read public inquiries and their replies"
+}

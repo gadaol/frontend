@@ -72,7 +72,7 @@ export default function SubscriptionClient({
   const isCurrentPlan = activeTab === plan
   const isPaid = plan !== 'free'
   const features = t.raw(`benefits.${activeTab}`) as string[]
-  const periodLabel = period === 'yearly' ? '연간' : '월간'
+  const periodLabel = period === 'yearly' ? t('billingYearly') : t('billingMonthly')
 
   function getPrice(tab: Plan) {
     if (tab === 'free') return t('free')
@@ -86,7 +86,7 @@ export default function SubscriptionClient({
 
   const price = getPrice(activeTab)
   const priceUnit =
-    activeTab === 'free' ? '' : isCurrentPlan && period === 'yearly' ? '/ 년' : t('perMonth')
+    activeTab === 'free' ? '' : isCurrentPlan && period === 'yearly' ? t('perYear') : t('perMonth')
 
   function handleCancel() {
     startTransition(async () => {
@@ -114,7 +114,7 @@ export default function SubscriptionClient({
                 <span className="text-ink3 text-[12px]">
                   {t('currentPlan')}
                   {isTrial && activeTab !== 'free' ? t('trialSuffix') : ''}
-                  {isCanceled && activeTab !== 'free' ? ' (취소됨)' : ''}
+                  {isCanceled && activeTab !== 'free' ? t('canceledSuffix') : ''}
                 </span>
               )}
             </div>
@@ -146,12 +146,12 @@ export default function SubscriptionClient({
         {/* 현재 구독 정보 — 유료 플랜일 때만 */}
         {isPaid && isCurrentPlan && (
           <div className="border-border rounded-2xl border bg-white p-5">
-            <p className="text-ink mb-3 text-[14px] font-semibold">구독 정보</p>
+            <p className="text-ink mb-3 text-[14px] font-semibold">{t('info')}</p>
 
             <div className="space-y-3">
               {/* 구독 주기 */}
               <div className="flex items-center justify-between">
-                <span className="text-ink3 text-[13px]">구독 주기</span>
+                <span className="text-ink3 text-[13px]">{t('cycle')}</span>
                 <span className="text-ink text-[13px] font-medium">{periodLabel}</span>
               </div>
 
@@ -159,7 +159,7 @@ export default function SubscriptionClient({
               {expiresAt && (
                 <div className="flex items-center justify-between">
                   <span className="text-ink3 text-[13px]">
-                    {isCanceled ? '이용 만료일' : '다음 갱신일'}
+                    {isCanceled ? t('expiresOn') : t('renewsOn')}
                   </span>
                   <span
                     className="text-[13px] font-medium"
@@ -173,7 +173,7 @@ export default function SubscriptionClient({
               {/* 취소일 */}
               {isCanceled && canceledAt && (
                 <div className="flex items-center justify-between">
-                  <span className="text-ink3 text-[13px]">취소일</span>
+                  <span className="text-ink3 text-[13px]">{t('canceledOn')}</span>
                   <span className="text-ink2 text-[13px]">{formatDate(canceledAt)}</span>
                 </div>
               )}
@@ -181,7 +181,7 @@ export default function SubscriptionClient({
               {/* 등록 카드 */}
               {cardCompany && cardNumber && (
                 <div className="flex items-center justify-between">
-                  <span className="text-ink3 text-[13px]">결제 카드</span>
+                  <span className="text-ink3 text-[13px]">{t('payCard')}</span>
                   <span className="text-ink text-[13px] font-medium">
                     {cardCompany} ****{cardNumber.slice(-4)}
                   </span>
@@ -195,7 +195,7 @@ export default function SubscriptionClient({
                 onClick={() => setShowCancelConfirm(true)}
                 className="text-ink3 mt-4 w-full text-center text-[13px] underline underline-offset-2"
               >
-                구독 취소
+                {t('cancel')}
               </button>
             )}
 
@@ -203,7 +203,7 @@ export default function SubscriptionClient({
             {isCanceled && (
               <div className="bg-error-light mt-4 rounded-xl p-3">
                 <p className="text-error text-[13px] leading-relaxed">
-                  구독이 취소되었어요. {formatDate(expiresAt)}까지는 계속 이용할 수 있어요.
+                  {t('canceledNotice', { date: formatDate(expiresAt) ?? '' })}
                 </p>
               </div>
             )}
@@ -213,13 +213,14 @@ export default function SubscriptionClient({
         {/* 결제 내역 */}
         {payments.length > 0 && (
           <div className="border-border rounded-2xl border bg-white p-5">
-            <p className="text-ink mb-3 text-[14px] font-semibold">결제 내역</p>
+            <p className="text-ink mb-3 text-[14px] font-semibold">{t('history')}</p>
             <div className="space-y-3">
               {payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-ink text-[13px] font-medium">
-                      {p.plan === 'pro' ? 'Pro' : 'Plus'} {p.period === 'yearly' ? '연간' : '월간'}
+                      {p.plan === 'pro' ? 'Pro' : 'Plus'}{' '}
+                      {p.period === 'yearly' ? t('billingYearly') : t('billingMonthly')}
                     </p>
                     <p className="text-ink3 mt-0.5 text-[12px]">{formatDate(p.approved_at)}</p>
                   </div>
@@ -240,12 +241,10 @@ export default function SubscriptionClient({
           />
           <div className="fixed inset-x-0 bottom-0 z-[70] rounded-t-2xl bg-white p-6">
             <div className="mb-5 text-center">
-              <p className="text-ink text-[17px] font-bold">구독을 취소할까요?</p>
+              <p className="text-ink text-[17px] font-bold">{t('cancelConfirm')}</p>
               {expiresAt && (
                 <p className="text-ink3 mt-2 text-[14px] leading-relaxed">
-                  취소해도 {formatDate(expiresAt)}까지는
-                  <br />
-                  계속 이용할 수 있어요.
+                  {t('cancelConfirmDesc', { date: formatDate(expiresAt) ?? '' })}
                 </p>
               )}
             </div>
@@ -256,7 +255,7 @@ export default function SubscriptionClient({
                 disabled={isPending}
                 className="flex-1"
               >
-                돌아가기
+                {t('goBack')}
               </Button>
               <button
                 onClick={handleCancel}
@@ -264,7 +263,7 @@ export default function SubscriptionClient({
                 className="flex-1 rounded-xl py-3 text-[15px] font-semibold text-white disabled:opacity-50"
                 style={{ backgroundColor: 'var(--color-error)' }}
               >
-                {isPending ? '취소 중...' : '구독 취소'}
+                {isPending ? t('canceling') : t('cancel')}
               </button>
             </div>
           </div>

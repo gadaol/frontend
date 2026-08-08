@@ -366,12 +366,21 @@ export default function AssistantPanel() {
                 className="active:bg-bg2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity disabled:opacity-25"
                 aria-label={locale === 'ko' ? '새 대화' : 'New chat'}
               >
+                {/* 새 대화 — 통용되는 '작성' 아이콘이라 +보다 뜻이 분명하다 */}
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path
-                    d="M9 3.6v10.8M3.6 9h10.8"
+                    d="M8 3H4.2A1.2 1.2 0 0 0 3 4.2v9.6A1.2 1.2 0 0 0 4.2 15h9.6a1.2 1.2 0 0 0 1.2-1.2V10"
                     stroke="var(--color-ink2)"
-                    strokeWidth="1.6"
+                    strokeWidth="1.5"
                     strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12.4 2.6a1.4 1.4 0 0 1 2 2L9.6 9.4l-2.6.6.6-2.6 4.8-4.8z"
+                    stroke="var(--color-ink2)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </button>
